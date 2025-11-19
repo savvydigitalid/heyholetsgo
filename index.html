@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Savvy Dopamine Task Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #fff4dc;
+      --text-main: #01356b;
+      --text-muted: #455a7a;
+      --accent-yellow: #ffb300;
+      --accent-yellow-dark: #ff8c00;
+      --accent-green: #00c853;
+      --accent-green-dark: #00a344;
+      --card-border: #0b4f82;
+      --card-bg: #fffbf2;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 18px;
+      background: var(--bg);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      max-width: 900px;
+      width: 100%;
+    }
+
+    .headline {
+      text-align: center;
+      font-weight: 800;
+      font-size: 26px;
+      line-height: 1.1;
+      color: var(--accent-yellow-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 16px;
+    }
+
+    .subline {
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .ring-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+
+    .ring {
+      width: 190px;
+      height: 190px;
+      border-radius: 50%;
+      background: conic-gradient(
+        var(--accent-green) 0deg,
+        var(--accent-green) 0deg,
+        #e0e4f0 0deg,
+        #e0e4f0 360deg
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ring-inner {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ring-label {
+      font-size: 40px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .cards-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 8px 0 16px 0;
+    }
+
+    @media (max-width: 780px) {
+      .cards-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 2px solid var(--card-border);
+      padding: 10px 12px;
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .card-value-main {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .card-subtext {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .mini-bar-bg {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: #e3e7f2;
+      overflow: hidden;
+      margin: 4px 0 4px 0;
+    }
+
+    .mini-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(
+        90deg,
+        var(--accent-green),
+        var(--accent-green-dark)
+      );
+      width: 0;
+      transition: width 0.25s ease-out;
+    }
+
+    .icon-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      background: #ffe2b2;
+      color: #ff7a00;
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .arrow-pill {
+      background: #e1f7df;
+      color: var(--accent-green-dark);
+    }
+
+    .big-banner {
+      margin: 0 auto 20px auto;
+      background: var(--accent-green);
+      border-radius: 20px;
+      padding: 10px 16px;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 8px 0 rgba(0, 0, 0, 0.12);
+    }
+
+    .big-banner span.emoji {
+      font-size: 20px;
+    }
+
+    /* TASK SECTION */
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .task-card {
+      background: #ffffff;
+      border-radius: 16px;
+      border: 1px solid #d3d7e5;
+      padding: 12px;
+      box-shadow: 0 8px 18px rgba(13, 37, 63, 0.12);
+      margin-bottom: 10px;
+    }
+
+    .task-form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex: 1;
+      min-width: 150px;
+    }
+
+    label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    input[type="text"],
+    select {
+      background: #f7f8ff;
+      border-radius: 10px;
+      border: 1px solid #cdd3ea;
+      padding: 7px 9px;
+      font-size: 13px;
+      color: var(--text-main);
+      outline: none;
+    }
+
+    input[type="text"]:focus,
+    select:focus {
+      border-color: var(--accent-yellow);
+      box-shadow: 0 0 0 1px rgba(255, 179, 0, 0.4);
+    }
+
+    .btn-primary {
+      border-radius: 999px;
+      background: linear-gradient(
+        135deg,
+        var(--accent-yellow),
+        var(--accent-yellow-dark)
+      );
+      color: #1d2733;
+      border: none;
+      font-size: 13px;
+      padding: 7px 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 6px 0 rgba(227, 146, 0, 0.6);
+    }
+
+    .btn-secondary {
+      border-radius: 999px;
+      background: transparent;
+      color: #8b95b3;
+      border: 1px solid #d0d6ea;
+      font-size: 12px;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 260px;
+      overflow-y: auto;
+      margin-top: 6px;
+    }
+
+    .task-item {
+      border-radius: 12px;
+      border: 1px solid #d3d7e5;
+      padding: 7px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      background: #fdfdff;
+    }
+
+    .task-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .task-title {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .task-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .effort-pill {
+      border-radius: 999px;
+      font-size: 10px;
+      padding: 2px 7px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .effort-1 {
+      background: #e2f7e7;
+      color: #1b8f46;
+    }
+
+    .effort-2 {
+      background: #fff5d7;
+      color: #af7a00;
+    }
+
+    .effort-3 {
+      background: #ffe2de;
+      color: #d84343;
+    }
+
+    .status-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .status-btn {
+      font-size: 11px;
+      border-radius: 999px;
+      border: 1px solid #d0d6ea;
+      padding: 3px 8px;
+      background: #ffffff;
+      color: #7582a3;
+      cursor: pointer;
+    }
+
+    .status-btn.active-done {
+      border-color: #00b341;
+      background: #e0f7ea;
+      color: #00a344;
+    }
+
+    .status-btn.active-blocked {
+      border-color: #ff6b6b;
+      background: #ffe3e0;
+      color: #e44747;
+    }
+
+    .no-tasks {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      padding: 10px 0;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="headline">YOUR DAY LOOKS SATISFYING AF.</div>
+    <div class="subline" id="headlineSub">You're closer than you think.</div>
+
+    <!-- Progress Ring -->
+    <div class="ring-wrap">
+      <div class="ring" id="progressRing">
+        <div class="ring-inner">
+          <div class="ring-label" id="percentText">0%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top cards -->
+    <div class="cards-row">
+      <!-- Tasks completed -->
+      <div class="card">
+        <div class="card-title">Tasks Completed</div>
+        <div class="card-value-main" id="tasksRatio">0/0</div>
+        <div class="mini-bar-bg">
+          <div class="mini-bar-fill" id="tasksBar"></div>
+        </div>
+        <div class="card-subtext" id="tasksSub">Start with 1–3 key tasks.</div>
+      </div>
+
+      <!-- Streak -->
+      <div class="card">
+        <div class="icon-pill">🔥</div>
+        <div class="card-title">Streak</div>
+        <div class="card-value-main" id="streakValue">0 days</div>
+        <div class="card-subtext">Consistency = Power.</div>
+      </div>
+
+      <!-- Focus score -->
+      <div class="card">
+        <div class="icon-pill arrow-pill">⬇</div>
+        <div class="card-title">Focus Score</div>
+        <div class="card-value-main" id="focusScore">0%</div>
+        <div class="card-subtext" id="focusSub">Let’s make today cleaner than yesterday.</div>
+      </div>
+    </div>
+
+    <!-- Banner -->
+    <div class="big-banner" id="banner">
+      <span class="emoji">🏆</span>
+      <span id="bannerText">Hit 80%+ to unlock “Top 10%” vibes.</span>
+    </div>
+
+    <!-- Task section -->
+    <div class="section-title">Today’s Missions</div>
+    <div class="task-card">
+      <div class="task-form-row">
+        <div class="field">
+          <label for="taskTitle">Task</label>
+          <input id="taskTitle" type="text" placeholder="Contoh: Listing 20 KOL" />
+        </div>
+        <div class="field">
+          <label for="taskCategory">Kategori</label>
+          <select id="taskCategory">
+            <option value="KOL">KOL / Campaign</option>
+            <option value="Creative">Creative / Konten</option>
+            <option value="Finance">Finance / Admin</option>
+            <option value="Sales">Sales / Outreach</option>
+            <option value="Ops">Ops / HR / Internal</option>
+            <option value="Other">Lainnya</option>
+          </select>
+        </div>
+        <div class="field" style="max-width:140px;">
+          <label for="taskEffort">Effort</label>
+          <select id="taskEffort">
+            <option value="1">1 - Ringan</option>
+            <option value="2" selected>2 - Sedang</option>
+            <option value="3">3 - Berat</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <button class="btn-secondary" id="resetDayBtn">Reset hari ini</button>
+        <button class="btn-primary" id="addTaskBtn">+ Add Task</button>
+      </div>
+
+      <div class="task-list" id="taskList"></div>
+      <div class="no-tasks" id="noTasksMsg">
+        Belum ada task. Tambah 1–3 misi utama hari ini dulu.
+      </div>
+
+      <div class="hint">
+        Effort 1 = 1 pt · Effort 2 = 3 pts · Effort 3 = 6 pts (hanya yang statusnya <b>Done</b> keitung skor).
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "savvy_tasks_v2";
+    const STREAK_KEY = "savvy_streak_v2";
+    const LAST_SCORE_KEY = "savvy_last_score_v2";
+
+    const TARGET_SCORE = 30; // bisa lo adjust
+
+    function todayKey() {
+      const d = new Date();
+      return d.toISOString().slice(0, 10);
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const today = todayKey();
+        if (!raw) return { date: today, tasks: [] };
+        const parsed = JSON.parse(raw);
+        if (!parsed.date || parsed.date !== today) {
+          // simpan score kemarin buat perbandingan (sederhana)
+          if (parsed.tasks && parsed.tasks.length > 0) {
+            const yesterdayScore = calcScore(parsed.tasks);
+            localStorage.setItem(LAST_SCORE_KEY, String(yesterdayScore));
+          }
+          return { date: today, tasks: [] };
+        }
+        return parsed;
+      } catch (e) {
+        return { date: todayKey(), tasks: [] };
+      }
+    }
+
+    function saveState(state) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function weightForEffort(effort) {
+      if (effort === 1) return 1;
+      if (effort === 2) return 3;
+      if (effort === 3) return 6;
+      return 0;
+    }
+
+    function calcScore(tasks) {
+      return tasks.reduce((sum, t) => {
+        if (t.status === "done") {
+          return sum + weightForEffort(t.effort);
+        }
+        return sum;
+      }, 0);
+    }
+
+    let state = loadState();
+
+    // DOM
+    const percentText = document.getElementById("percentText");
+    const ringEl = document.getElementById("progressRing");
+    const headlineSub = document.getElementById("headlineSub");
+
+    const tasksRatioEl = document.getElementById("tasksRatio");
+    const tasksBarEl = document.getElementById("tasksBar");
+    const tasksSubEl = document.getElementById("tasksSub");
+
+    const streakValueEl = document.getElementById("streakValue");
+    const focusScoreEl = document.getElementById("focusScore");
+    const focusSubEl = document.getElementById("focusSub");
+    const bannerEl = document.getElementById("banner");
+    const bannerTextEl = document.getElementById("bannerText");
+
+    const taskTitleInput = document.getElementById("taskTitle");
+    const taskCategorySelect = document.getElementById("taskCategory");
+    const taskEffortSelect = document.getElementById("taskEffort");
+    const addTaskBtn = document.getElementById("addTaskBtn");
+    const resetDayBtn = document.getElementById("resetDayBtn");
+    const taskListEl = document.getElementById("taskList");
+    const noTasksMsg = document.getElementById("noTasksMsg");
+
+    function render() {
+      const tasks = state.tasks || [];
+      taskListEl.innerHTML = "";
+
+      if (tasks.length === 0) {
+        noTasksMsg.style.display = "block";
+      } else {
+        noTasksMsg.style.display = "none";
+      }
+
+      let doneCount = 0;
+      let heavyCount = 0;
+
+      tasks.forEach((t) => {
+        if (t.status === "done") {
+          doneCount++;
+          if (t.effort === 3) heavyCount++;
+        }
+
+        const item = document.createElement("div");
+        item.className = "task-item";
+
+        const main = document.createElement("div");
+        main.className = "task-main";
+
+        const title = document.createElement("div");
+        title.className = "task-title";
+        title.textContent = t.title || "(Untitled task)";
+
+        const meta = document.createElement("div");
+        meta.className = "task-meta";
+
+        const catSpan = document.createElement("span");
+        catSpan.textContent = t.category;
+        meta.appendChild(catSpan);
+
+        const effSpan = document.createElement("span");
+        effSpan.className = "effort-pill effort-" + t.effort;
+        effSpan.textContent =
+          "Effort " +
+          t.effort +
+          (t.effort === 1
+            ? " · ringan"
+            : t.effort === 2
+            ? " · sedang"
+            : " · berat");
+        meta.appendChild(effSpan);
+
+        const statusSpan = document.createElement("span");
+        statusSpan.textContent =
+          t.status === "todo"
+            ? "To do"
+            : t.status === "done"
+            ? "Done"
+            : "Blocked";
+        meta.appendChild(statusSpan);
+
+        main.appendChild(title);
+        main.appendChild(meta);
+
+        const statusButtons = document.createElement("div");
+        statusButtons.className = "status-buttons";
+
+        const btnDone = document.createElement("button");
+        btnDone.className =
+          "status-btn" + (t.status === "done" ? " active-done" : "");
+        btnDone.textContent = "Done";
+        btnDone.onclick = () => updateTaskStatus(t.id, "done");
+
+        const btnBlocked = document.createElement("button");
+        btnBlocked.className =
+          "status-btn" + (t.status === "blocked" ? " active-blocked" : "");
+        btnBlocked.textContent = "Blocked";
+        btnBlocked.onclick = () => updateTaskStatus(t.id, "blocked");
+
+        const btnTodo = document.createElement("button");
+        btnTodo.className = "status-btn";
+        btnTodo.textContent = "Reset";
+        btnTodo.onclick = () => updateTaskStatus(t.id, "todo");
+
+        statusButtons.appendChild(btnDone);
+        statusButtons.appendChild(btnBlocked);
+        statusButtons.appendChild(btnTodo);
+
+        item.appendChild(main);
+        item.appendChild(statusButtons);
+        taskListEl.appendChild(item);
+      });
+
+      // SCORE & PERCENT
+      const score = calcScore(tasks);
+      const percent =
+        TARGET_SCORE === 0
+          ? 0
+          : Math.max(0, Math.min(100, Math.round((score / TARGET_SCORE) * 100)));
+
+      percentText.textContent = percent + "%";
+      const angle = percent * 3.6;
+      ringEl.style.background = `conic-gradient(${getRingColor(
+        percent
+      )} 0deg, ${getRingColor(percent)} ${angle}deg, #e0e4f0 ${angle}deg, #e0e4f0 360deg)`;
+
+      // Headline sub
+      if (percent >= 90) {
+        headlineSub.textContent = "This is elite consistency.";
+      } else if (percent >= 60) {
+        headlineSub.textContent = "You're closer than you think.";
+      } else if (percent > 0) {
+        headlineSub.textContent = "Small moves, big compounding.";
+      } else {
+        headlineSub.textContent = "Drop one mission to get started.";
+      }
+
+      // Tasks ratio
+      tasksRatioEl.textContent = `${doneCount}/${tasks.length || 0}`;
+      const ratio = tasks.length === 0 ? 0 : (doneCount / tasks.length) * 100;
+      tasksBarEl.style.width = ratio + "%";
+      if (tasks.length === 0) {
+        tasksSubEl.textContent = "Start with 1–3 key tasks.";
+      } else if (doneCount === tasks.length && tasks.length > 0) {
+        tasksSubEl.textContent = "All green. Clean sheet!";
+      } else {
+        tasksSubEl.textContent = "Almost there. One more push.";
+      }
+
+      // Focus score card
+      focusScoreEl.textContent = percent + "%";
+      const lastStr = localStorage.getItem(LAST_SCORE_KEY);
+      if (lastStr) {
+        const last = parseInt(lastStr, 10) || 0;
+        if (last > 0) {
+          const diff = score - last;
+          const diffPct = Math.round((diff / last) * 100);
+          if (diffPct > 0) {
+            focusSubEl.textContent = `+${diffPct}% vs yesterday. Cleaner work.`;
+          } else if (diffPct < 0) {
+            focusSubEl.textContent = `${diffPct}% vs yesterday. Still ok, keep it tidy.`;
+          } else {
+            focusSubEl.textContent = "Same focus as yesterday. Steady is good.";
+          }
+        }
+      }
+
+      // Streak
+      let streak = 0;
+      try {
+        const rawStreak = localStorage.getItem(STREAK_KEY);
+        if (rawStreak) streak = parseInt(rawStreak, 10) || 0;
+      } catch (e) {}
+      streakValueEl.textContent = streak + (streak === 1 ? " day" : " days");
+
+      // Banner
+      if (percent >= 90) {
+        bannerEl.style.background = "var(--accent-green)";
+        bannerTextEl.textContent = "You're in the Top 10% feeling today.";
+      } else if (percent >= 60) {
+        bannerEl.style.background = "#00bfa5";
+        bannerTextEl.textContent = "Solid momentum. Keep stacking wins.";
+      } else {
+        bannerEl.style.background = "#ffb300";
+        bannerTextEl.textContent = "Hit 60%+ to unlock that “crisp day” feeling.";
+      }
+    }
+
+    function getRingColor(percent) {
+      if (percent >= 80) return "#00c853";
+      if (percent >= 50) return "#ffb300";
+      return "#ff7043";
+    }
+
+    function addTask() {
+      const title = taskTitleInput.value.trim();
+      const category = taskCategorySelect.value;
+      const effort = parseInt(taskEffortSelect.value, 10) || 2;
+      if (!title) {
+        alert("Isi dulu nama task-nya, bro.");
+        return;
+      }
+      const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+      state.tasks.push({
+        id,
+        title,
+        category,
+        effort,
+        status: "todo",
+      });
+      taskTitleInput.value = "";
+      saveState(state);
+      render();
+    }
+
+    function updateTaskStatus(id, status) {
+      const t = state.tasks.find((task) => task.id === id);
+      if (!t) return;
+      t.status = status;
+
+      // streak: kalau hari ini score >= target, update streak
+      const score = calcScore(state.tasks);
+      if (score >= TARGET_SCORE) {
+        let streak = 0;
+        const raw = localStorage.getItem(STREAK_KEY);
+        if (raw) streak = parseInt(raw, 10) || 0;
+        if (!state.streakCounted) {
+          streak += 1;
+          localStorage.setItem(STREAK_KEY, String(streak));
+          state.streakCounted = true;
+        }
+      }
+
+      saveState(state);
+      render();
+    }
+
+    function resetToday() {
+      if (!confirm("Reset semua task hari ini?")) return;
+      // simpan score ke last_score dulu
+      const score = calcScore(state.tasks);
+      localStorage.setItem(LAST_SCORE_KEY, String(score));
+      state = { date: todayKey(), tasks: [] };
+      saveState(state);
+      render();
+    }
+
+    addTaskBtn.addEventListener("click", addTask);
+    taskTitleInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addTask();
+    });
+    resetDayBtn.addEventListener("click", resetToday);
+
+    render();
+  </script>
+</body>
+</html>
