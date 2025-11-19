@@ -13,6 +13,8 @@
       --accent-yellow-dark: #ff8c00;
       --accent-green: #00c853;
       --accent-green-dark: #00a344;
+      --accent-orange-soft: #ffe2b2;
+      --accent-green-soft: #e1f7df;
       --card-border: #0b4f82;
       --card-bg: #fffbf2;
     }
@@ -161,14 +163,14 @@
       width: 26px;
       height: 26px;
       border-radius: 999px;
-      background: #ffe2b2;
+      background: var(--accent-orange-soft);
       color: #ff7a00;
       font-size: 16px;
       margin-bottom: 4px;
     }
 
     .arrow-pill {
-      background: #e1f7df;
+      background: var(--accent-green-soft);
       color: var(--accent-green-dark);
     }
 
@@ -190,8 +192,6 @@
     .big-banner span.emoji {
       font-size: 20px;
     }
-
-    /* TASK SECTION */
 
     .section-title {
       font-size: 13px;
@@ -387,6 +387,93 @@
       margin-top: 4px;
     }
 
+    /* History & Heatmap */
+
+    .history-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .history-block {
+      flex: 1;
+      min-width: 200px;
+      background: #fffbf6;
+      border-radius: 14px;
+      border: 1px solid #d3d7e5;
+      padding: 8px 10px;
+    }
+
+    .history-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .history-main {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .history-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .heat-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .heat-cell {
+      width: 100%;
+      padding-bottom: 100%;
+      border-radius: 6px;
+      background: #e4e7f5;
+      position: relative;
+    }
+
+    .heat-cell-inner {
+      position: absolute;
+      inset: 0;
+      border-radius: 6px;
+    }
+
+    .heat-0 {
+      background: #e4e7f5;
+    }
+
+    .heat-1 {
+      background: #d3f8df;
+    }
+
+    .heat-2 {
+      background: #9be6b5;
+    }
+
+    .heat-3 {
+      background: #4cd77f;
+    }
+
+    .heat-4 {
+      background: #00c853;
+    }
+
+    .heat-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
   </style>
 </head>
 <body>
@@ -481,42 +568,51 @@
         Effort 1 = 1 pt · Effort 2 = 3 pts · Effort 3 = 6 pts (hanya yang statusnya <b>Done</b> keitung skor).
       </div>
     </div>
+
+    <!-- History & Stats -->
+    <div class="section-title">History & Stats</div>
+    <div class="task-card">
+      <div class="history-row">
+        <div class="history-block">
+          <div class="history-title">Last 7 Days</div>
+          <div class="history-main" id="weeklyText">—</div>
+          <div class="history-sub" id="weeklySub">Once you log a week, this becomes your mini “Weekly Wrapped”.</div>
+        </div>
+        <div class="history-block">
+          <div class="history-title">Last 30 Days</div>
+          <div class="history-main" id="monthlyText">—</div>
+          <div class="history-sub" id="monthlySub">Average of your daily score over the last month.</div>
+        </div>
+        <div class="history-block">
+          <div class="history-title">Best Day</div>
+          <div class="history-main" id="bestDayText">—</div>
+          <div class="history-sub" id="bestDaySub">Your highest % day logged so far.</div>
+        </div>
+      </div>
+
+      <div class="history-title" style="margin-top:4px;">28-Day Heatmap</div>
+      <div class="heat-grid" id="heatGrid"></div>
+      <div class="heat-label-row">
+        <span>older</span>
+        <span>today</span>
+      </div>
+      <div class="hint">
+        Each square is one day. Darker green = closer to or above target score. This can grow year by year; browser keeps the log.
+      </div>
+    </div>
   </div>
 
   <script>
-    const STORAGE_KEY = "savvy_tasks_v2";
+    const STORAGE_KEY = "savvy_tasks_v3";     // daily today state
+    const HISTORY_KEY = "savvy_history_v1";   // full history
     const STREAK_KEY = "savvy_streak_v2";
     const LAST_SCORE_KEY = "savvy_last_score_v2";
 
-    const TARGET_SCORE = 30; // bisa lo adjust
+    const TARGET_SCORE = 30; // feel free to tweak
 
     function todayKey() {
       const d = new Date();
-      return d.toISOString().slice(0, 10);
-    }
-
-    function loadState() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        const today = todayKey();
-        if (!raw) return { date: today, tasks: [] };
-        const parsed = JSON.parse(raw);
-        if (!parsed.date || parsed.date !== today) {
-          // simpan score kemarin buat perbandingan (sederhana)
-          if (parsed.tasks && parsed.tasks.length > 0) {
-            const yesterdayScore = calcScore(parsed.tasks);
-            localStorage.setItem(LAST_SCORE_KEY, String(yesterdayScore));
-          }
-          return { date: today, tasks: [] };
-        }
-        return parsed;
-      } catch (e) {
-        return { date: todayKey(), tasks: [] };
-      }
-    }
-
-    function saveState(state) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      return d.toISOString().slice(0, 10); // YYYY-MM-DD
     }
 
     function weightForEffort(effort) {
@@ -527,12 +623,71 @@
     }
 
     function calcScore(tasks) {
-      return tasks.reduce((sum, t) => {
+      return tasks.reduce(function (sum, t) {
         if (t.status === "done") {
           return sum + weightForEffort(t.effort);
         }
         return sum;
       }, 0);
+    }
+
+    function loadHistory() {
+      try {
+        const raw = localStorage.getItem(HISTORY_KEY);
+        if (!raw) return { days: {} };
+        const parsed = JSON.parse(raw);
+        if (!parsed.days) return { days: {} };
+        return parsed;
+      } catch (e) {
+        return { days: {} };
+      }
+    }
+
+    function saveHistory(history) {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    }
+
+    function archiveDay(dayState) {
+      if (!dayState || !dayState.tasks) return;
+      const history = loadHistory();
+      const date = dayState.date || todayKey();
+      const tasks = dayState.tasks || [];
+      const score = calcScore(tasks);
+      const total = tasks.length;
+      var done = 0;
+      tasks.forEach(function (t) {
+        if (t.status === "done") done++;
+      });
+
+      history.days[date] = {
+        date: date,
+        score: score,
+        total: total,
+        done: done
+      };
+      saveHistory(history);
+      localStorage.setItem(LAST_SCORE_KEY, String(score));
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const today = todayKey();
+        if (!raw) return { date: today, tasks: [] };
+        const parsed = JSON.parse(raw);
+        if (!parsed.date || parsed.date !== today) {
+          // archive previous day before starting fresh
+          archiveDay(parsed);
+          return { date: today, tasks: [] };
+        }
+        return parsed;
+      } catch (e) {
+        return { date: todayKey(), tasks: [] };
+      }
+    }
+
+    function saveState(state) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
 
     let state = loadState();
@@ -560,9 +715,25 @@
     const taskListEl = document.getElementById("taskList");
     const noTasksMsg = document.getElementById("noTasksMsg");
 
+    const weeklyTextEl = document.getElementById("weeklyText");
+    const weeklySubEl = document.getElementById("weeklySub");
+    const monthlyTextEl = document.getElementById("monthlyText");
+    const monthlySubEl = document.getElementById("monthlySub");
+    const bestDayTextEl = document.getElementById("bestDayText");
+    const bestDaySubEl = document.getElementById("bestDaySub");
+    const heatGridEl = document.getElementById("heatGrid");
+
+    function getRingColor(percent) {
+      if (percent >= 80) return "#00c853";
+      if (percent >= 50) return "#ffb300";
+      return "#ff7043";
+    }
+
     function render() {
       const tasks = state.tasks || [];
       taskListEl.innerHTML = "";
+
+      var doneCount = 0;
 
       if (tasks.length === 0) {
         noTasksMsg.style.display = "block";
@@ -570,13 +741,9 @@
         noTasksMsg.style.display = "none";
       }
 
-      let doneCount = 0;
-      let heavyCount = 0;
-
-      tasks.forEach((t) => {
+      tasks.forEach(function (t) {
         if (t.status === "done") {
           doneCount++;
-          if (t.effort === 3) heavyCount++;
         }
 
         const item = document.createElement("div");
@@ -627,18 +794,24 @@
         btnDone.className =
           "status-btn" + (t.status === "done" ? " active-done" : "");
         btnDone.textContent = "Done";
-        btnDone.onclick = () => updateTaskStatus(t.id, "done");
+        btnDone.onclick = function () {
+          updateTaskStatus(t.id, "done");
+        };
 
         const btnBlocked = document.createElement("button");
         btnBlocked.className =
           "status-btn" + (t.status === "blocked" ? " active-blocked" : "");
         btnBlocked.textContent = "Blocked";
-        btnBlocked.onclick = () => updateTaskStatus(t.id, "blocked");
+        btnBlocked.onclick = function () {
+          updateTaskStatus(t.id, "blocked");
+        };
 
         const btnTodo = document.createElement("button");
         btnTodo.className = "status-btn";
         btnTodo.textContent = "Reset";
-        btnTodo.onclick = () => updateTaskStatus(t.id, "todo");
+        btnTodo.onclick = function () {
+          updateTaskStatus(t.id, "todo");
+        };
 
         statusButtons.appendChild(btnDone);
         statusButtons.appendChild(btnBlocked);
@@ -658,11 +831,17 @@
 
       percentText.textContent = percent + "%";
       const angle = percent * 3.6;
-      ringEl.style.background = `conic-gradient(${getRingColor(
-        percent
-      )} 0deg, ${getRingColor(percent)} ${angle}deg, #e0e4f0 ${angle}deg, #e0e4f0 360deg)`;
+      ringEl.style.background =
+        "conic-gradient(" +
+        getRingColor(percent) +
+        " 0deg, " +
+        getRingColor(percent) +
+        " " +
+        angle +
+        "deg, #e0e4f0 " +
+        angle +
+        "deg, #e0e4f0 360deg)";
 
-      // Headline sub
       if (percent >= 90) {
         headlineSub.textContent = "This is elite consistency.";
       } else if (percent >= 60) {
@@ -674,7 +853,7 @@
       }
 
       // Tasks ratio
-      tasksRatioEl.textContent = `${doneCount}/${tasks.length || 0}`;
+      tasksRatioEl.textContent = doneCount + "/" + (tasks.length || 0);
       const ratio = tasks.length === 0 ? 0 : (doneCount / tasks.length) * 100;
       tasksBarEl.style.width = ratio + "%";
       if (tasks.length === 0) {
@@ -685,7 +864,7 @@
         tasksSubEl.textContent = "Almost there. One more push.";
       }
 
-      // Focus score card
+      // Focus score vs yesterday
       focusScoreEl.textContent = percent + "%";
       const lastStr = localStorage.getItem(LAST_SCORE_KEY);
       if (lastStr) {
@@ -694,19 +873,22 @@
           const diff = score - last;
           const diffPct = Math.round((diff / last) * 100);
           if (diffPct > 0) {
-            focusSubEl.textContent = `+${diffPct}% vs yesterday. Cleaner work.`;
+            focusSubEl.textContent =
+              "+" + diffPct + "% vs yesterday. Cleaner work.";
           } else if (diffPct < 0) {
-            focusSubEl.textContent = `${diffPct}% vs yesterday. Still ok, keep it tidy.`;
+            focusSubEl.textContent =
+              diffPct + "% vs yesterday. Still ok, keep it tidy.";
           } else {
-            focusSubEl.textContent = "Same focus as yesterday. Steady is good.";
+            focusSubEl.textContent =
+              "Same focus as yesterday. Steady is good.";
           }
         }
       }
 
-      // Streak
-      let streak = 0;
+      // Streak (already stored when >= target)
+      var streak = 0;
       try {
-        const rawStreak = localStorage.getItem(STREAK_KEY);
+        var rawStreak = localStorage.getItem(STREAK_KEY);
         if (rawStreak) streak = parseInt(rawStreak, 10) || 0;
       } catch (e) {}
       streakValueEl.textContent = streak + (streak === 1 ? " day" : " days");
@@ -720,14 +902,11 @@
         bannerTextEl.textContent = "Solid momentum. Keep stacking wins.";
       } else {
         bannerEl.style.background = "#ffb300";
-        bannerTextEl.textContent = "Hit 60%+ to unlock that “crisp day” feeling.";
+        bannerTextEl.textContent =
+          "Hit 60%+ to unlock that “crisp day” feeling.";
       }
-    }
 
-    function getRingColor(percent) {
-      if (percent >= 80) return "#00c853";
-      if (percent >= 50) return "#ffb300";
-      return "#ff7043";
+      renderHistory(); // NEW
     }
 
     function addTask() {
@@ -738,13 +917,14 @@
         alert("Isi dulu nama task-nya, bro.");
         return;
       }
-      const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+      const id =
+        Date.now().toString(36) + Math.random().toString(36).slice(2);
       state.tasks.push({
-        id,
-        title,
-        category,
-        effort,
-        status: "todo",
+        id: id,
+        title: title,
+        category: category,
+        effort: effort,
+        status: "todo"
       });
       taskTitleInput.value = "";
       saveState(state);
@@ -752,15 +932,16 @@
     }
 
     function updateTaskStatus(id, status) {
-      const t = state.tasks.find((task) => task.id === id);
+      const t = state.tasks.find(function (task) {
+        return task.id === id;
+      });
       if (!t) return;
       t.status = status;
 
-      // streak: kalau hari ini score >= target, update streak
       const score = calcScore(state.tasks);
       if (score >= TARGET_SCORE) {
-        let streak = 0;
-        const raw = localStorage.getItem(STREAK_KEY);
+        var streak = 0;
+        var raw = localStorage.getItem(STREAK_KEY);
         if (raw) streak = parseInt(raw, 10) || 0;
         if (!state.streakCounted) {
           streak += 1;
@@ -775,16 +956,149 @@
 
     function resetToday() {
       if (!confirm("Reset semua task hari ini?")) return;
-      // simpan score ke last_score dulu
-      const score = calcScore(state.tasks);
-      localStorage.setItem(LAST_SCORE_KEY, String(score));
+      archiveDay(state); // simpan dulu hari ini ke history
       state = { date: todayKey(), tasks: [] };
       saveState(state);
       render();
     }
 
+    // HISTORY RENDER
+    function renderHistory() {
+      const history = loadHistory();
+      const daysObj = history.days || {};
+
+      // gabungkan dengan hari ini (supaya sementara kebaca juga)
+      const today = todayKey();
+      const currentTasks = state.tasks || [];
+      const todayScore = calcScore(currentTasks);
+      var todayDone = 0;
+      currentTasks.forEach(function (t) {
+        if (t.status === "done") todayDone++;
+      });
+      daysObj[today] = {
+        date: today,
+        score: todayScore,
+        total: currentTasks.length,
+        done: todayDone
+      };
+
+      const allDays = Object.keys(daysObj)
+        .map(function (k) {
+          return daysObj[k];
+        })
+        .sort(function (a, b) {
+          return a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
+        });
+
+      if (allDays.length === 0) {
+        weeklyTextEl.textContent = "No data yet";
+        monthlyTextEl.textContent = "No data yet";
+        bestDayTextEl.textContent = "No data yet";
+        heatGridEl.innerHTML = "";
+        return;
+      }
+
+      // Weekly (last 7 days)
+      const last7 = allDays.slice(-7);
+      var sum7 = 0;
+      last7.forEach(function (d) {
+        sum7 += d.score || 0;
+      });
+      const max7 = TARGET_SCORE * last7.length || 1;
+      const pct7 = Math.round((sum7 / max7) * 100);
+      weeklyTextEl.textContent = pct7 + "% of target";
+      weeklySubEl.textContent =
+        "Across " +
+        last7.length +
+        " days. Keep nudging it closer to 100%.";
+
+      // Monthly (last 30 days)
+      const last30 = allDays.slice(-30);
+      var sum30 = 0;
+      last30.forEach(function (d) {
+        sum30 += d.score || 0;
+      });
+      const avg30 =
+        last30.length === 0
+          ? 0
+          : Math.round(sum30 / last30.length);
+      const avgPct30 = Math.round((avg30 / TARGET_SCORE) * 100);
+      monthlyTextEl.textContent = avgPct30 + "% avg";
+      monthlySubEl.textContent =
+        "Avg score " +
+        avg30 +
+        " pts over " +
+        last30.length +
+        " days.";
+
+      // Best day
+      var best = allDays[0];
+      allDays.forEach(function (d) {
+        if (!best || (d.score || 0) > (best.score || 0)) {
+          best = d;
+        }
+      });
+      if (best) {
+        const bestPct = Math.round(
+          ((best.score || 0) / TARGET_SCORE) * 100
+        );
+        const dateLabel = formatShortDate(best.date);
+        bestDayTextEl.textContent = bestPct + "% · " + dateLabel;
+        bestDaySubEl.textContent =
+          "Score " +
+          (best.score || 0) +
+          " pts on your cleanest day.";
+      }
+
+      // Heatmap: last 28 days
+      const last28 = allDays.slice(-28);
+      heatGridEl.innerHTML = "";
+      last28.forEach(function (d) {
+        const pct =
+          TARGET_SCORE === 0
+            ? 0
+            : Math.max(
+                0,
+                Math.min(100, Math.round((d.score || 0) / TARGET_SCORE * 100))
+              );
+        var level = 0;
+        if (pct === 0) level = 0;
+        else if (pct < 40) level = 1;
+        else if (pct < 70) level = 2;
+        else if (pct < 100) level = 3;
+        else level = 4;
+
+        const cell = document.createElement("div");
+        cell.className = "heat-cell";
+        const inner = document.createElement("div");
+        inner.className = "heat-cell-inner heat-" + level;
+        inner.title =
+          formatShortDate(d.date) +
+          " · " +
+          (d.score || 0) +
+          " pts (" +
+          pct +
+          "%)";
+        cell.appendChild(inner);
+        heatGridEl.appendChild(cell);
+      });
+    }
+
+    function formatShortDate(dateStr) {
+      try {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "short"
+        });
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
+    // events
     addTaskBtn.addEventListener("click", addTask);
-    taskTitleInput.addEventListener("keydown", (e) => {
+    taskTitleInput.addEventListener("keydown", function (e) {
       if (e.key === "Enter") addTask();
     });
     resetDayBtn.addEventListener("click", resetToday);
