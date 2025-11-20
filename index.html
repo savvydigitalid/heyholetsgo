@@ -712,7 +712,6 @@
     const LAST_SCORE_KEY = "savvy_last_score_v2";
     const TARGET_SCORE = 30;
 
-    // sprite mapping Ho-Ho
     const HOHO_IMAGES = {
       idle: "hoho-happy.png",
       addTask: "hoho-point.png",
@@ -721,7 +720,6 @@
       sad: "hoho-sad.png"
     };
 
-    // drag position storage
     const HOHO_POS_KEY = "hoho_position_v1";
     let isDraggingHoho = false;
     let dragOffsetX = 0;
@@ -781,15 +779,23 @@
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         const today = todayKey();
-        if (!raw) return { date: today, tasks: [] };
+        if (!raw) return { date: today, tasks: [], streakCounted: false };
         const parsed = JSON.parse(raw);
+
+        // kalau beda hari: archive + carry over task yang belum done
         if (!parsed.date || parsed.date !== today) {
           archiveDay(parsed);
-          return { date: today, tasks: [] };
+          const carried = (parsed.tasks || []).filter(t => t.status !== "done");
+          carried.forEach(t => { t.status = "todo"; });
+          return { date: today, tasks: carried, streakCounted: false };
+        }
+
+        if (typeof parsed.streakCounted !== "boolean") {
+          parsed.streakCounted = false;
         }
         return parsed;
       } catch {
-        return { date: todayKey(), tasks: [] };
+        return { date: todayKey(), tasks: [], streakCounted: false };
       }
     }
 
@@ -799,7 +805,6 @@
 
     let state = loadState();
 
-    // DOM
     const percentText = document.getElementById("percentText");
     const ringEl = document.getElementById("progressRing");
     const headlineSub = document.getElementById("headlineSub");
@@ -902,7 +907,6 @@
       setHohoSprite("idle");
     }
 
-    // posisi Ho-Ho (drag)
     function applySavedHohoPosition() {
       if (!hohoWrapper) return;
       try {
@@ -915,17 +919,13 @@
           hohoWrapper.style.left = pos.left + "px";
           hohoWrapper.style.top = pos.top + "px";
         }
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
     }
 
     function saveHohoPosition(left, top) {
       try {
         localStorage.setItem(HOHO_POS_KEY, JSON.stringify({ left, top }));
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
     }
 
     function render() {
@@ -1004,9 +1004,15 @@
         btnTodo.textContent = "Reset";
         btnTodo.onclick = () => updateTaskStatus(t.id, "todo");
 
+        const btnEdit = document.createElement("button");
+        btnEdit.className = "status-btn";
+        btnEdit.textContent = "Edit";
+        btnEdit.onclick = () => editTask(t.id);
+
         statusButtons.appendChild(btnDone);
         statusButtons.appendChild(btnBlocked);
         statusButtons.appendChild(btnTodo);
+        statusButtons.appendChild(btnEdit);
 
         item.appendChild(main);
         item.appendChild(statusButtons);
@@ -1159,10 +1165,36 @@
       }
     }
 
+    function editTask(id) {
+      const t = state.tasks.find(task => task.id === id);
+      if (!t) return;
+
+      const newTitle = prompt("Edit task name:", t.title || "");
+      if (newTitle === null) return; // cancel
+      const trimmed = newTitle.trim();
+      if (trimmed) {
+        t.title = trimmed;
+      }
+
+      const effortInput = prompt(
+        "Edit effort (1 = ringan, 2 = sedang, 3 = berat):",
+        String(t.effort || 2)
+      );
+      if (effortInput !== null) {
+        const eNum = parseInt(effortInput, 10);
+        if (eNum === 1 || eNum === 2 || eNum === 3) {
+          t.effort = eNum;
+        }
+      }
+
+      saveState(state);
+      render();
+    }
+
     function resetToday() {
       if (!confirm("Reset semua task hari ini?")) return;
       archiveDay(state);
-      state = { date: todayKey(), tasks: [] };
+      state = { date: todayKey(), tasks: [], streakCounted: false };
       saveState(state);
       render();
       setHohoSprite("invite");
@@ -1295,7 +1327,6 @@
       });
     }
 
-    // DRAG BEHAVIOUR FOR HO-HO
     if (hohoWrapper) {
       applySavedHohoPosition();
 
