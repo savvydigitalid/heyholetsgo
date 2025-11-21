@@ -141,33 +141,93 @@
       color: var(--text-soft);
     }
 
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: rgba(255, 180, 67, 0.12);
-      color: #a96807;
-    }
-
     main {
       display: flex;
       flex-direction: column;
       gap: 14px;
     }
 
-    /* Tasks View ---------------------------------------------------- */
-    #tasks-view {
+    /* Dopamine layout (Tasks top card) ---------------------------- */
+    .dopamine-layout {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      align-items: stretch;
+    }
+
+    .dopamine-main {
+      flex: 1 1 260px;
+      min-width: 0;
+    }
+
+    .dopamine-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .dopamine-sub {
+      font-size: 12px;
+      color: var(--text-soft);
+      margin-top: 4px;
+    }
+
+    .dopamine-chart-wrapper {
+      position: relative;
+      width: 170px;
+      height: 170px;
+      margin: 8px auto 4px;
+    }
+
+    .dopamine-chart-wrapper svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .dopamine-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dopamine-center-main {
+      font-size: 26px;
+      font-weight: 800;
+    }
+
+    .dopamine-center-sub {
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    #dopamine-ring {
+      transition: stroke-dashoffset 0.3s ease-out, stroke 0.3s ease-out;
+    }
+
+    .dopamine-side {
+      flex: 0 0 260px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dopamine-hoho {
+      width: 130px;
+      max-width: 150px;
+      height: auto;
       display: block;
     }
 
     .summary-row {
+      width: 100%;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 12px;
-      margin-bottom: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-top: 4px;
     }
 
     .summary-item {
@@ -192,6 +252,11 @@
     .summary-caption {
       font-size: 11px;
       color: var(--text-soft);
+    }
+
+    /* Tasks View --------------------------------------------------- */
+    #tasks-view {
+      display: block;
     }
 
     .task-flex {
@@ -398,11 +463,19 @@
       display: none;
     }
 
+    .learning-top-layout {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: stretch;
+    }
+
     .learning-header-stats {
+      flex: 1 1 260px;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
       gap: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 4px;
     }
 
     .learning-stat {
@@ -429,6 +502,24 @@
       color: var(--text-soft);
     }
 
+    .learning-hoho-wrap {
+      flex: 0 0 180px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-soft);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .learning-hoho {
+      width: 120px;
+      height: auto;
+      display: block;
+    }
+
     .warning-chip {
       display: inline-flex;
       align-items: center;
@@ -438,6 +529,7 @@
       background: #fee2e2;
       color: #b91c1c;
       font-size: 11px;
+      margin-top: 6px;
     }
 
     .skills-section-title {
@@ -760,6 +852,9 @@
       .top-right {
         align-items: flex-start;
       }
+      .dopamine-side {
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
@@ -788,23 +883,71 @@
         <div class="card">
           <div class="card-header">
             <h2>Today’s Focus Score</h2>
-            <span id="tasks-header-caption">Daily XP based on finished work.</span>
+            <span id="tasks-header-caption">Target good day: ≥ 60% focus score.</span>
           </div>
-          <div class="summary-row">
-            <div class="summary-item">
-              <span class="summary-label">Focus Score</span>
-              <span class="summary-value" id="today-score">0%</span>
-              <span class="summary-caption" id="score-caption">Let’s start cooking.</span>
+          <div class="dopamine-layout">
+            <div class="dopamine-main">
+              <div class="dopamine-title" id="dopamine-title">
+                Let’s warm up this day.
+              </div>
+              <div class="dopamine-chart-wrapper">
+                <svg viewBox="0 0 160 160">
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="60"
+                    stroke="rgba(209,213,219,0.8)"
+                    stroke-width="14"
+                    fill="none"
+                    stroke-linecap="round"
+                  ></circle>
+                  <circle
+                    id="dopamine-ring"
+                    cx="80"
+                    cy="80"
+                    r="60"
+                    stroke="#22c55e"
+                    stroke-width="14"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-dasharray="377"
+                    stroke-dashoffset="377"
+                    transform="rotate(-90 80 80)"
+                  ></circle>
+                </svg>
+                <div class="dopamine-center">
+                  <div class="dopamine-center-main" id="dopamine-percent">0%</div>
+                  <div class="dopamine-center-sub">of today’s focus target</div>
+                </div>
+              </div>
+              <div class="dopamine-sub" id="dopamine-sub">
+                Aim for 60%+ to call today a “good day”.
+              </div>
             </div>
-            <div class="summary-item">
-              <span class="summary-label">Tasks Done</span>
-              <span class="summary-value" id="tasks-done">0</span>
-              <span class="summary-caption" id="tasks-done-caption">Completed today.</span>
-            </div>
-            <div class="summary-item">
-              <span class="summary-label">XP from Tasks</span>
-              <span class="summary-value" id="tasks-xp">0</span>
-              <span class="summary-caption">Only from today’s tasks.</span>
+            <div class="dopamine-side">
+              <img
+                id="hoho-mood"
+                src="hoho-thinking.png"
+                alt="Ho-Ho mood"
+                class="dopamine-hoho"
+              />
+              <div class="summary-row">
+                <div class="summary-item">
+                  <span class="summary-label">Focus Score</span>
+                  <span class="summary-value" id="today-score">0%</span>
+                  <span class="summary-caption" id="score-caption">Let’s start cooking.</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">Tasks Done</span>
+                  <span class="summary-value" id="tasks-done">0</span>
+                  <span class="summary-caption" id="tasks-done-caption">Completed today.</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">XP from Tasks</span>
+                  <span class="summary-value" id="tasks-xp">0</span>
+                  <span class="summary-caption">Only from today’s tasks.</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -883,24 +1026,37 @@
             <h2>Learning & Skills</h2>
             <span>1 insight per day = compound growth.</span>
           </div>
-          <div class="learning-header-stats">
-            <div class="learning-stat">
-              <span class="learning-stat-label">Today’s Learning XP</span>
-              <span class="learning-stat-value" id="learning-xp-today">0</span>
-              <span class="learning-stat-caption">From insights logged today.</span>
+
+          <div class="learning-top-layout">
+            <div class="learning-header-stats">
+              <div class="learning-stat">
+                <span class="learning-stat-label">Today’s Learning XP</span>
+                <span class="learning-stat-value" id="learning-xp-today">0</span>
+                <span class="learning-stat-caption">From insights logged today.</span>
+              </div>
+              <div class="learning-stat">
+                <span class="learning-stat-label">Total Learning XP (6 months)</span>
+                <span class="learning-stat-value" id="learning-xp-total">0</span>
+                <span class="learning-stat-caption">Across all skills.</span>
+              </div>
+              <div class="learning-stat">
+                <span class="learning-stat-label">Learning Streak</span>
+                <span class="learning-stat-value" id="learning-streak">0 days</span>
+                <span class="learning-stat-caption">Consecutive days with learning.</span>
+              </div>
             </div>
-            <div class="learning-stat">
-              <span class="learning-stat-label">Total Learning XP (6 months)</span>
-              <span class="learning-stat-value" id="learning-xp-total">0</span>
-              <span class="learning-stat-caption">Across all skills.</span>
-            </div>
-            <div class="learning-stat">
-              <span class="learning-stat-label">Learning Streak</span>
-              <span class="learning-stat-value" id="learning-streak">0 days</span>
-              <span class="learning-stat-caption">Consecutive days with learning.</span>
+
+            <div class="learning-hoho-wrap">
+              <img
+                src="hoho-book.png"
+                alt="Ho-Ho Learning"
+                class="learning-hoho"
+              />
+              <span>Ho-Ho cuma minta 1 insight kecil per hari. Gak perlu sempurna, yang penting konsisten.</span>
             </div>
           </div>
-          <div id="learning-warning" class="warning-chip" style="display:none;margin-top:4px;">
+
+          <div id="learning-warning" class="warning-chip" style="display:none;">
             ⚠️ Today has no learning entry yet. Ho-Ho wants at least 1 insight.
           </div>
         </div>
@@ -1188,7 +1344,7 @@
     </div>
   </div>
 
-  <!-- Heatmap Day Detail Modal (simple) -->
+  <!-- Heatmap Day Detail Modal -->
   <div id="day-modal-backdrop" class="modal-backdrop hidden">
     <div class="modal">
       <div class="modal-header">
@@ -1287,6 +1443,58 @@
       };
     }
 
+    function updateDopamineChart(score) {
+      const ring = document.getElementById("dopamine-ring");
+      const percentEl = document.getElementById("dopamine-percent");
+      const titleEl = document.getElementById("dopamine-title");
+      const subEl = document.getElementById("dopamine-sub");
+      const hohoImg = document.getElementById("hoho-mood");
+
+      const clamped = Math.max(0, Math.min(100, score));
+      const circumference = 377;
+
+      if (ring) {
+        const offset = circumference * (1 - clamped / 100);
+        ring.style.strokeDashoffset = offset;
+
+        // warna stroke berubah dari orange ke hijau
+        const hue = 30 + (clamped / 100) * 90; // 30 = orange, 120 = hijau
+        ring.style.stroke = `hsl(${hue}, 90%, 55%)`;
+      }
+
+      if (percentEl) percentEl.textContent = clamped + "%";
+
+      let title = "Let’s warm up this day.";
+      let sub = "Aim for 60%+ to call today a “good day”.";
+      let hohoSrc = "hoho-thinking.png";
+
+      if (clamped === 0) {
+        title = "Blank canvas. You’re one task away.";
+        sub = "Mulai dari 1 task kecil dulu aja.";
+        hohoSrc = "hoho-thinking.png";
+      } else if (clamped < 40) {
+        title = "You’ve started. Keep going.";
+        sub = "Tambah 1–2 task lagi biar nge-dopamine.";
+        hohoSrc = "hoho-thinking.png";
+      } else if (clamped < 60) {
+        title = "Momentum udah kebentuk.";
+        sub = "Dikit lagi tembus 60%. Pick one more meaningful task.";
+        hohoSrc = "hoho-thinking.png";
+      } else if (clamped < 80) {
+        title = "Good day unlocked.";
+        sub = "Lo udah lewat target 60%. Kalau mau, gas dikit lagi.";
+        hohoSrc = "hoho-levelup.png";
+      } else {
+        title = "Satisfying AF. 🔥";
+        sub = "Lo bukan cuma productive, ini udah mode highlight reel.";
+        hohoSrc = "hoho-levelup.png";
+      }
+
+      if (titleEl) titleEl.textContent = title;
+      if (subEl) subEl.textContent = sub;
+      if (hohoImg) hohoImg.src = hohoSrc;
+    }
+
     function renderTodaySummary() {
       const today = todayISO();
       const day = ensureDay(today);
@@ -1300,6 +1508,8 @@
       else if (score >= 40) caption = "Nice momentum, 1–2 more tasks to spike it.";
       else if (score > 0) caption = "Warm-up mode. You’ve started, keep going.";
       document.getElementById("score-caption").textContent = caption;
+
+      updateDopamineChart(score);
     }
 
     function renderTasksList() {
