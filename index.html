@@ -1,2888 +1,1539 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>HeyHoLetsGo – Productivity & Learning</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    :root {
-      --bg: #fdf6ec;
-      --card-bg: #ffffff;
-      --text-main: #16213e;
-      --text-soft: #5c6275;
-      --orange: #ffb443;
-      --orange-soft: #ffd979;
-      --green: #22c55e;
-      --red: #ef4444;
-      --yellow: #facc15;
-      --border-soft: rgba(15, 23, 42, 0.06);
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-        "Helvetica Neue", Arial, sans-serif;
-      background: radial-gradient(circle at top, #ffe9c7 0, #fdf6ec 40%, #fdf6ec 100%);
-      color: var(--text-main);
-    }
-
-    .app-shell {
-      max-width: 1080px;
-      margin: 24px auto 40px;
-      padding: 0 16px;
-    }
-
-    header.app-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 18px;
-    }
-
-    .brand-block {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .brand-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 999px;
-      background: radial-gradient(circle at 30% 20%, #ffe69b, #ffb443);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.14);
-    }
-
-    .brand-text h1 {
-      font-size: 18px;
-      margin: 0;
-      font-weight: 800;
-      letter-spacing: 0.03em;
-    }
-
-    .brand-text span {
-      display: block;
-      font-size: 12px;
-      color: var(--text-soft);
-    }
-
-    .top-right {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 8px;
-    }
-
-    .today-label {
-      font-size: 13px;
-      color: var(--text-soft);
-    }
-
-    .nav-tabs {
-      display: inline-flex;
-      background: rgba(255, 255, 255, 0.8);
-      padding: 4px;
-      border-radius: 999px;
-      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
-      backdrop-filter: blur(10px);
-    }
-
-    .nav-tab {
-      border: none;
-      padding: 6px 14px;
-      border-radius: 999px;
-      background: transparent;
-      font-size: 13px;
-      cursor: pointer;
-      color: var(--text-soft);
-      font-weight: 600;
-      transition: background 0.15s ease-out, color 0.15s ease-out,
-        transform 0.15s ease-out;
-    }
-
-    .nav-tab.active {
-      background: linear-gradient(135deg, #ffb443, #ffd979);
-      color: #1f2933;
-      transform: translateY(-1px);
-    }
-
-    .card {
-      background: var(--card-bg);
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-      padding: 16px 18px;
-      margin-bottom: 16px;
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .card-header h2 {
-      font-size: 15px;
-      margin: 0;
-      font-weight: 700;
-    }
-
-    .card-header span {
-      font-size: 12px;
-      color: var(--text-soft);
-    }
-
-    main {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    /* ================== TASKS VIEW =================== */
-
-    #tasks-view {
-      display: block;
-    }
-
-    .dopamine-card-title {
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .dopamine-card-sub {
-      font-size: 12px;
-      color: var(--text-soft);
-    }
-
-    .dopamine-chart-container {
-      margin-top: 10px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .dopamine-chart-wrapper {
-      position: relative;
-      width: 190px;
-      height: 190px;
-    }
-
-    .dopamine-chart-wrapper svg {
-      width: 100%;
-      height: 100%;
-    }
-
-    .dopamine-center {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-    }
-
-    .dopamine-center-main {
-      font-size: 28px;
-      font-weight: 800;
-    }
-
-    .dopamine-center-sub {
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    #dopamine-ring {
-      transition: stroke-dashoffset 0.3s ease-out, stroke 0.3s ease-out;
-    }
-
-    .summary-row {
-      width: 100%;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 10px;
-      margin-top: 4px;
-    }
-
-    .summary-item {
-      background: #fff7e7;
-      border-radius: 16px;
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .summary-label {
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .summary-value {
-      font-size: 18px;
-      font-weight: 800;
-    }
-
-    .summary-caption {
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .task-flex {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .task-form-fields {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .task-form-main {
-      flex: 1 1 220px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: #fff7e7;
-      border-radius: 999px;
-      padding: 6px 10px;
-      box-shadow: inset 0 0 0 1px rgba(248, 171, 46, 0.45);
-    }
-
-    .task-form-main input[type="text"] {
-      flex: 1;
-      border: none;
-      background: transparent;
-      font-size: 13px;
-      padding: 4px 4px;
-      outline: none;
-    }
-
-    .effort-pill-group {
-      display: inline-flex;
-      gap: 4px;
-      padding: 2px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.7);
-    }
-
-    .effort-pill {
-      border-radius: 999px;
-      padding: 3px 8px;
-      font-size: 11px;
-      border: none;
-      cursor: pointer;
-      color: #4b5563;
-      background: transparent;
-      transition: background 0.15s ease-out, transform 0.15s ease-out;
-    }
-
-    .effort-pill.active {
-      background: linear-gradient(135deg, #ffb443, #ffd979);
-      color: #1f2933;
-      transform: translateY(-1px);
-    }
-
-    .task-add-btn {
-      padding: 8px 14px;
-      border-radius: 999px;
-      border: none;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      background: linear-gradient(135deg, #ffb443, #ffd979);
-      color: #1f2933;
-      box-shadow: 0 4px 10px rgba(248, 171, 46, 0.55);
-      white-space: nowrap;
-    }
-
-    .task-list {
-      border-top: 1px dashed rgba(148, 163, 184, 0.4);
-      padding-top: 8px;
-      max-height: 280px;
-      overflow: auto;
-    }
-
-    table.tasks-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-
-    table.tasks-table th,
-    table.tasks-table td {
-      padding: 6px 4px;
-      text-align: left;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.16);
-    }
-
-    table.tasks-table th {
-      font-weight: 600;
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .task-title-span {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: #fef3c7;
-      cursor: pointer;
-      transition: box-shadow 0.15s ease-out, transform 0.1s ease-out,
-        background 0.15s ease-out;
-    }
-
-    .task-title-span:hover {
-      box-shadow: 0 4px 10px rgba(248, 171, 46, 0.4);
-      transform: translateY(-1px);
-      background: #fffbeb;
-    }
-
-    .task-title-span.editing {
-      background: #fff;
-      box-shadow: 0 0 0 1px rgba(248, 171, 46, 0.7);
-    }
-
-    .task-title-span input {
-      border: none;
-      background: transparent;
-      font-size: 12px;
-      outline: none;
-      min-width: 120px;
-    }
-
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 11px;
-      cursor: pointer;
-      border: 1px solid transparent;
-      background: #e5e7eb;
-      color: #374151;
-      transition: background 0.15s ease-out, border-color 0.15s ease-out,
-        transform 0.1s ease-out;
-    }
-
-    .status-pill:hover {
-      transform: translateY(-1px);
-    }
-
-    .status-none {
-      background: #e5e7eb;
-      color: #374151;
-    }
-
-    .status-progress {
-      background: #fef9c3;
-      border-color: #facc15;
-      color: #854d0e;
-    }
-
-    .status-done {
-      background: #bbf7d0;
-      border-color: #22c55e;
-      color: #166534;
-    }
-
-    .status-blocked {
-      background: #fee2e2;
-      border-color: #ef4444;
-      color: #991b1b;
-    }
-
-    .status-pill-icon {
-      font-size: 12px;
-    }
-
-    .effort-chip-row {
-      display: inline-flex;
-      gap: 4px;
-    }
-
-    .effort-chip {
-      border-radius: 999px;
-      padding: 3px 7px;
-      font-size: 11px;
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      cursor: pointer;
-      background: #ffffff;
-      transition: background 0.15s ease-out, border-color 0.15s ease-out,
-        transform 0.1s ease-out;
-    }
-
-    .effort-chip.active {
-      background: #fffbeb;
-      border-color: rgba(248, 171, 46, 0.9);
-      transform: translateY(-1px);
-    }
-
-    .btn-delete-task {
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      font-size: 14px;
-      padding: 2px 4px;
-      transition: transform 0.1s ease-out;
-    }
-
-    .btn-delete-task:hover {
-      transform: translateY(-1px) scale(1.05);
-    }
-
-    .heatmap-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-      flex-wrap: wrap;
-    }
-
-    .heatmap-header small {
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .heatmap-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
-      margin-top: 6px;
-    }
-
-    .heat-cell {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      border-radius: 5px;
-      font-size: 9px;
-      color: #111827;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      position: relative;
-      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
-    }
-
-    .heat-cell span {
-      position: absolute;
-      bottom: 2px;
-      right: 3px;
-      font-size: 8px;
-      color: rgba(17, 24, 39, 0.6);
-    }
-
-    .heat-low {
-      background: #fecaca;
-    }
-
-    .heat-mid {
-      background: #fef9c3;
-    }
-
-    .heat-high {
-      background: #bbf7d0;
-    }
-
-    .legend {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-      font-size: 10px;
-      color: var(--text-soft);
-      flex-wrap: wrap;
-    }
-
-    .legend-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .legend-swatch {
-      width: 12px;
-      height: 12px;
-      border-radius: 3px;
-    }
-
-    .heatmap-empty-text {
-      font-size: 11px;
-      color: var(--text-soft);
-      margin-top: 4px;
-    }
-
-    /* Floating Ho-Ho (Tasks) */
-    .hoho-floating {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 170px;
-      height: auto;
-      cursor: grab;
-      z-index: 50;
-      filter: drop-shadow(0 10px 20px rgba(15, 23, 42, 0.35));
-      user-select: none;
-      -webkit-user-drag: none;
-    }
-
-    .hoho-floating:active {
-      cursor: grabbing;
-    }
-
-    /* Floating Ho-Ho (Learning) */
-    .hoho-learning-floating {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 150px;
-      height: auto;
-      z-index: 50;
-      filter: drop-shadow(0 10px 20px rgba(15, 23, 42, 0.35));
-      user-select: none;
-      -webkit-user-drag: none;
-      display: none;
-    }
-
-    /* ================== LEARNING VIEW =================== */
-
-    #learning-view {
-      display: none;
-    }
-
-    .learning-chart-card {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .learning-chart-left {
-      flex: 1 1 230px;
-      min-width: 0;
-    }
-
-    .learning-chart-title {
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .learning-chart-sub {
-      font-size: 12px;
-      color: var(--text-soft);
-    }
-
-    .learning-chart-wrapper {
-      position: relative;
-      width: 170px;
-      height: 170px;
-      margin: 10px auto 6px;
-    }
-
-    .learning-chart-wrapper svg {
-      width: 100%;
-      height: 100%;
-    }
-
-    .learning-center {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-    }
-
-    .learning-center-main {
-      font-size: 24px;
-      font-weight: 800;
-    }
-
-    .learning-center-sub {
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    #learning-ring {
-      transition: stroke-dashoffset 0.3s ease-out, stroke 0.3s ease-out;
-    }
-
-    .learning-stats-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 8px;
-      margin-top: 4px;
-    }
-
-    .learning-stat {
-      background: #fff7e7;
-      border-radius: 16px;
-      padding: 8px 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    .learning-stat-label {
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .learning-stat-value {
-      font-size: 16px;
-      font-weight: 800;
-    }
-
-    .learning-stat-caption {
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .warning-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: #fee2e2;
-      color: #b91c1c;
-      font-size: 11px;
-      margin-top: 6px;
-    }
-
-    .skills-section-title {
-      font-size: 13px;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .skills-section-sub {
-      font-size: 11px;
-      color: var(--text-soft);
-      margin-bottom: 8px;
-    }
-
-    .skills-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
-      margin-top: 8px;
-      margin-bottom: 12px;
-    }
-
-    .skill-card {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 12px;
-      border-radius: 16px;
-      background: #ffffff;
-      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
-      cursor: pointer;
-      border: 1px solid transparent;
-      transition: transform 0.12s ease-out, box-shadow 0.12s ease-out,
-        border-color 0.12s ease-out, background 0.12s ease-out;
-    }
-
-    .skill-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.1);
-      border-color: rgba(248, 171, 46, 0.65);
-      background: #fffdf6;
-    }
-
-    .skill-icon {
-      flex-shrink: 0;
-      width: 46px;
-      height: 46px;
-      border-radius: 999px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      font-weight: 600;
-      color: #1f2933;
-      background: #f5f5f5;
-    }
-
-    .skill-info h3 {
-      margin: 0 0 2px 0;
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    .skill-info p {
-      margin: 0;
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .skill-progress {
-      margin-top: 4px;
-      width: 100%;
-      height: 6px;
-      border-radius: 999px;
-      background: rgba(148, 163, 184, 0.18);
-      overflow: hidden;
-    }
-
-    .skill-progress-fill {
-      height: 100%;
-      width: 0%;
-      border-radius: 999px;
-      transition: width 0.25s ease-out;
-    }
-
-    /* Hard skill icon colors */
-    .icon-tools { background: linear-gradient(135deg, #bfe3ff, #e3f2ff); }
-    .icon-digital { background: linear-gradient(135deg, #ffb443, #ffd979); }
-    .icon-ai { background: linear-gradient(135deg, #dcd5ff, #f3e8ff); }
-    .icon-creative { background: linear-gradient(135deg, #ffb6c9, #ffe0e9); }
-    .icon-analytics { background: linear-gradient(135deg, #c8ffd7, #e6ffef); }
-    .icon-finance { background: linear-gradient(135deg, #ffd979, #ffefc2); }
-    .icon-hr { background: linear-gradient(135deg, #f3d9ff, #f8ecff); }
-    .icon-sales { background: linear-gradient(135deg, #ff7e6e, #ffd1c7); }
-    .icon-other { background: linear-gradient(135deg, #e0f4ff, #f0fbff); }
-
-    /* Soft skills */
-    .icon-cognitive { background: linear-gradient(135deg, #c8ffd7, #e9fff1); }
-    .icon-interpersonal { background: linear-gradient(135deg, #ffb6c9, #ffe4f0); }
-    .icon-intrapersonal { background: linear-gradient(135deg, #dcd5ff, #f2ecff); }
-    .icon-business { background: linear-gradient(135deg, #ffb443, #ffe4b8); }
-    .icon-leadership { background: linear-gradient(135deg, #ffe27a, #fff3c4); }
-
-    .learning-history {
-      margin-top: 6px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 10px;
-    }
-
-    .learning-card {
-      border-radius: 16px;
-      background: #ffffff;
-      padding: 10px 12px;
-      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
-      font-size: 11px;
-    }
-
-    .learning-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 6px;
-      margin-bottom: 4px;
-    }
-
-    .learning-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: #fff7e7;
-      font-size: 10px;
-    }
-
-    .learning-actions {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 4px;
-      font-size: 10px;
-    }
-
-    .learning-actions-row {
-      display: flex;
-      gap: 4px;
-    }
-
-    .learning-action-btn {
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      font-size: 11px;
-      padding: 0;
-      color: #6b7280;
-      text-decoration: underline;
-    }
-
-    .learning-card p {
-      margin: 0;
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    /* Report export */
-    .report-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-      margin-top: 8px;
-    }
-
-    .report-row input[type="text"] {
-      padding: 6px 10px;
-      border-radius: 12px;
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      font-size: 13px;
-      background: #fff;
-      flex: 1 1 160px;
-    }
-
-    .report-row input[type="month"] {
-      padding: 6px 10px;
-      border-radius: 12px;
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      font-size: 13px;
-      background: #fff;
-    }
-
-    .report-btn {
-      padding: 7px 14px;
-      border-radius: 999px;
-      border: none;
-      font-size: 13px;
-      font-weight: 600;
-      background: linear-gradient(135deg, #ffb443, #ffd979);
-      color: #1f2933;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(248, 171, 46, 0.55);
-      white-space: nowrap;
-    }
-
-    .report-hint {
-      font-size: 11px;
-      color: var(--text-soft);
-      margin-top: 4px;
-    }
-
-    /* Modal */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.35);
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      padding: 16px;
-      z-index: 30;
-    }
-
-    .modal-backdrop.hidden {
-      display: none;
-    }
-
-    .modal {
-      width: 100%;
-      max-width: 480px;
-      background: #ffffff;
-      border-radius: 18px;
-      padding: 16px 16px 14px;
-      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.35);
-      animation: popIn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    @keyframes popIn {
-      from {
-        transform: translateY(12px) scale(0.92);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0) scale(1);
-        opacity: 1;
-      }
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .modal-header h3 {
-      margin: 0;
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    .modal-header button {
-      border: none;
-      background: transparent;
-      font-size: 18px;
-      cursor: pointer;
-    }
-
-    .modal-body {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      font-size: 12px;
-    }
-
-    .modal-body label {
-      font-size: 11px;
-      font-weight: 600;
-    }
-
-    .modal-body textarea {
-      width: 100%;
-      min-height: 56px;
-      border-radius: 12px;
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      padding: 6px 8px;
-      font-size: 12px;
-      resize: vertical;
-    }
-
-    .effort-options {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-top: 3px;
-    }
-
-    .effort-chip-modal {
-      border-radius: 999px;
-      padding: 4px 8px;
-      font-size: 11px;
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      cursor: pointer;
-      background: #ffffff;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .effort-chip-modal.active {
-      border-color: rgba(248, 171, 46, 0.9);
-      background: #fff7e7;
-    }
-
-    .modal-footer {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 10px;
-      gap: 6px;
-    }
-
-    .btn-primary {
-      padding: 8px 14px;
-      border-radius: 999px;
-      border: none;
-      font-size: 13px;
-      font-weight: 600;
-      background: linear-gradient(135deg, #ffb443, #ffd979);
-      color: #1f2933;
-      cursor: pointer;
-      box-shadow: 0 4px 14px rgba(248, 171, 46, 0.6);
-    }
-
-    .btn-secondary {
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      font-size: 11px;
-      background: #ffffff;
-      color: var(--text-soft);
-      cursor: pointer;
-    }
-
-    @media (max-width: 640px) {
-      header.app-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .top-right {
-        align-items: flex-start;
-      }
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HeyHoLetsGo – Productivity & Skill Tracker</title>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- jsPDF + html2canvas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+:root {
+  --bg: #ffffff;
+  --bg-alt: #f5f7fa;
+  --text: #1f2937;
+  --text-light: #4b5563;
+  --card: #ffffff;
+  --border: #e5e7eb;
+  --accent: #ffb443;
+  --accent-soft: #ffd488;
+}
+
+body.dark {
+  --bg: #0d1117;
+  --bg-alt: #111827;
+  --text: #f3f4f6;
+  --text-light: #cbd5e1;
+  --card: #1a2332;
+  --border: #253041;
+  --accent: #ffb443;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Layout Container */
+.app-container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tab-btn {
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.tab-btn.active {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+
+/* Cards */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+  transition: 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+/* Section Titles */
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+/* Inputs */
+input, select, textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+  color: var(--text);
+  font-size: 14px;
+}
+
+button {
+  background: var(--accent);
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+button:hover {
+  opacity: 0.85;
+}
+
+/* Ho-Ho Floating */
+.hoho-float {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 110px;
+  z-index: 20;
+  animation: hohoBounce 2.5s infinite ease-in-out;
+}
+
+@keyframes hohoBounce {
+  0% { transform: translateY(0) }
+  50% { transform: translateY(-6px) }
+  100% { transform: translateY(0) }
+}
+
+.hidden { display: none; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .app-container { padding: 14px; }
+  .hoho-float { width: 80px; }
+}
+</style>
 </head>
 <body>
-  <div class="app-shell">
-    <header class="app-header">
-      <div class="brand-block">
-        <div class="brand-avatar">✨</div>
-        <div class="brand-text">
-          <h1>HeyHoLetsGo</h1>
-          <span>Dopamine-based work & learning tracker</span>
-        </div>
-      </div>
-      <div class="top-right">
-        <div class="today-label" id="today-label"></div>
-        <div class="nav-tabs">
-          <button class="nav-tab active" data-view="tasks-view">Tasks</button>
-          <button class="nav-tab" data-view="learning-view">Learning & Skills</button>
-        </div>
-      </div>
-    </header>
+<div class="app-container">
 
-    <main>
-      <!-- ============== TASKS VIEW ============== -->
-      <section id="tasks-view">
-        <div class="card">
-          <div class="card-header">
-            <h2>Today’s Dopamine Sparks</h2>
-            <span>“Good day” kalau udah tembus ≥ 60%.</span>
-          </div>
-          <div class="dopamine-card-title" id="dopamine-title">
-            Let’s warm up this day.
-          </div>
-          <div class="dopamine-card-sub" id="dopamine-sub">
-            Ngerjain beberapa task meaningful sampai minimal 60% — baru berasa enak di otak.
-          </div>
+  <!-- Header -->
+  <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;gap:12px;">
+    <div>
+      <h1 style="margin:0;font-size:24px;font-weight:800;">
+        HeyHoLetsGo
+      </h1>
+      <p style="margin:4px 0 0;font-size:13px;color:var(--text-light);">
+        Daily Dopamine Tracker • Tasks & Learning
+      </p>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button id="themeToggle" type="button" style="background:var(--bg-alt);color:var(--text);border:1px solid var(--border);display:flex;align-items:center;gap:6px;">
+        <span style="font-size:13px;">Light</span>
+        <span id="themeIcon">🌞</span>
+      </button>
+    </div>
+  </header>
 
-          <div class="dopamine-chart-container">
-            <div class="dopamine-chart-wrapper">
-              <svg viewBox="0 0 160 160">
-                <circle
-                  cx="80"
-                  cy="80"
-                  r="60"
-                  stroke="rgba(209,213,219,0.8)"
-                  stroke-width="14"
-                  fill="none"
-                  stroke-linecap="round"
-                ></circle>
-                <circle
-                  id="dopamine-ring"
-                  cx="80"
-                  cy="80"
-                  r="60"
-                  stroke="#22c55e"
-                  stroke-width="14"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-dasharray="377"
-                  stroke-dashoffset="377"
-                  transform="rotate(-90 80 80)"
-                ></circle>
-              </svg>
-              <div class="dopamine-center">
-                <div class="dopamine-center-main" id="dopamine-percent">0%</div>
-                <div class="dopamine-center-sub">dopamine sparks today</div>
-              </div>
-            </div>
-
-            <div class="summary-row">
-              <div class="summary-item">
-                <span class="summary-label">Dopamine Sparks</span>
-                <span class="summary-value" id="today-score">0%</span>
-                <span class="summary-caption" id="score-caption">Belum mulai, masih loading.</span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label">Tasks Done</span>
-                <span class="summary-value" id="tasks-done">0</span>
-                <span class="summary-caption" id="tasks-done-caption">Completed today.</span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label">XP from Tasks</span>
-                <span class="summary-value" id="tasks-xp">0</span>
-                <span class="summary-caption">Semakin berat task, XP makin tinggi.</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <h2>Tasks & Progress</h2>
-            <span>Track yang penting aja, tanpa micromanage.</span>
-          </div>
-          <div class="task-flex">
-            <form id="task-form">
-              <div class="task-form-fields">
-                <div class="task-form-main">
-                  <input
-                    type="text"
-                    id="task-title"
-                    placeholder="What are you working on?"
-                    autocomplete="off"
-                    required
-                  />
-                  <div class="effort-pill-group" id="effort-pill-group">
-                    <button type="button" class="effort-pill active" data-effort="1">E1</button>
-                    <button type="button" class="effort-pill" data-effort="2">E2</button>
-                    <button type="button" class="effort-pill" data-effort="3">E3</button>
-                  </div>
-                </div>
-                <button type="submit" class="task-add-btn">Add Task</button>
-              </div>
-            </form>
-
-            <div class="task-list">
-              <table class="tasks-table">
-                <thead>
-                  <tr>
-                    <th>Task</th>
-                    <th>Effort</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="tasks-body"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="heatmap-header">
-            <div>
-              <h2 style="margin:0;font-size:14px;">Productivity Heatmap (Last 28 Days)</h2>
-              <small>Heatmap muncul cuma di hari yang ada data. Klik untuk lihat detail.</small>
-            </div>
-          </div>
-          <div id="heatmap-grid" class="heatmap-grid"></div>
-          <div id="heatmap-empty-text" class="heatmap-empty-text" style="display:none;">
-            Belum ada history task. Begitu lo mulai isi hari ini, kotak-kotak bakal muncul pelan-pelan.
-          </div>
-          <div class="legend">
-            <div class="legend-item">
-              <div class="legend-swatch" style="background:#fecaca;"></div> <span>0–39%</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-swatch" style="background:#fef9c3;"></div> <span>40–79%</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-swatch" style="background:#bbf7d0;"></div> <span>80–100%</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <h2>Monthly Report Export</h2>
-            <span>Summary 1 bulan buat dikirim ke manager.</span>
-          </div>
-
-          <div class="report-row">
-            <input type="text" id="report-name" placeholder="Your name (optional)" />
-            <input type="text" id="report-position" placeholder="Position / Role (optional)" />
-          </div>
-          <div class="report-row">
-            <input type="month" id="report-month" />
-            <button type="button" class="report-btn" id="btn-export-report">
-              Generate Monthly Report (PDF)
-            </button>
-          </div>
-          <p class="report-hint">
-            Pilih bulan, isi nama & posisi (kalau mau), lalu klik export. Browser bakal buka jendela baru
-            dan lo bisa pilih “Save as PDF”.
-          </p>
-        </div>
-      </section>
-
-      <!-- ============== LEARNING VIEW ============== -->
-      <section id="learning-view">
-        <div class="card">
-          <div class="card-header">
-            <h2>Learning & Skills</h2>
-            <span>Minimal 1 insight/hari untuk compound growth.</span>
-          </div>
-
-          <div class="learning-chart-card">
-            <div class="learning-chart-left">
-              <div class="learning-chart-title" id="learning-title">
-                Today’s Learning Dose
-              </div>
-              <div class="learning-chart-sub" id="learning-sub">
-                Target harian: 5 XP dari belajar (video, artikel, diskusi, dll).
-              </div>
-
-              <div class="learning-chart-wrapper">
-                <svg viewBox="0 0 160 160">
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r="60"
-                    stroke="rgba(209,213,219,0.8)"
-                    stroke-width="14"
-                    fill="none"
-                    stroke-linecap="round"
-                  ></circle>
-                  <circle
-                    id="learning-ring"
-                    cx="80"
-                    cy="80"
-                    r="60"
-                    stroke="#22c55e"
-                    stroke-width="14"
-                    fill="none"
-                    stroke-linecap="round"
-                    stroke-dasharray="377"
-                    stroke-dashoffset="377"
-                    transform="rotate(-90 80 80)"
-                  ></circle>
-                </svg>
-                <div class="learning-center">
-                  <div class="learning-center-main" id="learning-percent">0%</div>
-                  <div class="learning-center-sub">of today’s learning target</div>
-                </div>
-              </div>
-
-              <div class="learning-stats-row">
-                <div class="learning-stat">
-                  <span class="learning-stat-label">Today’s Learning XP</span>
-                  <span class="learning-stat-value" id="learning-xp-today">0</span>
-                  <span class="learning-stat-caption">Dari insight yang lo log hari ini.</span>
-                </div>
-                <div class="learning-stat">
-                  <span class="learning-stat-label">Total Learning XP (6 months)</span>
-                  <span class="learning-stat-value" id="learning-xp-total">0</span>
-                  <span class="learning-stat-caption">Across all skills.</span>
-                </div>
-                <div class="learning-stat">
-                  <span class="learning-stat-label">Learning Streak</span>
-                  <span class="learning-stat-value" id="learning-streak">0 days</span>
-                  <span class="learning-stat-caption">Hari beruntun isi learning.</span>
-                </div>
-              </div>
-
-              <div id="learning-warning" class="warning-chip" style="display:none;">
-                ⚠️ Today has no learning entry yet. Ho-Ho mau minimal 1 insight.
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="heatmap-header">
-            <div>
-              <h2 style="margin:0;font-size:14px;">Learning Heatmap (Last 28 Days)</h2>
-              <small>Kotak muncul hanya di hari yang ada learning. Klik buat lihat insight-nya.</small>
-            </div>
-          </div>
-          <div id="learning-heatmap-grid" class="heatmap-grid"></div>
-          <div id="learning-heatmap-empty-text" class="heatmap-empty-text" style="display:none;">
-            Belum ada learning yang di-log. Isi satu aja hari ini, heatmap bakal mulai terbentuk.
-          </div>
-          <div class="legend">
-            <div class="legend-item">
-              <div class="legend-swatch" style="background:#fecaca;"></div> <span>0–39% target</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-swatch" style="background:#fef9c3;"></div> <span>40–79%</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-swatch" style="background:#bbf7d0;"></div> <span>80–100%</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="skills-section-title">Hard Skills</div>
-          <div class="skills-section-sub">
-            Pilih area yang lo kembangin hari ini, lalu catat insight barunya.
-          </div>
-          <div class="skills-grid">
-            <div
-              class="skill-card"
-              data-skill-id="tools"
-              data-skill-name="Tools & Workspace"
-              data-skill-type="hard"
-            >
-              <div class="skill-icon icon-tools">🧰</div>
-              <div class="skill-info">
-                <h3>Tools & Workspace</h3>
-                <p>Google Sheets, Lark, Canva, Capcut, dsb.</p>
-                <div class="skill-progress">
-                  <div class="skill-progress-fill" data-progress-for="tools"></div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="skill-card"
-              data-skill-id="digital"
-              data-skill-name="Digital Marketing"
-              data-skill-type="hard"
-            >
-              <div class="skill-icon icon-digital">📣</div>
-              <div class="skill-info">
-                <h3>Digital Marketing</h3>
-                <p>Meta Ads, TikTok Ads, Google Ads, SEO.</p>
-                <div class="skill-progress">
-                  <div class="skill-progress-fill" data-progress-for="digital"></div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="skill-card"
-              data-skill-id="ai"
-              data-skill-name="AI Skills"
-              data-skill-type="hard"
-            >
-              <div class="skill-icon icon-ai">🤖</div>
-              <div class="skill-info">
-                <h3>AI Skills</h3>
-                <p>ChatGPT prompting, AI coding, AI content.</p>
-                <div class="skill-progress">
-                  <div class="skill-progress-fill" data-progress-for="ai"></div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="skill-card"
-              data-skill-id="creative"
-              data-skill-name="Content & Creative"
-              data-skill-type="hard"
-            >
-              <div class="skill-icon icon-creative">🎨</div>
-              <div class="skill-info">
-                <h3>Content & Creative</h3>
-                <p>Audience, copy, storytelling, campaigns.</p>
-                <div class="skill-progress">
-                  <div class="skill-progress-fill" data-progress-for="creative"></div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="skill-card"
-              data-skill-id="analytics"
-              data-skill-name="Data Analytics & Research"
-              data-skill-type="hard"
-            >
-              <div class="skill-icon icon-analytics">📊</div>
-              <div class="skill-info">
-                <h3>Data Analytics & Research</h3>
-                <p>Competitor, trend, funnel, industry.</p>
-                <div class="skill-progress">
-                  <div class="skill-progress-fill" data-progress-for="analytics"></div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="skill-card"
-              data-skill-id="finance"
-              data-skill-name="Finance"
-              data-skill-type="hard"
-            >
-              <div class="skill-icon icon-finance">💰</div>
-              <div class="skill-info">
-                <h3>Finance</h3>
-                <p>Tax, financial audit, budgeting.</p>
-                <div class="skill-progress">
-                  <div class="skill-progress-fill" data-progress-for="finance"></div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="skill-card"
-              data-skill-id="hr"
-              data-skill-name="HR"
-              data-skill-type="hard"
-            >
-              <div class="skill-icon icon-hr">🧑‍💼</div>
-              <div class="skill-info">
-                <h3>HR</h3>
-                <p>Recruitment, performance, legal HR.</p>
-                <div class="skill-progress">
-                  <div class="skill-progress-fill" data-progress-for="hr"></div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="skill-card"
-              data-skill-id="sales"
-              data-skill-name="Sales"
-              data-skill-type="hard"
-            >
-              <div class="skill-icon icon-sales">📈</div>
-              <div class="skill-info">
-                <h3>Sales</h3>
-                <p>Prospecting, closing, follow-up.</p>
-                <div class="skill-progress">
-                  <div class="skill-progress-fill" data-progress-for="sales"></div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="skill-card"
-              data-skill-id="others"
-              data-skill-name="Others"
-              data-skill-type="hard"
-            >
-              <div class="skill-icon icon-other">✨</div>
-              <div class="skill-info">
-                <h3>Others</h3>
-                <p>Skill lain di luar kategori utama.</p>
-                <div class="skill-progress">
-                  <div class="skill-progress-fill" data-progress-for="others"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="skills-section-title">Soft Skills</div>
-          <div class="skills-section-sub">
-            Mindset & cara mikir lo yang bikin karier bisa ngebut.
-          </div>
-          <div class="skills-grid">
-            <div
-              class="skill-card"
-              data-skill-id="cognitive"
-              data-skill-name="Cognitive"
-              data-skill-type="soft"
-            >
-              <div class="skill-icon icon-cognitive">🧠</div>
-              <div class="skill-info">
-                <h3>Cognitive</h3>
-                <p>Analytical, structured, system, strategic.</p>
-                <div class="skill-progress">
-                  <div class="skill-progress-fill" data-progress-for="cognitive"></div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="skill-card"
-              data-skill-id="interpersonal"
-              data-skill-name="Interpersonal"
-              data-skill-type="soft"
-            >
-              <div class="skill-icon icon-interpersonal">🤝</div>
-              <div class="skill-info">
-                <h3>Interpersonal</h3>
-                <p>Communication, conflict, negotiation.</p>
-                <div class="skill-progress">
-                  <div class="skill-progress-fill" data-progress-for="interpersonal"></div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="skill-card"
-              data-skill-id="intrapersonal"
-              data-skill-name="Intrapersonal"
-              data-skill-type="soft"
-            >
-              <div class="skill-icon icon-intrapersonal">🌱</div>
-              <div class="skill-info">
-                <h3>Intrapersonal</h3>
-                <p>Growth mindset, focus, resilience.</p>
-                <div class="skill-progress">
-                  <div class="skill-progress-fill" data-progress-for="intrapersonal"></div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="skill-card"
-              data-skill-id="business"
-              data-skill-name="Business Acumen"
-              data-skill-type="soft"
-            >
-              <div class="skill-icon icon-business">📊</div>
-              <div class="skill-info">
-                <h3>Business Acumen</h3>
-                <p>Finance, market, risk & opportunity.</p>
-                <div class="skill-progress">
-                  <div class="skill-progress-fill" data-progress-for="business"></div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="skill-card"
-              data-skill-id="leadership"
-              data-skill-name="Leadership & Management"
-              data-skill-type="soft"
-            >
-              <div class="skill-icon icon-leadership">⭐</div>
-              <div class="skill-info">
-                <h3>Leadership & Management</h3>
-                <p>Vision, influence, mentoring.</p>
-                <div class="skill-progress">
-                  <div class="skill-progress-fill" data-progress-for="leadership"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div style="font-size:11px;color:var(--text-soft);margin-top:6px;">
-            History insight terbaru:
-          </div>
-          <div id="learning-history" class="learning-history"></div>
-        </div>
-      </section>
-    </main>
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="tasksTab">Tasks & Productivity</button>
+    <button class="tab-btn" data-tab="learningTab">Learning & Skills</button>
+    <button class="tab-btn" data-tab="settingsTab">Settings & Reports</button>
   </div>
 
-  <!-- Floating Ho-Ho (Tasks) -->
-  <img
-    id="hoho-floating"
-    src="hoho-happy.png"
-    alt="Ho-Ho Tasks"
-    class="hoho-floating"
-  />
+  <!-- ===== TAB: TASKS & PRODUCTIVITY ===== -->
+  <section id="tasksTab" class="tab-content">
 
-  <!-- Floating Ho-Ho (Learning) -->
-  <img
-    id="hoho-learning-floating"
-    src="hoho-book.png"
-    alt="Ho-Ho Learning"
-    class="hoho-learning-floating"
-  />
-
-  <!-- Learning Modal -->
-  <div id="learning-modal-backdrop" class="modal-backdrop hidden">
-    <div class="modal">
-      <div class="modal-header">
-        <div>
-          <h3 id="modal-skill-title">Log Learning</h3>
-          <small id="modal-skill-sub" style="font-size:11px;color:var(--text-soft);"></small>
+    <!-- Top Row: Dopamine Chart + Today Snapshot -->
+    <div style="display:grid;grid-template-columns: minmax(0,2.2fr) minmax(0,1.8fr);gap:16px;margin-bottom:16px;">
+      <!-- Dopamine Sparks Card -->
+      <div class="card">
+        <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Dopamine Sparks – Today</span>
+          <span style="font-size:12px;color:var(--text-light);">Target ≥ 60%</span>
         </div>
-        <button type="button" id="modal-close-btn">×</button>
-      </div>
-      <div class="modal-body">
-        <div>
-          <label for="learning-what">Apa yang lo pelajarin?</label>
-          <textarea id="learning-what" placeholder="Tulis insight atau skill yang lo dapet hari ini..."></textarea>
-        </div>
-        <div>
-          <label for="learning-benefit">Manfaatnya buat kerja lo?</label>
-          <textarea id="learning-benefit" placeholder="Contoh: bikin revisi ke KOL lebih smooth, bikin konten lebih kebayang, dll."></textarea>
-        </div>
-        <div>
-          <label>Effort (durasi / kedalaman belajar)</label>
-          <div class="effort-options" id="effort-options">
-            <div class="effort-chip-modal" data-effort="small">🌱 Small (5–10 menit)</div>
-            <div class="effort-chip-modal" data-effort="medium">🔥 Medium (deep dive)</div>
-            <div class="effort-chip-modal" data-effort="intensive">🚀 Intensive (1–2 jam)</div>
+        <div style="display:flex;align-items:center;gap:18px;">
+          <div style="width:170px;height:170px;position:relative;">
+            <canvas id="dopamineChart"></canvas>
+            <div id="dopamineCenterText" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+              <div style="font-size:26px;font-weight:800;" id="dopaminePercentText">0%</div>
+              <div style="font-size:11px;color:var(--text-light);">XP Progress</div>
+            </div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:8px;font-size:13px;">
+            <div style="display:flex;justify-content:space-between;">
+              <span>XP Today</span>
+              <span id="xpTodayText" style="font-weight:700;">0 XP</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;">
+              <span>Tasks Done</span>
+              <span id="tasksDoneText" style="font-weight:600;">0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;">
+              <span>On Progress</span>
+              <span id="tasksProgressText" style="font-weight:600;">0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;">
+              <span>Blocked</span>
+              <span id="tasksBlockedText" style="font-weight:600;color:#f97373;">0</span>
+            </div>
+            <div style="margin-top:6px;font-size:11px;color:var(--text-light);">
+              Keep daily dopamine ≥ 60% to turn the ring green.
+            </div>
           </div>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn-secondary" id="modal-cancel-btn">Cancel</button>
-        <button class="btn-primary" id="modal-save-btn">Save Learning</button>
+
+      <!-- Heatmap Snapshot -->
+      <div class="card">
+        <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>28-Day Productivity Heatmap</span>
+          <small id="heatmapRangeLabel" style="font-size:11px;color:var(--text-light);">
+            Last 28 days
+          </small>
+        </div>
+        <div id="taskHeatmap" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:10px;margin-bottom:8px;min-height:72px;">
+          <!-- Filled dynamically -->
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--text-light);">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span>Legend:</span>
+            <span style="display:inline-flex;align-items:center;gap:3px;">
+              <span style="width:12px;height:12px;border-radius:3px;background:#fca5a5;"></span> 0–39%
+            </span>
+            <span style="display:inline-flex;align-items:center;gap:3px;">
+              <span style="width:12px;height:12px;border-radius:3px;background:#fde68a;"></span> 40–79%
+            </span>
+            <span style="display:inline-flex;align-items:center;gap:3px;">
+              <span style="width:12px;height:12px;border-radius:3px;background:#6ee7b7;"></span> 80–100%
+            </span>
+          </div>
+          <button id="openTaskHistory" type="button" style="background:transparent;color:var(--accent);border:0;padding:0;font-size:11px;font-weight:600;">
+            View day details
+          </button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Heatmap Day Detail Modal (Tasks) -->
-  <div id="day-modal-backdrop" class="modal-backdrop hidden">
-    <div class="modal">
-      <div class="modal-header">
-        <div>
-          <h3 id="day-modal-title">Day Details</h3>
-          <small id="day-modal-sub" style="font-size:11px;color:var(--text-soft);"></small>
-        </div>
-        <button type="button" id="day-modal-close-btn">×</button>
+    <!-- Add Task + List -->
+    <div class="card">
+      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Today’s Tasks</span>
+        <small style="font-size:11px;color:var(--text-light);">
+          Focus on a few meaningful tasks. XP based on effort.
+        </small>
       </div>
-      <div class="modal-body" id="day-modal-body"></div>
-    </div>
-  </div>
 
-  <!-- Heatmap Day Detail Modal (Learning) -->
-  <div id="learning-day-modal-backdrop" class="modal-backdrop hidden">
-    <div class="modal">
-      <div class="modal-header">
+      <!-- Add Task Row -->
+      <div style="display:grid;grid-template-columns: minmax(0,3fr) minmax(0,1fr) minmax(0,1.2fr) auto;gap:10px;align-items:center;margin-bottom:14px;">
         <div>
-          <h3 id="learning-day-modal-title">Learning Details</h3>
-          <small id="learning-day-modal-sub" style="font-size:11px;color:var(--text-soft);"></small>
+          <label style="font-size:11px;">Task Name</label>
+          <input id="taskNameInput" type="text" placeholder="e.g. Handle Cimory campaign 20 KOL" />
         </div>
-        <button type="button" id="learning-day-modal-close-btn">×</button>
+        <div>
+          <label style="font-size:11px;">Effort</label>
+          <select id="taskEffortInput">
+            <option value="1">Effort 1 – Small</option>
+            <option value="2">Effort 2 – Medium</option>
+            <option value="3">Effort 3 – Large</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;">Status</label>
+          <select id="taskStatusInput">
+            <option value="progress">On Progress</option>
+            <option value="done">Done</option>
+            <option value="blocked">Blocked</option>
+          </select>
+        </div>
+        <div style="align-self:flex-end;">
+          <button id="addTaskBtn" type="button">+ Add Task</button>
+        </div>
       </div>
-      <div class="modal-body" id="learning-day-modal-body"></div>
+
+      <!-- Task List -->
+      <div id="taskList" style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
+        <!-- Filled dynamically -->
+      </div>
     </div>
-  </div>
-
-  <script>
-    // ------------------- Utility ----------------------------------
-    function formatDateISO(date) {
-      return date.toISOString().slice(0, 10);
-    }
-
-    function todayISO() {
-      return formatDateISO(new Date());
-    }
-
-    function parseISO(dateStr) {
-      const [y, m, d] = dateStr.split("-").map(Number);
-      return new Date(y, m - 1, d);
-    }
-
-    const STORAGE_TASKS = "heyho_tasks_v1";
-    const STORAGE_LEARNING = "heyho_learning_v1";
-
-    let tasksState = { days: {} };
-    let learningState = { entries: [] };
-
-    function loadState() {
-      try {
-        const rawTasks = localStorage.getItem(STORAGE_TASKS);
-        if (rawTasks) tasksState = JSON.parse(rawTasks);
-      } catch (e) {
-        console.error("Error loading tasks:", e);
-      }
-      try {
-        const rawLearn = localStorage.getItem(STORAGE_LEARNING);
-        if (rawLearn) learningState = JSON.parse(rawLearn);
-      } catch (e) {
-        console.error("Error loading learning:", e);
-      }
-    }
-
-    function saveTasks() {
-      localStorage.setItem(STORAGE_TASKS, JSON.stringify(tasksState));
-    }
-
-    function saveLearning() {
-      localStorage.setItem(STORAGE_LEARNING, JSON.stringify(learningState));
-    }
-
-    // ------------------- Tasks Logic ------------------------------
-    function ensureDay(dateStr) {
-      if (!tasksState.days[dateStr]) {
-        tasksState.days[dateStr] = { tasks: [] };
-      }
-      return tasksState.days[dateStr];
-    }
-
-    function computeDayScore(dayData) {
-      const tasks = dayData.tasks || [];
-      let totalEffort = 0;
-      let gainedEffort = 0;
-      let doneCount = 0;
-      tasks.forEach((t) => {
-        const eff = Number(t.effort || 1);
-        totalEffort += eff;
-        if (t.status === "done") {
-          gainedEffort += eff;
-          doneCount++;
-        } else if (t.status === "progress") {
-          gainedEffort += eff * 0.2;
-        }
-      });
-      const score = totalEffort > 0 ? Math.round((gainedEffort / totalEffort) * 100) : 0;
-      return {
-        score,
-        doneCount,
-        xp: Math.round(gainedEffort * 10)
-      };
-    }
-
-    function updateDopamineChart(score) {
-      const ring = document.getElementById("dopamine-ring");
-      const percentEl = document.getElementById("dopamine-percent");
-      const titleEl = document.getElementById("dopamine-title");
-      const subEl = document.getElementById("dopamine-sub");
-      const hoho = document.getElementById("hoho-floating");
-
-      const clamped = Math.max(0, Math.min(100, score));
-      const circumference = 377;
-
-      if (ring) {
-        const offset = circumference * (1 - clamped / 100);
-        ring.style.strokeDashoffset = offset;
-        const hue = 30 + (clamped / 100) * 90;
-        ring.style.stroke = `hsl(${hue}, 90%, 55%)`;
-      }
-      if (percentEl) percentEl.textContent = clamped + "%";
-
-      let title = "Let’s warm up this day.";
-      let sub =
-        "Ngerjain beberapa task meaningful sampai minimal 60% — baru berasa enak di otak.";
-      let hohoSrc = "hoho-happy.png";
-
-      if (clamped === 0) {
-        title = "Blank canvas. You’re one task away.";
-        sub = "Mulai dari 1 small task aja dulu.";
-        hohoSrc = "hoho-sad.png";
-      } else if (clamped < 40) {
-        title = "You’ve started. Keep going.";
-        sub = "Tambah 1–2 task lagi biar mulai kerasa.";
-        hohoSrc = "hoho-thinking.png";
-      } else if (clamped < 60) {
-        title = "Momentum udah kebentuk.";
-        sub = "Dikit lagi tembus 60%. Pilih satu task yang meaningful.";
-        hohoSrc = "hoho-pointsmile.png";
-      } else if (clamped < 80) {
-        title = "Good day unlocked.";
-        sub = "Lo udah lewat target 60%. Gas dikit lagi kalau mau.";
-        hohoSrc = "hoho-happy.png";
-      } else {
-        title = "Max dopamine mode. 🔥";
-        sub = "Besok boleh slow dikit, tapi streaknya jangan putus.";
-        hohoSrc = "hoho-levelup.png";
-      }
-
-      if (titleEl) titleEl.textContent = title;
-      if (subEl) subEl.textContent = sub;
-      if (hoho) hoho.src = hohoSrc;
-    }
-
-    function renderTodaySummary() {
-      const today = todayISO();
-      const day = ensureDay(today);
-      const { score, doneCount, xp } = computeDayScore(day);
-      document.getElementById("today-score").textContent = score + "%";
-      document.getElementById("tasks-done").textContent = doneCount;
-      document.getElementById("tasks-xp").textContent = xp;
-
-      let caption = "Belum mulai, masih loading.";
-      if (score >= 80) caption = "Satisfying AF. Keep this energy.";
-      else if (score >= 60) caption = "Good day. Lo udah lewat 60%.";
-      else if (score >= 40) caption = "Nice momentum, 1–2 task lagi buat tembus 60%.";
-      else if (score > 0) caption = "Warm-up mode. You’ve started, keep going.";
-      document.getElementById("score-caption").textContent = caption;
-
-      updateDopamineChart(score);
-    }
-
-    function getNextStatus(current) {
-      if (current === "none") return "progress";
-      if (current === "progress") return "done";
-      if (current === "done") return "blocked";
-      return "none";
-    }
-
-    function getStatusLabel(status) {
-      if (status === "progress") return "On Progress";
-      if (status === "done") return "Done";
-      if (status === "blocked") return "Blocked";
-      return "Not Started";
-    }
-
-    function getStatusIcon(status) {
-      if (status === "progress") return "⏳";
-      if (status === "done") return "✅";
-      if (status === "blocked") return "⛔";
-      return "⬜";
-    }
-
-    function renderTasksList() {
-      const today = todayISO();
-      const day = ensureDay(today);
-      const tbody = document.getElementById("tasks-body");
-      tbody.innerHTML = "";
-      day.tasks.forEach((t) => {
-        const tr = document.createElement("tr");
-
-        // Title cell: click to edit
-        const tdTitle = document.createElement("td");
-        const spanTitle = document.createElement("div");
-        spanTitle.className = "task-title-span";
-        const titleText = document.createElement("span");
-        titleText.textContent = t.title || "(No title)";
-        spanTitle.appendChild(titleText);
-
-        spanTitle.addEventListener("click", () => {
-          spanTitle.classList.add("editing");
-          spanTitle.innerHTML = "";
-          const input = document.createElement("input");
-          input.type = "text";
-          input.value = t.title || "";
-          spanTitle.appendChild(input);
-          input.focus();
-          input.select();
-
-          function commit() {
-            const newVal = input.value.trim();
-            t.title = newVal || "(No title)";
-            saveTasks();
-            renderTasksList();
-            renderTodaySummary();
-          }
-
-          input.addEventListener("blur", commit);
-          input.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              input.blur();
-            } else if (e.key === "Escape") {
-              renderTasksList();
-            }
-          });
-        });
-
-        tdTitle.appendChild(spanTitle);
-        tr.appendChild(tdTitle);
-
-        // Effort pill chips
-        const tdEff = document.createElement("td");
-        const chipRow = document.createElement("div");
-        chipRow.className = "effort-chip-row";
-        ["1", "2", "3"].forEach((val) => {
-          const chip = document.createElement("button");
-          chip.type = "button";
-          chip.className = "effort-chip" + (t.effort === val ? " active" : "");
-          chip.textContent = "E" + val;
-          chip.addEventListener("click", () => {
-            t.effort = val;
-            saveTasks();
-            renderTasksList();
-            renderTodaySummary();
-            renderHeatmap();
-          });
-          chipRow.appendChild(chip);
-        });
-        tdEff.appendChild(chipRow);
-        tr.appendChild(tdEff);
-
-        // Status pill (click to cycle)
-        const tdStatus = document.createElement("td");
-        const pill = document.createElement("div");
-        const status = t.status || "none";
-        pill.className =
-          "status-pill " +
-          (status === "progress"
-            ? "status-progress"
-            : status === "done"
-            ? "status-done"
-            : status === "blocked"
-            ? "status-blocked"
-            : "status-none");
-
-        const iconSpan = document.createElement("span");
-        iconSpan.className = "status-pill-icon";
-        iconSpan.textContent = getStatusIcon(status);
-
-        const labelSpan = document.createElement("span");
-        labelSpan.textContent = getStatusLabel(status);
-
-        pill.appendChild(iconSpan);
-        pill.appendChild(labelSpan);
-
-        pill.addEventListener("click", () => {
-          t.status = getNextStatus(t.status || "none");
-          saveTasks();
-          renderTasksList();
-          renderTodaySummary();
-          renderHeatmap();
-        });
-
-        tdStatus.appendChild(pill);
-        tr.appendChild(tdStatus);
-
-        // Actions (delete)
-        const tdActions = document.createElement("td");
-        const delBtn = document.createElement("button");
-        delBtn.className = "btn-delete-task";
-        delBtn.title = "Delete task";
-        delBtn.textContent = "🗑";
-        delBtn.addEventListener("click", () => {
-          day.tasks = day.tasks.filter((x) => x.id !== t.id);
-          saveTasks();
-          renderTasksList();
-          renderTodaySummary();
-          renderHeatmap();
-        });
-        tdActions.appendChild(delBtn);
-        tr.appendChild(tdActions);
-
-        tbody.appendChild(tr);
-      });
-    }
-
-    function handleTaskFormSubmit(evt) {
-      evt.preventDefault();
-      const titleInput = document.getElementById("task-title");
-      const title = titleInput.value.trim();
-      if (!title) return;
-
-      const selectedEff = document.querySelector(
-        "#effort-pill-group .effort-pill.active"
-      );
-      const effort = selectedEff ? selectedEff.dataset.effort : "1";
-
-      const today = todayISO();
-      const day = ensureDay(today);
-      day.tasks.push({
-        id: Date.now() + "_" + Math.random().toString(16).slice(2),
-        title,
-        effort,
-        status: "none"
-      });
-      saveTasks();
-      titleInput.value = "";
-      renderTasksList();
-      renderTodaySummary();
-      renderHeatmap();
-    }
-
-    // ------------------- Heatmap (Tasks) --------------------------
-    function renderHeatmap() {
-      const grid = document.getElementById("heatmap-grid");
-      const emptyText = document.getElementById("heatmap-empty-text");
-      grid.innerHTML = "";
-
-      const allDates = Object.keys(tasksState.days || {});
-      if (allDates.length === 0) {
-        emptyText.style.display = "block";
-        return;
-      }
-      emptyText.style.display = "none";
-
-      allDates.sort(); // ISO string sort
-      const lastDates = allDates.slice(-28);
-
-      lastDates.forEach((iso) => {
-        const d = parseISO(iso);
-        const dayData = tasksState.days[iso];
-        const { score } = computeDayScore(dayData);
-        const cell = document.createElement("div");
-        cell.className = "heat-cell";
-        if (score < 40) cell.classList.add("heat-low");
-        else if (score < 80) cell.classList.add("heat-mid");
-        else cell.classList.add("heat-high");
-
-        const label = document.createElement("span");
-        label.textContent = d.getDate();
-        cell.appendChild(label);
-
-        cell.addEventListener("click", () => openDayModal(iso, score));
-        grid.appendChild(cell);
-      });
-    }
-
-    function openDayModal(dateStr, score) {
-      const modalBackdrop = document.getElementById("day-modal-backdrop");
-      const titleEl = document.getElementById("day-modal-title");
-      const subEl = document.getElementById("day-modal-sub");
-      const bodyEl = document.getElementById("day-modal-body");
-
-      const d = parseISO(dateStr);
-      const options = { weekday: "short", day: "numeric", month: "short" };
-      titleEl.textContent = d.toLocaleDateString(undefined, options);
-      subEl.textContent = "Dopamine sparks: " + score + "%";
-
-      const day = tasksState.days[dateStr];
-      bodyEl.innerHTML = "";
-      if (!day || day.tasks.length === 0) {
-        bodyEl.innerHTML =
-          "<p style='font-size:12px;color:#6b7280;'>No tasks logged on this day. Mungkin belum ke-input atau memang hari santai.</p>";
-      } else {
-        const list = document.createElement("ul");
-        list.style.paddingLeft = "18px";
-        list.style.fontSize = "12px";
-        day.tasks.forEach((t) => {
-          const li = document.createElement("li");
-          const statusLabel =
-            t.status === "done"
-              ? "✅"
-              : t.status === "progress"
-              ? "🟡"
-              : t.status === "blocked"
-              ? "⛔"
-              : "⬜";
-          li.textContent =
-            statusLabel +
-            " [E" +
-            t.effort +
-            "] " +
-            (t.title || "(No title)");
-          list.appendChild(li);
-        });
-        bodyEl.appendChild(list);
-      }
-      modalBackdrop.classList.remove("hidden");
-    }
-
-    // ------------------- Learning Logic ---------------------------
-    const EFFORT_XP = { small: 1, medium: 3, intensive: 6 };
-    const EFFORT_PROGRESS = { small: 5, medium: 10, intensive: 15 };
-
-    function logLearningEntry(entry) {
-      learningState.entries.push(entry);
-      saveLearning();
-    }
-
-    function getSixMonthsAgoISO() {
-      const d = new Date();
-      d.setMonth(d.getMonth() - 6);
-      return formatDateISO(d);
-    }
-
-    function updateLearningHoHo(todayXP) {
-      const hohoL = document.getElementById("hoho-learning-floating");
-      if (!hohoL) return;
-      if (todayXP === 0) {
-        hohoL.src = "hoho-thinking.png";
-      } else if (todayXP < 5) {
-        hohoL.src = "hoho-book.png";
-      } else {
-        hohoL.src = "hoho-levelup.png";
-      }
-    }
-
-    function updateLearningChart(todayXP) {
-      const ring = document.getElementById("learning-ring");
-      const percentEl = document.getElementById("learning-percent");
-      const titleEl = document.getElementById("learning-title");
-      const subEl = document.getElementById("learning-sub");
-
-      const target = 5;
-      const ratio = target > 0 ? Math.min(1, todayXP / target) : 0;
-      const percent = Math.round(ratio * 100);
-      const circumference = 377;
-
-      if (ring) {
-        const offset = circumference * (1 - percent / 100);
-        ring.style.strokeDashoffset = offset;
-        const hue = 40 + ratio * 80;
-        ring.style.stroke = `hsl(${hue}, 90%, 55%)`;
-      }
-      if (percentEl) percentEl.textContent = percent + "%";
-
-      let title = "Today’s Learning Dose";
-      let sub = "Target harian: 5 XP dari belajar (video, artikel, diskusi, dll).";
-
-      if (todayXP === 0) {
-        title = "No learning logged (yet).";
-        sub = "Ambil 1 video / artikel / diskusi kecil, lalu tulis insight-nya.";
-      } else if (todayXP < 5) {
-        title = "Nice, otak udah kepancing.";
-        sub = "Satu insight lagi bisa nutup target harian.";
-      } else if (todayXP < 10) {
-        title = "Learning target tercapai.";
-        sub = "Kalau lagi mood, gas dikit lagi buat bonus XP.";
-      } else {
-        title = "Deep learning mode. 🔥";
-        sub = "Jangan lupa istirahat, otak juga butuh cooldown.";
-      }
-
-      if (titleEl) titleEl.textContent = title;
-      if (subEl) subEl.textContent = sub;
-
-      updateLearningHoHo(todayXP);
-    }
-
-    function renderLearningStatsAndProgress() {
-      const today = todayISO();
-      const sixMonthsAgo = getSixMonthsAgoISO();
-      const entries = learningState.entries || [];
-
-      let todayXP = 0;
-      let totalXP = 0;
-      const progressBySkill = {};
-      const datesWithLearning = new Set();
-
-      entries.forEach((e) => {
-        const date = e.date;
-        const xp = Number(e.xp || 0);
-        if (date === today) todayXP += xp;
-        if (date >= sixMonthsAgo) {
-          totalXP += xp;
-          const key = e.skillId;
-          const inc = EFFORT_PROGRESS[e.effort] || 0;
-          progressBySkill[key] = (progressBySkill[key] || 0) + inc;
-          datesWithLearning.add(date);
-        }
-      });
-
-      Object.keys(progressBySkill).forEach((k) => {
-        progressBySkill[k] = Math.min(100, progressBySkill[k]);
-      });
-
-      document.getElementById("learning-xp-today").textContent = todayXP;
-      document.getElementById("learning-xp-total").textContent = totalXP;
-
-      // streak
-      let streak = 0;
-      let cursor = new Date();
-      while (true) {
-        const iso = formatDateISO(cursor);
-        if (datesWithLearning.has(iso)) {
-          streak++;
-          cursor.setDate(cursor.getDate() - 1);
-        } else {
-          break;
-        }
-      }
-      document.getElementById("learning-streak").textContent =
-        streak + (streak === 1 ? " day" : " days");
-
-      const warningEl = document.getElementById("learning-warning");
-      warningEl.style.display = todayXP === 0 ? "inline-flex" : "none";
-
-      // progress bars
-      const fills = document.querySelectorAll(".skill-progress-fill");
-      fills.forEach((el) => {
-        const skillId = el.dataset.progressFor;
-        const value = progressBySkill[skillId] || 0;
-        el.style.width = value + "%";
-        const hue = 10 + (value / 100) * 80;
-        el.style.background = `linear-gradient(90deg, hsl(${hue},90%,60%), hsl(${hue + 20},90%,55%))`;
-      });
-
-      updateLearningChart(todayXP);
-    }
-
-    function renderLearningHistory() {
-      const container = document.getElementById("learning-history");
-      container.innerHTML = "";
-      const entries = [...(learningState.entries || [])];
-      entries.sort((a, b) => (a.date < b.date ? 1 : -1));
-      const recent = entries.slice(0, 8);
-      if (recent.length === 0) {
-        container.innerHTML =
-          "<p style='font-size:11px;color:#6b7280;'>Belum ada learning yang dicatat. Mulai dengan 1 insight kecil hari ini.</p>";
-        return;
-      }
-      const today = todayISO();
-      recent.forEach((e) => {
-        const card = document.createElement("div");
-        card.className = "learning-card";
-        const header = document.createElement("div");
-        header.className = "learning-card-header";
-
-        const left = document.createElement("div");
-        left.innerHTML =
-          "<strong>" +
-          e.skillName +
-          "</strong><br><span style='font-size:10px;color:#6b7280;'>" +
-          e.date +
-          "</span>";
-
-        const right = document.createElement("div");
-        right.className = "learning-actions";
-
-        const tag = document.createElement("div");
-        tag.className = "learning-tag";
-        const effortLabel =
-          e.effort === "small"
-            ? "Small"
-            : e.effort === "medium"
-            ? "Medium"
-            : "Intensive";
-        tag.textContent = effortLabel + " • +" + e.xp + " XP";
-        right.appendChild(tag);
-
-        if (e.date === today) {
-          const actionsRow = document.createElement("div");
-          actionsRow.className = "learning-actions-row";
-          const editBtn = document.createElement("button");
-          editBtn.className = "learning-action-btn";
-          editBtn.textContent = "Edit";
-          editBtn.addEventListener("click", () => {
-            openLearningModal(e.skillId, e.skillName, e.skillType, e);
-          });
-          const delBtn = document.createElement("button");
-          delBtn.className = "learning-action-btn";
-          delBtn.textContent = "Delete";
-          delBtn.addEventListener("click", () => {
-            deleteLearningEntry(e.id);
-          });
-          actionsRow.appendChild(editBtn);
-          actionsRow.appendChild(delBtn);
-          right.appendChild(actionsRow);
-        }
-
-        header.appendChild(left);
-        header.appendChild(right);
-
-        const pWhat = document.createElement("p");
-        pWhat.textContent = e.what || "";
-        const pBenefit = document.createElement("p");
-        pBenefit.textContent = "→ " + (e.benefit || "");
-
-        card.appendChild(header);
-        card.appendChild(pWhat);
-        card.appendChild(pBenefit);
-
-        container.appendChild(card);
-      });
-    }
-
-    function deleteLearningEntry(id) {
-      learningState.entries = (learningState.entries || []).filter(
-        (e) => e.id !== id
-      );
-      saveLearning();
-      renderLearningStatsAndProgress();
-      renderLearningHistory();
-      renderLearningHeatmap();
-    }
-
-    // ------------------- Learning Heatmap -------------------------
-    function getLearningXPForDate(dateStr) {
-      let xp = 0;
-      (learningState.entries || []).forEach((e) => {
-        if (e.date === dateStr) {
-          xp += Number(e.xp || 0);
-        }
-      });
-      return xp;
-    }
-
-    function renderLearningHeatmap() {
-      const grid = document.getElementById("learning-heatmap-grid");
-      const emptyText = document.getElementById(
-        "learning-heatmap-empty-text"
-      );
-      grid.innerHTML = "";
-
-      const allDatesSet = new Set();
-      (learningState.entries || []).forEach((e) => {
-        allDatesSet.add(e.date);
-      });
-      const allDates = Array.from(allDatesSet);
-      if (allDates.length === 0) {
-        emptyText.style.display = "block";
-        return;
-      }
-      emptyText.style.display = "none";
-
-      allDates.sort();
-      const lastDates = allDates.slice(-28);
-
-      lastDates.forEach((iso) => {
-        const d = parseISO(iso);
-        const xp = getLearningXPForDate(iso);
-        const targetXP = 5;
-        const ratio = targetXP > 0 ? Math.min(1, xp / targetXP) : 0;
-        const score = Math.round(ratio * 100);
-
-        const cell = document.createElement("div");
-        cell.className = "heat-cell";
-        if (score === 0) cell.classList.add("heat-low");
-        else if (score < 80) cell.classList.add("heat-mid");
-        else cell.classList.add("heat-high");
-
-        const label = document.createElement("span");
-        label.textContent = d.getDate();
-        cell.appendChild(label);
-
-        cell.addEventListener("click", () =>
-          openLearningDayModal(iso, xp, score)
-        );
-
-        grid.appendChild(cell);
-      });
-    }
-
-    function openLearningDayModal(dateStr, xp, score) {
-      const modalBackdrop = document.getElementById(
-        "learning-day-modal-backdrop"
-      );
-      const titleEl = document.getElementById("learning-day-modal-title");
-      const subEl = document.getElementById("learning-day-modal-sub");
-      const bodyEl = document.getElementById("learning-day-modal-body");
-
-      const d = parseISO(dateStr);
-      const options = { weekday: "short", day: "numeric", month: "short" };
-      titleEl.textContent = d.toLocaleDateString(undefined, options);
-      subEl.textContent = "XP: " + xp + " • " + score + "% of daily target";
-
-      const entries = (learningState.entries || []).filter(
-        (e) => e.date === dateStr
-      );
-      bodyEl.innerHTML = "";
-      if (entries.length === 0) {
-        bodyEl.innerHTML =
-          "<p style='font-size:12px;color:#6b7280;'>No learning logged on this day.</p>";
-      } else {
-        const list = document.createElement("ul");
-        list.style.paddingLeft = "18px";
-        list.style.fontSize = "12px";
-        entries.forEach((e) => {
-          const li = document.createElement("li");
-          li.textContent =
-            "[" +
-            e.skillName +
-            "] +" +
-            e.xp +
-            " XP – " +
-            (e.what || "").slice(0, 80);
-          list.appendChild(li);
-        });
-        bodyEl.appendChild(list);
-      }
-      modalBackdrop.classList.remove("hidden");
-    }
-
-    // ------------------- Learning Modal ---------------------------
-    let currentSkillContext = null;
-    let currentEffort = "small";
-    let editingEntryId = null;
-
-    function openLearningModal(skillId, skillName, skillType, existingEntry) {
-      currentSkillContext = { skillId, skillName, skillType };
-
-      const titleEl = document.getElementById("modal-skill-title");
-      const subEl = document.getElementById("modal-skill-sub");
-      const whatEl = document.getElementById("learning-what");
-      const benefitEl = document.getElementById("learning-benefit");
-
-      if (existingEntry) {
-        editingEntryId = existingEntry.id;
-        whatEl.value = existingEntry.what || "";
-        benefitEl.value = existingEntry.benefit || "";
-        currentEffort = existingEntry.effort || "small";
-        titleEl.textContent = "Edit Learning – " + skillName;
-      } else {
-        editingEntryId = null;
-        whatEl.value = "";
-        benefitEl.value = "";
-        currentEffort = "small";
-        titleEl.textContent = "Log Learning – " + skillName;
-      }
-
-      subEl.textContent =
-        skillType === "hard"
-          ? "Hard skill: bikin lo makin tajem di kerjaan teknis."
-          : "Soft skill: cara lo mikir & berinteraksi sama orang.";
-
-      const chips = document.querySelectorAll(".effort-chip-modal");
-      chips.forEach((chip) => {
-        chip.classList.toggle("active", chip.dataset.effort === currentEffort);
-      });
-
-      document
-        .getElementById("learning-modal-backdrop")
-        .classList.remove("hidden");
-    }
-
-    function closeLearningModal() {
-      document
-        .getElementById("learning-modal-backdrop")
-        .classList.add("hidden");
-    }
-
-    function handleEffortClick(e) {
-      const chip = e.target.closest(".effort-chip-modal");
-      if (!chip) return;
-      currentEffort = chip.dataset.effort;
-      document
-        .querySelectorAll(".effort-chip-modal")
-        .forEach((c) => c.classList.remove("active"));
-      chip.classList.add("active");
-    }
-
-    function handleSaveLearning() {
-      if (!currentSkillContext) return;
-      const what = document.getElementById("learning-what").value.trim();
-      const benefit = document
-        .getElementById("learning-benefit")
-        .value.trim();
-      if (!what || !benefit) {
-        alert("Isi dulu apa yang lo pelajarin dan manfaatnya ya.");
-        return;
-      }
-      const date = todayISO();
-      const xp = EFFORT_XP[currentEffort] || 0;
-
-      if (editingEntryId) {
-        const existing = (learningState.entries || []).find(
-          (e) => e.id === editingEntryId
-        );
-        if (existing) {
-          existing.what = what;
-          existing.benefit = benefit;
-          existing.effort = currentEffort;
-          existing.xp = xp;
-        }
-        saveLearning();
-      } else {
-        const entry = {
-          id: Date.now() + "_" + Math.random().toString(16).slice(2),
-          date,
-          skillId: currentSkillContext.skillId,
-          skillName: currentSkillContext.skillName,
-          skillType: currentSkillContext.skillType,
-          what,
-          benefit,
-          effort: currentEffort,
-          xp
-        };
-        logLearningEntry(entry);
-      }
-
-      closeLearningModal();
-      renderLearningStatsAndProgress();
-      renderLearningHistory();
-      renderLearningHeatmap();
-    }
-
-    // ------------------- Nav & HoHo Drag --------------------------
-    function setupNav() {
-      const tabs = document.querySelectorAll(".nav-tab");
-      tabs.forEach((tab) => {
-        tab.addEventListener("click", () => {
-          const viewId = tab.dataset.view;
-          document
-            .querySelectorAll("section")
-            .forEach((s) => (s.style.display = "none"));
-          document.getElementById(viewId).style.display = "block";
-          tabs.forEach((t) => t.classList.remove("active"));
-          tab.classList.add("active");
-
-          const hohoTasks = document.getElementById("hoho-floating");
-          const hohoLearning = document.getElementById(
-            "hoho-learning-floating"
-          );
-
-          if (viewId === "tasks-view") {
-            if (hohoTasks) hohoTasks.style.display = "block";
-            if (hohoLearning) hohoLearning.style.display = "none";
-          } else {
-            if (hohoTasks) hohoTasks.style.display = "none";
-            if (hohoLearning) hohoLearning.style.display = "block";
-          }
-        });
-      });
-    }
-
-    function setupHoHoDrag() {
-      const hoho = document.getElementById("hoho-floating");
-      if (!hoho) return;
-      let isDragging = false;
-      let startX = 0;
-      let startY = 0;
-      let startLeft = 0;
-      let startTop = 0;
-
-      function onPointerDown(e) {
-        isDragging = true;
-        hoho.style.transition = "none";
-        const rect = hoho.getBoundingClientRect();
-        startLeft = rect.left;
-        startTop = rect.top;
-        startX = e.clientX;
-        startY = e.clientY;
-        window.addEventListener("pointermove", onPointerMove);
-        window.addEventListener("pointerup", onPointerUp);
-      }
-
-      function onPointerMove(e) {
-        if (!isDragging) return;
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        const newLeft = startLeft + dx;
-        const newTop = startTop + dy;
-        hoho.style.left = newLeft + "px";
-        hoho.style.top = newTop + "px";
-        hoho.style.right = "auto";
-        hoho.style.bottom = "auto";
-      }
-
-      function onPointerUp() {
-        isDragging = false;
-        hoho.style.transition = "";
-        window.removeEventListener("pointermove", onPointerMove);
-        window.removeEventListener("pointerup", onPointerUp);
-      }
-
-      hoho.addEventListener("pointerdown", onPointerDown);
-    }
-
-    // ------------------- Export Monthly Report --------------------
-    function handleExportReport() {
-      const nameInput = document.getElementById("report-name");
-      const positionInput = document.getElementById("report-position");
-      const monthInput = document.getElementById("report-month");
-
-      const name = nameInput.value.trim() || "Unnamed";
-      const position = positionInput.value.trim() || "Staff";
-
-      if (!monthInput.value) {
-        alert("Pilih dulu bulan yang mau di-export.");
-        return;
-      }
-
-      const [yearStr, monthStr] = monthInput.value.split("-");
-      const year = parseInt(yearStr, 10);
-      const month = parseInt(monthStr, 10); // 1-12
-      const monthLabel = new Date(year, month - 1, 1).toLocaleDateString(
-        undefined,
-        { month: "long", year: "numeric" }
-      );
-
-      const monthPrefix = monthInput.value; // "2025-08"
-
-      // --- Tasks monthly summary ---
-      const allTaskDates = Object.keys(tasksState.days || {});
-      const taskDates = allTaskDates.filter((d) => d.startsWith(monthPrefix));
-      taskDates.sort();
-
-      let totalDopamine = 0;
-      let totalTaskXP = 0;
-      let totalTasksDone = 0;
-
-      taskDates.forEach((date) => {
-        const dayData = tasksState.days[date];
-        const { score, doneCount, xp } = computeDayScore(dayData);
-        totalDopamine += score;
-        totalTaskXP += xp;
-        totalTasksDone += doneCount;
-      });
-
-      const daysLogged = taskDates.length;
-      const daysInMonth = new Date(year, month, 0).getDate(); // last day date number
-      const avgDopamine =
-        daysLogged > 0 ? Math.round(totalDopamine / daysLogged) : 0;
-
-      function buildTaskHeatmapHTML() {
-        let html =
-          '<div style="display:grid;grid-template-columns:repeat(7,16px);gap:4px;margin:8px 0 4px 0;">';
-
-        for (let day = 1; day <= daysInMonth; day++) {
-          const dayStr = String(day).padStart(2, "0");
-          const iso = `${yearStr}-${monthStr}-${dayStr}`;
-          const dayData = tasksState.days[iso];
-          let color = "#e5e7eb";
-          let title = iso + " – no data";
-          let score = 0;
-
-          if (dayData) {
-            const res = computeDayScore(dayData);
-            score = res.score;
-            title = iso + " – " + score + "%";
-            if (score < 40) color = "#fecaca";
-            else if (score < 80) color = "#fef9c3";
-            else color = "#bbf7d0";
-          }
-
-          html += `<div title="${title}" style="width:16px;height:16px;border-radius:4px;background:${color};"></div>`;
-        }
-
-        html += "</div>";
-        html +=
-          '<div style="font-size:10px;color:#6b7280;margin-top:2px;">' +
-          '<span style="display:inline-flex;align-items:center;margin-right:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#fecaca;margin-right:4px;"></span>0–39%</span>' +
-          '<span style="display:inline-flex;align-items:center;margin-right:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#fef9c3;margin-right:4px;"></span>40–79%</span>' +
-          '<span style="display:inline-flex;align-items:center;"><span style="width:10px;height:10px;border-radius:3px;background:#bbf7d0;margin-right:4px;"></span>80–100%</span>' +
-          "</div>";
-        return html;
-      }
-
-      // --- Learning monthly summary ---
-      const allEntries = learningState.entries || [];
-      const monthEntries = allEntries.filter(
-        (e) => e.date && e.date.startsWith(monthPrefix)
-      );
-
-      const learningDaySet = new Set();
-      let totalLearningXP = 0;
-      const xpBySkill = {};
-
-      monthEntries.forEach((e) => {
-        const xp = Number(e.xp || 0);
-        totalLearningXP += xp;
-        learningDaySet.add(e.date);
-        const key = e.skillName || e.skillId || "Unknown skill";
-        xpBySkill[key] = (xpBySkill[key] || 0) + xp;
-      });
-
-      const learningDaysCount = learningDaySet.size;
-
-      function getLearningXPOn(iso) {
-        let xp = 0;
-        monthEntries.forEach((e) => {
-          if (e.date === iso) {
-            xp += Number(e.xp || 0);
-          }
-        });
-        return xp;
-      }
-
-      function buildLearningHeatmapHTML() {
-        let html =
-          '<div style="display:grid;grid-template-columns:repeat(7,16px);gap:4px;margin:8px 0 4px 0;">';
-
-        for (let day = 1; day <= daysInMonth; day++) {
-          const dayStr = String(day).padStart(2, "0");
-          const iso = `${yearStr}-${monthStr}-${dayStr}`;
-          const xp = getLearningXPOn(iso);
-          let color = "#e5e7eb";
-          let title = iso + " – no learning";
-          if (xp > 0) {
-            const ratio = Math.min(1, xp / 5); // 5 XP target harian
-            const score = Math.round(ratio * 100);
-            title = iso + " – " + xp + " XP (" + score + "% of daily target)";
-            if (score < 40) color = "#fecaca";
-            else if (score < 80) color = "#fef9c3";
-            else color = "#bbf7d0";
-          }
-          html += `<div title="${title}" style="width:16px;height:16px;border-radius:4px;background:${color};"></div>`;
-        }
-
-        html += "</div>";
-        html +=
-          '<div style="font-size:10px;color:#6b7280;margin-top:2px;">' +
-          '<span style="display:inline-flex;align-items:center;margin-right:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#e5e7eb;margin-right:4px;"></span>No data</span>' +
-          '<span style="display:inline-flex;align-items:center;margin-right:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#fecaca;margin-right:4px;"></span>0–39%</span>' +
-          '<span style="display:inline-flex;align-items:center;margin-right:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#fef9c3;margin-right:4px;"></span>40–79%</span>' +
-          '<span style="display:inline-flex;align-items:center;"><span style="width:10px;height:10px;border-radius:3px;background:#bbf7d0;margin-right:4px;"></span>80–100%</span>' +
-          "</div>";
-        return html;
-      }
-
-      function buildSkillBarsHTML() {
-        const skills = Object.keys(xpBySkill);
-        if (skills.length === 0) {
-          return '<p style="font-size:12px;color:#6b7280;">No learning data for this month.</p>';
-        }
-        let html = "";
-        skills
-          .sort((a, b) => xpBySkill[b] - xpBySkill[a])
-          .forEach((skill) => {
-            const xp = xpBySkill[skill];
-            const percent = Math.min(100, Math.round((xp / 30) * 100)); // 30 XP = full bar
-            html += `
-              <div style="margin-bottom:8px;">
-                <div style="display:flex;justify-content:space-between;font-size:12px;">
-                  <span>${skill}</span>
-                  <span>${xp} XP</span>
-                </div>
-                <div style="height:8px;background:#e5e7eb;border-radius:999px;margin-top:3px;overflow:hidden;">
-                  <div style="height:8px;width:${percent}%;background:linear-gradient(90deg,#60a5fa,#38bdf8);border-radius:999px;"></div>
-                </div>
-              </div>
-            `;
-          });
-        return html;
-      }
-
-      // --- Build report HTML ---
-      const reportHTML = `
-        <html>
-        <head>
-          <meta charset="UTF-8" />
-          <title>HeyHoLetsGo Monthly Report – ${monthLabel}</title>
-          <style>
-            body {
-              font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-              margin: 24px;
-              color: #111827;
-              background: #fdf6ec;
-            }
-            h1,h2,h3 {
-              margin: 0 0 6px 0;
-            }
-            .section {
-              margin-bottom: 18px;
-              padding: 12px 14px;
-              border-radius: 12px;
-              background: #ffffff;
-              box-shadow: 0 4px 12px rgba(15,23,42,0.06);
-            }
-            .section-title {
-              font-size: 18px;
-              font-weight: 800;
-              margin-bottom: 4px;
-            }
-            .section-sub {
-              font-size: 12px;
-              color: #6b7280;
-              margin-bottom: 8px;
-            }
-            .metric-row {
-              font-size: 12px;
-              line-height: 1.6;
-            }
-            .label {
-              font-weight: 600;
-            }
-            .small {
-              font-size: 11px;
-              color: #6b7280;
-            }
-            .textarea-placeholder {
-              min-height: 60px;
-              border-radius: 10px;
-              border: 1px dashed rgba(148,163,184,0.8);
-              padding: 6px 8px;
-              font-size: 11px;
-              color: #9ca3af;
-              margin-top: 4px;
-            }
-          </style>
-        </head>
-        <body>
-          <h1>HeyHoLetsGo – Monthly Report</h1>
-          <p style="font-size:12px;margin:4px 0 14px 0;">
-            <span class="label">Name:</span> ${name}<br/>
-            <span class="label">Position:</span> ${position}<br/>
-            <span class="label">Period:</span> ${monthLabel}
-          </p>
-
-          <div class="section">
-            <div class="section-title">🧠 Productivity Summary</div>
-            <div class="section-sub">Ringkasan dari task & dopamine sparks selama 1 bulan.</div>
-            <div class="metric-row">
-              <div><span class="label">Avg Dopamine Sparks:</span> ${avgDopamine}%</div>
-              <div><span class="label">Total Task XP:</span> ${totalTaskXP}</div>
-              <div><span class="label">Total Tasks Completed:</span> ${totalTasksDone}</div>
-              <div><span class="label">Days Logged:</span> ${daysLogged} / ${daysInMonth}</div>
-            </div>
-            <h3 style="margin-top:10px;font-size:14px;">📅 Task Heatmap (Monthly)</h3>
-            ${buildTaskHeatmapHTML()}
-          </div>
-
-          <div class="section">
-            <div class="section-title">📚 Learning Summary</div>
-            <div class="section-sub">Learning & skill growth yang terekam bulan ini.</div>
-            <div class="metric-row">
-              <div><span class="label">Total Learning XP:</span> ${totalLearningXP}</div>
-              <div><span class="label">Days with Learning:</span> ${learningDaysCount} / ${daysInMonth}</div>
-            </div>
-            <h3 style="margin-top:10px;font-size:14px;">📅 Learning Heatmap (Monthly)</h3>
-            ${buildLearningHeatmapHTML()}
-            <h3 style="margin-top:10px;font-size:14px;">📈 Skill Progress (Monthly)</h3>
-            ${buildSkillBarsHTML()}
-          </div>
-
-          <div class="section">
-            <div class="section-title">✏️ Self Reflection (Fill Manually)</div>
-            <div class="section-sub small">
-              Gunakan bagian ini untuk bahan 1-on-1 dengan atasan atau review pribadi.
-            </div>
-            <div style="font-size:12px;">
-              • What worked well this month?<br/>
-              <div class="textarea-placeholder"></div>
-              • What made you stuck?<br/>
-              <div class="textarea-placeholder"></div>
-              • What will you try differently next month?<br/>
-              <div class="textarea-placeholder"></div>
+  </section>
+
+  <!-- ===== TAB: LEARNING & SKILLS ===== -->
+  <section id="learningTab" class="tab-content hidden">
+
+    <!-- Top Row: Learning Dopamine + Heatmap -->
+    <div style="display:grid;grid-template-columns: minmax(0,2.2fr) minmax(0,1.8fr);gap:16px;margin-bottom:16px;">
+      <!-- Learning Chart -->
+      <div class="card">
+        <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Learning Dopamine – Today</span>
+          <small style="font-size:11px;color:var(--text-light);">
+            1+ learning entry/day recommended
+          </small>
+        </div>
+        <div style="display:flex;align-items:center;gap:18px;">
+          <div style="width:170px;height:170px;position:relative;">
+            <canvas id="learningChart"></canvas>
+            <div id="learningCenterText" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+              <div style="font-size:26px;font-weight:800;" id="learningPercentText">0%</div>
+              <div style="font-size:11px;color:var(--text-light);">Learning XP</div>
             </div>
           </div>
-
-          <div class="section">
-            <div class="section-title">📝 Manager Comments</div>
-            <div class="section-sub small">
-              Diisi oleh manager saat sesi review bulanan.
+          <div style="flex:1;display:flex;flex-direction:column;gap:8px;font-size:13px;">
+            <div style="display:flex;justify-content:space-between;">
+              <span>Entries Today</span>
+              <span id="learningEntriesToday" style="font-weight:700;">0</span>
             </div>
-            <div class="textarea-placeholder"></div>
+            <div style="display:flex;justify-content:space-between;">
+              <span>XP Today</span>
+              <span id="learningXpToday" style="font-weight:700;">0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;">
+              <span>6-Month Total XP</span>
+              <span id="learningXpSixMonths" style="font-weight:700;">0</span>
+            </div>
+            <div style="margin-top:6px;font-size:11px;color:var(--text-light);">
+              Learning XP resets every 6 months, but history stays visible.
+            </div>
           </div>
-        </body>
-        </html>
-      `;
+        </div>
+      </div>
 
-      const win = window.open("", "_blank");
-      if (!win) {
-        alert("Popup ke-block. Aktifkan popup dulu untuk export.");
-        return;
+      <!-- Learning Heatmap -->
+      <div class="card">
+        <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>28-Day Learning Heatmap</span>
+          <small id="learningHeatmapRangeLabel" style="font-size:11px;color:var(--text-light);">
+            Last 28 days
+          </small>
+        </div>
+        <div id="learningHeatmap" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:10px;margin-bottom:8px;min-height:72px;">
+          <!-- Filled dynamically -->
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--text-light);">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span>Legend:</span>
+            <span style="display:inline-flex;align-items:center;gap:3px;">
+              <span style="width:12px;height:12px;border-radius:3px;background:#e5e7eb;"></span> 0 XP
+            </span>
+            <span style="display:inline-flex;align-items:center;gap:3px;">
+              <span style="width:12px;height:12px;border-radius:3px;background:#bfdbfe;"></span> Low
+            </span>
+            <span style="display:inline-flex;align-items:center;gap:3px;">
+              <span style="width:12px;height:12px;border-radius:3px;background:#60a5fa;"></span> Medium
+            </span>
+            <span style="display:inline-flex;align-items:center;gap:3px;">
+              <span style="width:12px;height:12px;border-radius:3px;background:#2563eb;"></span> High
+            </span>
+          </div>
+          <button id="openLearningHistory" type="button" style="background:transparent;color:var(--accent);border:0;padding:0;font-size:11px;font-weight:600;">
+            View day details
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Learning Entry + Skill Progress -->
+    <div class="card">
+      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Daily Learning Log</span>
+        <small style="font-size:11px;color:var(--text-light);">
+          Log at least one learning per day.
+        </small>
+      </div>
+
+      <!-- Add Learning -->
+      <div style="display:grid;grid-template-columns: minmax(0,1.4fr) minmax(0,1.1fr) minmax(0,1fr) auto;gap:10px;align-items:flex-end;margin-bottom:14px;">
+        <div>
+          <label style="font-size:11px;">Skill Category</label>
+          <select id="learningCategoryInput">
+            <option value="tools">Tools & Workspace</option>
+            <option value="digital">Digital Marketing</option>
+            <option value="ai">AI Skills</option>
+            <option value="content">Content & Creative</option>
+            <option value="data">Data Analytics & Research</option>
+            <option value="finance">Finance</option>
+            <option value="hr">HR</option>
+            <option value="sales">Sales</option>
+            <option value="cognitive">Cognitive Skills</option>
+            <option value="interpersonal">Interpersonal Skills</option>
+            <option value="intrapersonal">Intrapersonal Skills</option>
+            <option value="business">Business Acumen</option>
+            <option value="leadership">Leadership & Management</option>
+            <option value="other">Others</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;">Subskill (optional)</label>
+          <input id="learningSubskillInput" type="text" placeholder="e.g. ChatGPT Prompting, Campaign Strategy" />
+        </div>
+        <div>
+          <label style="font-size:11px;">Learning Effort</label>
+          <select id="learningEffortInput">
+            <option value="1">Small (5–10 mins)</option>
+            <option value="2">Medium (deep dive)</option>
+            <option value="3">Intensive (1–2 hours)</option>
+          </select>
+        </div>
+        <div>
+          <button id="addLearningBtn" type="button">+ Add Learning</button>
+        </div>
+      </div>
+
+      <!-- Reflection -->
+      <div style="margin-bottom:12px;">
+        <label style="font-size:11px;">What did you learn & how does it help your work?</label>
+        <textarea id="learningReflectionInput" rows="2" placeholder="Write your key insight and why it matters..."></textarea>
+      </div>
+
+      <!-- Learning List -->
+      <div id="learningList" style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
+        <!-- Filled dynamically -->
+      </div>
+    </div>
+
+    <!-- Skill Progress Overview -->
+    <div class="card">
+      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Skill Progress (Last 6 Months)</span>
+        <small style="font-size:11px;color:var(--text-light);">
+          XP is cumulative, reset every 6 months.
+        </small>
+      </div>
+      <div id="skillProgressWrapper" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;font-size:12px;">
+        <!-- Filled dynamically with mini bar charts -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TAB: SETTINGS & REPORTS ===== -->
+  <section id="settingsTab" class="tab-content hidden">
+    <div class="card">
+      <div class="section-title">Profile</div>
+      <div style="display:grid;grid-template-columns: minmax(0,1fr) minmax(0,1fr);gap:12px;">
+        <div>
+          <label style="font-size:11px;">Name</label>
+          <input id="userNameInput" type="text" placeholder="Your name" />
+        </div>
+        <div>
+          <label style="font-size:11px;">Position</label>
+          <input id="userPositionInput" type="text" placeholder="e.g. KOL Specialist" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Monthly Report</span>
+        <small style="font-size:11px;color:var(--text-light);">
+          Export A4 PDF – summary only (no daily spam).
+        </small>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.8fr);gap:16px;align-items:flex-end;">
+        <div>
+          <label style="font-size:11px;">Select Month</label>
+          <input id="reportMonthInput" type="month" />
+          <div style="font-size:11px;color:var(--text-light);margin-top:4px;">
+            If empty, will use current month automatically.
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button id="exportPdfBtn" type="button">
+            📄 Export Monthly PDF
+          </button>
+          <div style="font-size:11px;color:var(--text-light);">
+            PDF includes: task heatmap, dopamine line chart, total XP, learning heatmap, skill XP & top 3 skills.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Ho-Ho Floating Mascots (only visible on certain tabs via JS) -->
+<img id="hohoTaskFloat" class="hoho-float hidden" src="hoho-happy.png" alt="Ho-Ho Task" />
+<img id="hohoLearningFloat" class="hoho-float hidden" src="hoho-book.png" alt="Ho-Ho Learning" />
+<script>
+const STORAGE_KEY = "hhlg_v134_state";
+
+let appState = {
+  tasks: {},
+  learning: {},
+  theme: "light",
+  user: { name: "", position: "" }
+};
+
+const TASK_XP_PER_EFFORT = { 1: 10, 2: 20, 3: 30 };
+const DAILY_TASK_XP_TARGET = 60;
+
+const LEARNING_XP_PER_EFFORT = { 1: 5, 2: 10, 3: 20 };
+const SIX_MONTHS_IN_DAYS = 183;
+
+function getTodayKey() {
+  const d = new Date();
+  const offset = d.getTimezoneOffset();
+  const local = new Date(d.getTime() - offset * 60000);
+  return local.toISOString().slice(0,10);
+}
+function formatShortDate(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString("en-GB",{day:"2-digit",month:"short"});
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    appState.tasks = parsed.tasks || {};
+    appState.learning = parsed.learning || {};
+    appState.theme = parsed.theme || "light";
+    appState.user = parsed.user || { name:"", position:"" };
+  } catch(e){ console.error(e); }
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); }
+  catch(e){ console.error(e); }
+}
+function generateId(){ return "id_"+Math.random().toString(36).slice(2,10); }
+function ensureArray(obj,key){ if(!obj[key]) obj[key]=[]; return obj[key]; }
+
+/* ===== DOM ===== */
+const tabButtons = document.querySelectorAll(".tab-btn");
+const tasksTabEl = document.getElementById("tasksTab");
+const learningTabEl = document.getElementById("learningTab");
+const settingsTabEl = document.getElementById("settingsTab");
+
+const hohoTaskFloat = document.getElementById("hohoTaskFloat");
+const hohoLearningFloat = document.getElementById("hohoLearningFloat");
+
+const themeToggleBtn = document.getElementById("themeToggle");
+const themeIconSpan = document.getElementById("themeIcon");
+
+/* Task DOM */
+const taskNameInput = document.getElementById("taskNameInput");
+const taskEffortInput = document.getElementById("taskEffortInput");
+const taskStatusInput = document.getElementById("taskStatusInput");
+const addTaskBtn = document.getElementById("addTaskBtn");
+const taskListEl = document.getElementById("taskList");
+const xpTodayText = document.getElementById("xpTodayText");
+const tasksDoneText = document.getElementById("tasksDoneText");
+const tasksProgressText = document.getElementById("tasksProgressText");
+const tasksBlockedText = document.getElementById("tasksBlockedText");
+const dopaminePercentText = document.getElementById("dopaminePercentText");
+const taskHeatmapEl = document.getElementById("taskHeatmap");
+const heatmapRangeLabel = document.getElementById("heatmapRangeLabel");
+
+/* Learning DOM */
+const learningCategoryInput = document.getElementById("learningCategoryInput");
+const learningSubskillInput = document.getElementById("learningSubskillInput");
+const learningEffortInput = document.getElementById("learningEffortInput");
+const learningReflectionInput = document.getElementById("learningReflectionInput");
+const addLearningBtn = document.getElementById("addLearningBtn");
+const learningListEl = document.getElementById("learningList");
+const learningEntriesTodayEl = document.getElementById("learningEntriesToday");
+const learningXpTodayEl = document.getElementById("learningXpToday");
+const learningXpSixMonthsEl = document.getElementById("learningXpSixMonths");
+const learningHeatmapEl = document.getElementById("learningHeatmap");
+const learningHeatmapRangeLabel = document.getElementById("learningHeatmapRangeLabel");
+const skillProgressWrapper = document.getElementById("skillProgressWrapper");
+
+/* Settings */
+const userNameInput = document.getElementById("userNameInput");
+const userPositionInput = document.getElementById("userPositionInput");
+
+/* ===== THEME ===== */
+function applyTheme(theme){
+  if(theme==="dark"){
+    document.body.classList.add("dark");
+    themeIconSpan.textContent = "🌙";
+    themeToggleBtn.querySelector("span").textContent = "Dark";
+  } else {
+    document.body.classList.remove("dark");
+    themeIconSpan.textContent = "🌞";
+    themeToggleBtn.querySelector("span").textContent = "Light";
+  }
+}
+themeToggleBtn.addEventListener("click", ()=>{
+  appState.theme = appState.theme==="dark" ? "light":"dark";
+  applyTheme(appState.theme);
+  saveState();
+});
+
+/* ===== TABS ===== */
+function showTab(tabId){
+  [tasksTabEl,learningTabEl,settingsTabEl].forEach(el=>el.classList.add("hidden"));
+  if(tabId==="tasksTab") tasksTabEl.classList.remove("hidden");
+  if(tabId==="learningTab") learningTabEl.classList.remove("hidden");
+  if(tabId==="settingsTab") settingsTabEl.classList.remove("hidden");
+
+  tabButtons.forEach(btn=>{
+    if(btn.dataset.tab===tabId) btn.classList.add("active");
+    else btn.classList.remove("active");
+  });
+
+  if(tabId==="tasksTab"){
+    hohoTaskFloat.classList.remove("hidden");
+    hohoLearningFloat.classList.add("hidden");
+  } else if(tabId==="learningTab"){
+    hohoTaskFloat.classList.add("hidden");
+    hohoLearningFloat.classList.remove("hidden");
+  } else {
+    hohoTaskFloat.classList.add("hidden");
+    hohoLearningFloat.classList.add("hidden");
+  }
+}
+tabButtons.forEach(btn=>{
+  btn.addEventListener("click",()=> showTab(btn.dataset.tab));
+});
+
+/* ===== TASKS ===== */
+function computeTaskStatsForDate(dateKey){
+  const arr = appState.tasks[dateKey] || [];
+  let xp=0, done=0, prog=0, blocked=0;
+  arr.forEach(t=>{
+    const eff = TASK_XP_PER_EFFORT[t.effort] || 0;
+    if(t.status==="done" || t.status==="progress") xp+=eff;
+    if(t.status==="done") done++;
+    if(t.status==="progress") prog++;
+    if(t.status==="blocked") blocked++;
+  });
+  const percent = Math.max(0,Math.min(100,Math.round((xp/DAILY_TASK_XP_TARGET)*100)));
+  return { xp, done, prog, blocked, percent };
+}
+
+function renderTasksForToday(){
+  const key = getTodayKey();
+  const tasks = appState.tasks[key] || [];
+  const stats = computeTaskStatsForDate(key);
+
+  xpTodayText.textContent = stats.xp + " XP";
+  tasksDoneText.textContent = stats.done;
+  tasksProgressText.textContent = stats.prog;
+  tasksBlockedText.textContent = stats.blocked;
+  dopaminePercentText.textContent = stats.percent + "%";
+
+  taskListEl.innerHTML = "";
+  if(tasks.length===0){
+    const empty = document.createElement("div");
+    empty.style.fontSize="12px";
+    empty.style.color="var(--text-light)";
+    empty.textContent="No tasks yet. Add 2–3 meaningful tasks.";
+    taskListEl.appendChild(empty);
+    return;
+  }
+
+  tasks.forEach(task=>{
+    const row = document.createElement("div");
+    row.style.display="grid";
+    row.style.gridTemplateColumns="minmax(0,3fr) minmax(0,1fr) minmax(0,1.2fr) auto";
+    row.style.gap="10px";
+    row.style.alignItems="center";
+    row.style.padding="8px 10px";
+    row.style.borderRadius="10px";
+    row.style.background="var(--bg-alt)";
+
+    const nameCell = document.createElement("div");
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = task.name;
+    nameSpan.style.cursor="pointer";
+    nameSpan.style.fontWeight="600";
+    nameSpan.style.fontSize="13px";
+    nameSpan.addEventListener("click",()=>{
+      const n = prompt("Edit task name:", task.name);
+      if(n!==null && n.trim()!==""){
+        task.name = n.trim();
+        saveState();
+        renderTasksForToday();
+        renderTaskHeatmap();
       }
-      win.document.open();
-      win.document.write(reportHTML);
-      win.document.close();
-      win.focus();
-    }
-
-    // ------------------- Init -------------------------------------
-    document.addEventListener("DOMContentLoaded", () => {
-      const today = new Date();
-      const options = {
-        weekday: "long",
-        day: "numeric",
-        month: "short",
-        year: "numeric"
-      };
-      document.getElementById("today-label").textContent =
-        "Today · " + today.toLocaleDateString(undefined, options);
-
-      loadState();
-
-      // default effort pill
-      document
-        .querySelectorAll("#effort-pill-group .effort-pill")
-        .forEach((btn) => {
-          btn.addEventListener("click", () => {
-            document
-              .querySelectorAll("#effort-pill-group .effort-pill")
-              .forEach((b) => b.classList.remove("active"));
-            btn.classList.add("active");
-          });
-        });
-
-      document
-        .getElementById("task-form")
-        .addEventListener("submit", handleTaskFormSubmit);
-
-      document
-        .getElementById("effort-options")
-        .addEventListener("click", handleEffortClick);
-      document
-        .getElementById("modal-save-btn")
-        .addEventListener("click", handleSaveLearning);
-      document
-        .getElementById("modal-close-btn")
-        .addEventListener("click", closeLearningModal);
-      document
-        .getElementById("modal-cancel-btn")
-        .addEventListener("click", closeLearningModal);
-
-      document
-        .getElementById("day-modal-close-btn")
-        .addEventListener("click", () =>
-          document
-            .getElementById("day-modal-backdrop")
-            .classList.add("hidden")
-        );
-
-      document
-        .getElementById("learning-day-modal-close-btn")
-        .addEventListener("click", () =>
-          document
-            .getElementById("learning-day-modal-backdrop")
-            .classList.add("hidden")
-        );
-
-      document.querySelectorAll(".skill-card").forEach((card) => {
-        card.addEventListener("click", () => {
-          const skillId = card.dataset.skillId;
-          const skillName = card.dataset.skillName;
-          const skillType = card.dataset.skillType;
-          openLearningModal(skillId, skillName, skillType, null);
-        });
-      });
-
-      document
-        .getElementById("btn-export-report")
-        .addEventListener("click", handleExportReport);
-
-      renderTodaySummary();
-      renderTasksList();
-      renderHeatmap();
-
-      renderLearningStatsAndProgress();
-      renderLearningHistory();
-      renderLearningHeatmap();
-      setupNav();
-      setupHoHoDrag();
-
-      // default: tasks view active, hoho tasks visible
-      const hohoTasks = document.getElementById("hoho-floating");
-      const hohoLearning = document.getElementById("hoho-learning-floating");
-      if (hohoTasks) hohoTasks.style.display = "block";
-      if (hohoLearning) hohoLearning.style.display = "none";
     });
-  </script>
-</body>
-</html>
+    nameCell.appendChild(nameSpan);
+
+    const effortCell = document.createElement("div");
+    effortCell.style.fontSize="12px";
+    let effTxt = "Effort "+task.effort;
+    if(task.effort===1) effTxt+=" – Small";
+    if(task.effort===2) effTxt+=" – Medium";
+    if(task.effort===3) effTxt+=" – Large";
+    effortCell.textContent = effTxt;
+
+    const statusCell = document.createElement("div");
+    statusCell.style.display="flex";
+    statusCell.style.gap="6px";
+
+    [
+      {value:"done",label:"Done"},
+      {value:"progress",label:"On Progress"},
+      {value:"blocked",label:"Blocked"},
+    ].forEach(s=>{
+      const btn = document.createElement("button");
+      btn.type="button";
+      btn.textContent = s.label;
+      btn.style.fontSize="11px";
+      btn.style.padding="4px 8px";
+      btn.style.borderRadius="999px";
+      btn.style.background="var(--bg)";
+      btn.style.color="var(--text)";
+      btn.style.border="1px solid transparent";
+      if(task.status===s.value){
+        if(s.value==="done") btn.style.background="#6ee7b7";
+        else if(s.value==="progress") btn.style.background="#fde68a";
+        else if(s.value==="blocked") btn.style.background="#fca5a5";
+      }
+      btn.addEventListener("click",()=>{
+        task.status = s.value;
+        saveState();
+        renderTasksForToday();
+        renderTaskHeatmap();
+      });
+      statusCell.appendChild(btn);
+    });
+
+    const actionsCell = document.createElement("div");
+    actionsCell.style.textAlign="right";
+    const delBtn = document.createElement("button");
+    delBtn.type="button";
+    delBtn.textContent="✕";
+    delBtn.style.fontSize="11px";
+    delBtn.style.padding="4px 8px";
+    delBtn.style.borderRadius="999px";
+    delBtn.style.background="#f97373";
+    delBtn.addEventListener("click",()=>{
+      if(confirm("Delete this task?")){
+        appState.tasks[key] = (appState.tasks[key] || []).filter(t=>t.id!==task.id);
+        saveState();
+        renderTasksForToday();
+        renderTaskHeatmap();
+      }
+    });
+    actionsCell.appendChild(delBtn);
+
+    row.appendChild(nameCell);
+    row.appendChild(effortCell);
+    row.appendChild(statusCell);
+    row.appendChild(actionsCell);
+    taskListEl.appendChild(row);
+  });
+}
+
+addTaskBtn.addEventListener("click",()=>{
+  const name = taskNameInput.value.trim();
+  const effort = parseInt(taskEffortInput.value,10) || 1;
+  const status = taskStatusInput.value;
+  if(!name){ alert("Please enter a task name."); return; }
+  const key = getTodayKey();
+  const arr = ensureArray(appState.tasks,key);
+  arr.push({
+    id: generateId(),
+    name,
+    effort,
+    status,
+    createdAt: new Date().toISOString()
+  });
+  saveState();
+  taskNameInput.value="";
+  taskEffortInput.value="1";
+  taskStatusInput.value="progress";
+  renderTasksForToday();
+  renderTaskHeatmap();
+});
+
+/* ===== LEARNING ===== */
+function computeLearningStatsForDate(dateKey){
+  const arr = appState.learning[dateKey] || [];
+  let xp=0;
+  arr.forEach(e=> xp += LEARNING_XP_PER_EFFORT[e.effort] || 0);
+  const percent = Math.max(0,Math.min(100,Math.round((xp/40)*100)));
+  return { xp, entriesCount: arr.length, percent };
+}
+function computeLearningSixMonthXp(){
+  const today = new Date(getTodayKey()+"T00:00:00");
+  let total = 0;
+  Object.keys(appState.learning).forEach(k=>{
+    const d = new Date(k+"T00:00:00");
+    const diffDays = (today - d)/(1000*60*60*24);
+    if(diffDays>=0 && diffDays<=SIX_MONTHS_IN_DAYS){
+      const stats = computeLearningStatsForDate(k);
+      total += stats.xp;
+    }
+  });
+  return total;
+}
+function categoryLabel(cat){
+  const map = {
+    tools:"Tools & Workspace",
+    digital:"Digital Marketing",
+    ai:"AI Skills",
+    content:"Content & Creative",
+    data:"Data Analytics & Research",
+    finance:"Finance",
+    hr:"HR",
+    sales:"Sales",
+    cognitive:"Cognitive Skills",
+    interpersonal:"Interpersonal Skills",
+    intrapersonal:"Intrapersonal Skills",
+    business:"Business Acumen",
+    leadership:"Leadership & Management",
+    other:"Others"
+  };
+  return map[cat] || cat;
+}
+function renderLearningForToday(){
+  const key = getTodayKey();
+  const arr = appState.learning[key] || [];
+  const stats = computeLearningStatsForDate(key);
+
+  learningEntriesTodayEl.textContent = stats.entriesCount;
+  learningXpTodayEl.textContent = stats.xp;
+  learningXpSixMonthsEl.textContent = computeLearningSixMonthXp();
+  document.getElementById("learningPercentText").textContent = stats.percent + "%";
+
+  learningListEl.innerHTML="";
+  if(arr.length===0){
+    const e = document.createElement("div");
+    e.style.fontSize="12px";
+    e.style.color="var(--text-light)";
+    e.textContent="No learning yet. Log at least one insight today.";
+    learningListEl.appendChild(e);
+    return;
+  }
+
+  arr.forEach(entry=>{
+    const row = document.createElement("div");
+    row.style.display="grid";
+    row.style.gridTemplateColumns="minmax(0,1.4fr) minmax(0,1.1fr) minmax(0,1fr) auto";
+    row.style.gap="10px";
+    row.style.alignItems="flex-start";
+    row.style.padding="8px 10px";
+    row.style.borderRadius="10px";
+    row.style.background="var(--bg-alt)";
+
+    const catCell = document.createElement("div");
+    const catSpan = document.createElement("span");
+    catSpan.textContent = entry.customLabel || categoryLabel(entry.category);
+    catSpan.style.fontWeight="600";
+    catSpan.style.fontSize="13px";
+    catSpan.style.cursor="pointer";
+    catSpan.addEventListener("click",()=>{
+      const newLabel = prompt("Edit category label (display only):", catSpan.textContent);
+      if(newLabel!==null && newLabel.trim()!==""){
+        entry.customLabel = newLabel.trim();
+        saveState();
+        renderLearningForToday();
+        renderLearningHeatmap();
+        renderSkillProgress();
+      }
+    });
+    catCell.appendChild(catSpan);
+
+    const subCell = document.createElement("div");
+    const subSpan = document.createElement("span");
+    subSpan.textContent = entry.subskill || "No subskill";
+    subSpan.style.fontSize="12px";
+    subSpan.style.cursor="pointer";
+    subSpan.addEventListener("click",()=>{
+      const upd = prompt("Edit subskill (or blank):", entry.subskill || "");
+      if(upd!==null){
+        entry.subskill = upd.trim();
+        saveState();
+        renderLearningForToday();
+        renderLearningHeatmap();
+        renderSkillProgress();
+      }
+    });
+    subCell.appendChild(subSpan);
+
+    const effortCell = document.createElement("div");
+    effortCell.style.fontSize="12px";
+    effortCell.textContent = entry.effort===1 ? "Small" : entry.effort===2 ? "Medium" : "Intensive";
+
+    const actionsCell = document.createElement("div");
+    actionsCell.style.textAlign="right";
+    actionsCell.style.display="flex";
+    actionsCell.style.flexDirection="column";
+    actionsCell.style.alignItems="flex-end";
+    actionsCell.style.gap="4px";
+
+    const refBtn = document.createElement("button");
+    refBtn.type="button";
+    refBtn.textContent="✎ Reflection";
+    refBtn.style.fontSize="11px";
+    refBtn.style.padding="4px 8px";
+    refBtn.style.borderRadius="999px";
+    refBtn.style.background="var(--bg)";
+    refBtn.style.color="var(--text)";
+    refBtn.addEventListener("click",()=>{
+      const upd = prompt("Edit reflection:", entry.reflection || "");
+      if(upd!==null){
+        entry.reflection = upd.trim();
+        saveState();
+        renderLearningForToday();
+      }
+    });
+
+    const delBtn = document.createElement("button");
+    delBtn.type="button";
+    delBtn.textContent="✕";
+    delBtn.style.fontSize="11px";
+    delBtn.style.padding="4px 8px";
+    delBtn.style.borderRadius="999px";
+    delBtn.style.background="#f97373";
+    delBtn.addEventListener("click",()=>{
+      if(confirm("Delete this learning entry?")){
+        appState.learning[key] = (appState.learning[key] || []).filter(e=>e.id!==entry.id);
+        saveState();
+        renderLearningForToday();
+        renderLearningHeatmap();
+        renderSkillProgress();
+      }
+    });
+
+    actionsCell.appendChild(refBtn);
+    actionsCell.appendChild(delBtn);
+
+    row.appendChild(catCell);
+    row.appendChild(subCell);
+    row.appendChild(effortCell);
+    row.appendChild(actionsCell);
+    learningListEl.appendChild(row);
+  });
+}
+
+addLearningBtn.addEventListener("click",()=>{
+  const category = learningCategoryInput.value;
+  const subskill = learningSubskillInput.value.trim();
+  const effort = parseInt(learningEffortInput.value,10) || 1;
+  const reflection = learningReflectionInput.value.trim();
+  const key = getTodayKey();
+  const arr = ensureArray(appState.learning,key);
+  arr.push({
+    id: generateId(),
+    category,
+    subskill,
+    effort,
+    reflection,
+    createdAt: new Date().toISOString()
+  });
+  saveState();
+  learningSubskillInput.value="";
+  learningReflectionInput.value="";
+  learningEffortInput.value="1";
+  renderLearningForToday();
+  renderLearningHeatmap();
+  renderSkillProgress();
+});
+
+/* ===== HEATMAPS ===== */
+function renderTaskHeatmap(){
+  const today = new Date(getTodayKey()+"T00:00:00");
+  const cells = [];
+  for(let i=27;i>=0;i--){
+    const d = new Date(today);
+    d.setDate(d.getDate()-i);
+    const key = d.toISOString().slice(0,10);
+    const stats = computeTaskStatsForDate(key);
+    cells.push({ dateKey:key, percent:stats.percent });
+  }
+  taskHeatmapEl.innerHTML="";
+  cells.forEach(info=>{
+    const cell = document.createElement("div");
+    cell.style.width="100%";
+    cell.style.paddingTop="100%";
+    cell.style.position="relative";
+    cell.style.borderRadius="4px";
+    cell.style.cursor="pointer";
+    let bg="#e5e7eb";
+    if(info.percent>=80) bg="#6ee7b7";
+    else if(info.percent>=40) bg="#fde68a";
+    else if(info.percent>0) bg="#fca5a5";
+    cell.style.background=bg;
+    const inner=document.createElement("div");
+    inner.style.position="absolute";
+    inner.style.top="50%";
+    inner.style.left="50%";
+    inner.style.transform="translate(-50%,-50%)";
+    inner.style.fontSize="9px";
+    inner.style.color="#111827";
+    inner.textContent = new Date(info.dateKey+"T00:00:00").getDate();
+    cell.dataset.dateKey=info.dateKey;
+    cell.appendChild(inner);
+    taskHeatmapEl.appendChild(cell);
+  });
+  const firstKey=cells[0]?.dateKey;
+  const lastKey=cells[cells.length-1]?.dateKey;
+  if(firstKey && lastKey){
+    heatmapRangeLabel.textContent = formatShortDate(firstKey)+" – "+formatShortDate(lastKey);
+  }
+}
+
+function renderLearningHeatmap(){
+  const today = new Date(getTodayKey()+"T00:00:00");
+  const cells = [];
+  for(let i=27;i>=0;i--){
+    const d = new Date(today);
+    d.setDate(d.getDate()-i);
+    const key = d.toISOString().slice(0,10);
+    const stats = computeLearningStatsForDate(key);
+    cells.push({ dateKey:key, xp:stats.xp });
+  }
+  learningHeatmapEl.innerHTML="";
+  cells.forEach(info=>{
+    const cell=document.createElement("div");
+    cell.style.width="100%";
+    cell.style.paddingTop="100%";
+    cell.style.position="relative";
+    cell.style.borderRadius="4px";
+    cell.style.cursor="pointer";
+    let bg="#e5e7eb";
+    if(info.xp>0 && info.xp<=10) bg="#bfdbfe";
+    else if(info.xp<=20) bg="#60a5fa";
+    else if(info.xp>20) bg="#2563eb";
+    cell.style.background=bg;
+    const inner=document.createElement("div");
+    inner.style.position="absolute";
+    inner.style.top="50%";
+    inner.style.left="50%";
+    inner.style.transform="translate(-50%,-50%)";
+    inner.style.fontSize="9px";
+    inner.style.color="#f9fafb";
+    inner.textContent = new Date(info.dateKey+"T00:00:00").getDate();
+    cell.dataset.dateKey=info.dateKey;
+    learningHeatmapEl.appendChild(cell);
+    cell.appendChild(inner);
+  });
+  const firstKey=cells[0]?.dateKey;
+  const lastKey=cells[cells.length-1]?.dateKey;
+  if(firstKey && lastKey){
+    learningHeatmapRangeLabel.textContent = formatShortDate(firstKey)+" – "+formatShortDate(lastKey);
+  }
+}
+
+/* ===== SKILL PROGRESS ===== */
+function computeSkillCategoryXpLastSixMonths(){
+  const today = new Date(getTodayKey()+"T00:00:00");
+  const map={};
+  Object.keys(appState.learning).forEach(k=>{
+    const d=new Date(k+"T00:00:00");
+    const diff=(today-d)/(1000*60*60*24);
+    if(diff>=0 && diff<=SIX_MONTHS_IN_DAYS){
+      (appState.learning[k]||[]).forEach(e=>{
+        const xp = LEARNING_XP_PER_EFFORT[e.effort] || 0;
+        if(!map[e.category]) map[e.category]=0;
+        map[e.category]+=xp;
+      });
+    }
+  });
+  return map;
+}
+function renderSkillProgress(){
+  const map = computeSkillCategoryXpLastSixMonths();
+  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  skillProgressWrapper.innerHTML="";
+  if(entries.length===0){
+    const e=document.createElement("div");
+    e.style.fontSize="12px";
+    e.style.color="var(--text-light)";
+    e.textContent="No learning XP yet. Start logging to see growth.";
+    skillProgressWrapper.appendChild(e);
+    return;
+  }
+  const maxXp = entries[0][1] || 1;
+  entries.forEach(([cat,xp])=>{
+    const card=document.createElement("div");
+    card.style.borderRadius="12px";
+    card.style.padding="10px 12px";
+    card.style.background="var(--bg-alt)";
+    card.style.border="1px solid var(--border)";
+    card.style.display="flex";
+    card.style.flexDirection="column";
+    card.style.gap="6px";
+
+    const header=document.createElement("div");
+    header.style.display="flex";
+    header.style.justifyContent="space-between";
+    const label=document.createElement("div");
+    label.style.fontWeight="600";
+    label.style.fontSize="13px";
+    label.textContent = categoryLabel(cat);
+    const xpText=document.createElement("div");
+    xpText.style.fontSize="11px";
+    xpText.style.color="var(--text-light)";
+    xpText.textContent = xp+" XP";
+    header.appendChild(label);
+    header.appendChild(xpText);
+
+    const barOuter=document.createElement("div");
+    barOuter.style.width="100%";
+    barOuter.style.height="6px";
+    barOuter.style.borderRadius="999px";
+    barOuter.style.background="rgba(148,163,184,0.35)";
+    const barInner=document.createElement("div");
+    barInner.style.height="100%";
+    barInner.style.borderRadius="999px";
+    barInner.style.background="linear-gradient(90deg,#ffb443,#ff7f50)";
+    barInner.style.width = Math.max(8,(xp/maxXp)*100)+"%";
+    barOuter.appendChild(barInner);
+
+    card.appendChild(header);
+    card.appendChild(barOuter);
+    skillProgressWrapper.appendChild(card);
+  });
+}
+
+/* ===== PROFILE ===== */
+function renderProfile(){
+  userNameInput.value = appState.user.name || "";
+  userPositionInput.value = appState.user.position || "";
+}
+userNameInput.addEventListener("change",()=>{
+  appState.user.name = userNameInput.value.trim();
+  saveState();
+});
+userPositionInput.addEventListener("change",()=>{
+  appState.user.position = userPositionInput.value.trim();
+  saveState();
+});
+
+/* ===== INIT ===== */
+document.addEventListener("DOMContentLoaded",()=>{
+  loadState();
+  applyTheme(appState.theme || "light");
+  showTab("tasksTab");
+  renderTasksForToday();
+  renderTaskHeatmap();
+  renderLearningForToday();
+  renderLearningHeatmap();
+  renderSkillProgress();
+  renderProfile();
+});
+</script>
+<!-- PART 4: Charts, Animations, Modal & PDF Export -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+<script>
+/* =========================================================
+   ========== 1. RADIAL DOPAMINE CHART (Daily) =============
+   ========================================================= */
+let dopamineChart;
+function renderDopamineRadial(percent){
+  const ctx = document.getElementById("dopamineChart").getContext("2d");
+  if(dopamineChart) dopamineChart.destroy();
+
+  dopamineChart = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      datasets: [{
+        data: [percent, 100 - percent],
+        backgroundColor: [
+          percent >= 60 ? "#6ee7b7" : "#fca5a5",
+          "rgba(0,0,0,0.08)"
+        ],
+        borderWidth: 0,
+        cutout: "70%",
+      }]
+    },
+    options: {
+      animation: {
+        animateRotate: true,
+        duration: 900,
+        easing: "easeOutBack"
+      },
+      plugins: {
+        tooltip: { enabled: false },
+      }
+    }
+  });
+}
+
+
+/* =========================================================
+   ===== 2. MONTHLY DOPAMINE LINE CHART (28 Days) ==========
+   ========================================================= */
+let monthlyChart;
+function renderMonthlyDopamineChart(){
+  const ctx = document.getElementById("monthlyDopamineChart").getContext("2d");
+
+  if(monthlyChart) monthlyChart.destroy();
+
+  const today = new Date(getTodayKey()+"T00:00:00");
+  const labels = [];
+  const values = [];
+
+  for(let i=27;i>=0;i--){
+    const d = new Date(today);
+    d.setDate(d.getDate()-i);
+    const key = d.toISOString().slice(0,10);
+    const stats = computeTaskStatsForDate(key);
+    labels.push(d.getDate());
+    values.push(stats.percent);
+  }
+
+  monthlyChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Dopamine Level (%)",
+        data: values,
+        borderColor: "#ffb443",
+        backgroundColor: "rgba(255,180,67,0.35)",
+        borderWidth: 3,
+        tension: 0.35,
+        fill: true,
+      }]
+    },
+    options: {
+      scales: {
+        y: { min: 0, max: 100, ticks: { stepSize: 20 } }
+      },
+      animation: {
+        duration: 900,
+        easing: "easeOutBack"
+      },
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+}
+
+
+/* =========================================================
+   ======== 3. HEATMAP CLICK → HO-HO COMMENT MODAL =========
+   ========================================================= */
+function createModal(){
+  if(document.getElementById("detailModal")) return;
+
+  const modal = document.createElement("div");
+  modal.id = "detailModal";
+  modal.style.position="fixed";
+  modal.style.top=0;
+  modal.style.left=0;
+  modal.style.width="100%";
+  modal.style.height="100%";
+  modal.style.background="rgba(0,0,0,0.4)";
+  modal.style.display="none";
+  modal.style.justifyContent="center";
+  modal.style.alignItems="center";
+  modal.style.zIndex=9999;
+
+  modal.innerHTML = `
+    <div id="modalContent" style="
+      background:white;
+      width:90%;
+      max-width:420px;
+      padding:20px;
+      border-radius:16px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      animation: modalPop .35s ease-out">
+      
+      <div style="display:flex; gap:12px; align-items:center;">
+        <img id="modalHoHo" src="hoho-pointsmile.png" style="width:52px;">
+        <div>
+          <div id="modalDate" style="font-weight:700; font-size:16px;">-</div>
+          <div id="modalPercent" style="font-size:13px; color:#374151">-</div>
+        </div>
+      </div>
+
+      <div id="modalTasks" style="font-size:13px; line-height:1.5;">
+        Loading tasks...
+      </div>
+
+      <button id="closeModalBtn" style="
+        padding:8px 12px;
+        border-radius:8px;
+        background:#ffb443;
+        border:none;
+        color:white;
+        font-weight:600;
+        cursor:pointer;
+      ">Close</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  /* Keyframes */
+  const style = document.createElement("style");
+  style.innerHTML = `
+    @keyframes modalPop {
+      0%   { transform: scale(.7); opacity:0; }
+      70%  { transform: scale(1.05); opacity:1; }
+      100% { transform: scale(1); }
+    }
+  `;
+  document.head.appendChild(style);
+
+  document.getElementById("closeModalBtn").onclick = () => {
+    modal.style.display = "none";
+  }
+}
+
+function openModal(dateKey, percent){
+  createModal();
+  const modal = document.getElementById("detailModal");
+  modal.style.display="flex";
+
+  document.getElementById("modalDate").textContent = formatShortDate(dateKey);
+  document.getElementById("modalPercent").textContent =
+    `Dopamine Sparks: ${percent}%`;
+
+  const tasks = appState.tasks[dateKey] || [];
+  const list = tasks.map(t => 
+    `<li><b>${t.name}</b> — Effort ${t.effort} (${t.status})</li>`
+  ).join("");
+
+  document.getElementById("modalTasks").innerHTML =
+    list ? `<ul style="padding-left:18px">${list}</ul>` :
+    `<i>No tasks logged.</i>`;
+
+  /* Change Ho-Ho based on performance */
+  const ho = document.getElementById("modalHoHo");
+  if(percent >= 80) ho.src="hoho-levelup.png";
+  else if(percent >= 40) ho.src="hoho-thinking.png";
+  else ho.src="hoho-sad.png";
+}
+
+
+/* Attach listener to both heatmaps */
+document.addEventListener("click", e=>{
+  if(e.target.closest("#taskHeatmap div")){
+    const key = e.target.closest("#taskHeatmap div").dataset.dateKey;
+    const stats = computeTaskStatsForDate(key);
+    openModal(key, stats.percent);
+  }
+  if(e.target.closest("#learningHeatmap div")){
+    const key = e.target.closest("#learningHeatmap div").dataset.dateKey;
+    const stats = computeLearningStatsForDate(key);
+    openModal(key, stats.percent);
+  }
+});
+
+
+/* =========================================================
+   ================== 4. TOP 3 SKILL GAIN ==================
+   ========================================================= */
+function computeTop3Skills(){
+  const map = computeSkillCategoryXpLastSixMonths();
+  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  return entries;
+}
+
+function renderTop3Skills(){
+  const wrapper = document.getElementById("top3skills");
+  if(!wrapper) return;
+  wrapper.innerHTML = "";
+
+  const data = computeTop3Skills();
+  if(data.length === 0){
+    wrapper.innerHTML = `<div style="font-size:12px;color:var(--text-light)">No skill gains yet.</div>`;
+    return;
+  }
+
+  data.forEach(([cat,xp])=>{
+    const row = document.createElement("div");
+    row.style.display="grid";
+    row.style.gridTemplateColumns="1fr auto";
+    row.style.gap="8px";
+    row.style.alignItems="center";
+
+    row.innerHTML = `
+      <div style="font-size:13px; font-weight:600;">
+        ${categoryLabel(cat)}
+        <div style="height:6px;background:#eee;border-radius:99px;margin-top:6px;position:relative;">
+          <div style="
+            height:100%;
+            width:${xp}px;
+            background:linear-gradient(90deg,#ffb443,#ff7f50);
+            border-radius:99px;
+          "></div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text-light); font-weight:600">${xp} XP</div>
+    `;
+    wrapper.appendChild(row);
+  });
+}
+
+
+/* =========================================================
+   =============== 5. EXPORT PDF (A4 Light Mode) ===========
+   ========================================================= */
+async function exportPDF(){
+  const { jsPDF } = window.jspdf;
+
+  /* Force light mode */
+  document.body.classList.remove("dark");
+
+  const pdf = new jsPDF({
+    orientation:"portrait",
+    unit:"pt",
+    format:"a4",
+    compress:true
+  });
+
+  /* Capture whole dashboard */
+  const reportArea = document.getElementById("fullReportArea");
+  reportArea.style.background="white";
+  reportArea.style.color="black";
+
+  const canvas = await html2canvas(reportArea, {
+    scale: 1.4,
+    useCORS: true
+  });
+
+  const imgData = canvas.toDataURL("image/jpeg", 0.55);
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+
+  let imgWidth = pageWidth;
+  let imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+  /* If height overflow, reduce */
+  if(imgHeight > pageHeight){
+    const ratio = pageHeight / imgHeight;
+    imgHeight *= ratio;
+    imgWidth *= ratio;
+  }
+
+  pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
+
+  pdf.save("HeyHoLetsGo_Report.pdf");
+}
+
+/* button listener */
+if(document.getElementById("exportPdfBtn")){
+  document.getElementById("exportPdfBtn").onclick = exportPDF;
+}
+
+
+/* =========================================================
+   ==================== INIT AFTER PART 3 ===================
+   ========================================================= */
+document.addEventListener("DOMContentLoaded", ()=>{
+  setTimeout(()=>{
+    const todayStats = computeTaskStatsForDate(getTodayKey());
+    renderDopamineRadial(todayStats.percent);
+    renderMonthlyDopamineChart();
+    renderTop3Skills();
+  }, 300);
+});
+</script>
+<!-- PART 5: Ho-Ho Mood & Duolingo-style Micro Animations -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const taskHoho = document.getElementById("hohoTaskFloat");
+  const learningHoho = document.getElementById("hohoLearningFloat");
+
+  if (!taskHoho || !learningHoho) return;
+
+  // Matikan animasi infinite default, kita ganti jadi micro-bounce
+  taskHoho.style.animation = "none";
+  learningHoho.style.animation = "none";
+
+  function updateHoHoMood() {
+    const todayKey = getTodayKey();
+
+    // Task mood
+    const taskStats = computeTaskStatsForDate(todayKey);
+    if (taskStats.percent >= 80) {
+      taskHoho.src = "hoho-levelup.png";
+    } else if (taskStats.percent >= 40) {
+      taskHoho.src = "hoho-pumped.png";
+    } else if (taskStats.percent > 0) {
+      taskHoho.src = "hoho-sad.png";
+    } else {
+      // no tasks at all
+      taskHoho.src = "hoho-happy.png";
+    }
+
+    // Learning mood
+    const learnStats = computeLearningStatsForDate(todayKey);
+    if (learnStats.percent >= 80) {
+      learningHoho.src = "hoho-levelup.png";
+    } else if (learnStats.percent >= 40) {
+      learningHoho.src = "hoho-book.png";
+    } else if (learnStats.percent > 0) {
+      learningHoho.src = "hoho-thinking.png";
+    } else {
+      learningHoho.src = "hoho-book.png";
+    }
+  }
+
+  function bounceOnce(el) {
+    if (!el) return;
+    // reset animasi biar bisa retrigger
+    el.style.animation = "none";
+    void el.offsetWidth; // force reflow
+    el.style.animation = "hohoBounce 0.65s cubic-bezier(0.34, 1.56, 0.64, 1)";
+  }
+
+  // Micro-bounce random interval, cuma kalau tab-nya lagi kepake
+  function scheduleRandomBounce() {
+    const delay = 3500 + Math.random() * 2500; // 3.5–6 detik
+    setTimeout(() => {
+      if (!taskHoho.classList.contains("hidden")) {
+        bounceOnce(taskHoho);
+      }
+      if (!learningHoho.classList.contains("hidden")) {
+        bounceOnce(learningHoho);
+      }
+      scheduleRandomBounce();
+    }, delay);
+  }
+
+  // Bounce kalau diklik
+  [taskHoho, learningHoho].forEach(el => {
+    el.addEventListener("click", () => bounceOnce(el));
+  });
+
+  // Update mood + mulai loop
+  updateHoHoMood();
+  scheduleRandomBounce();
+
+  // Refresh mood tiap beberapa detik biar ngikut progress terbaru
+  setInterval(updateHoHoMood, 5000);
+});
+</script>
