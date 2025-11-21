@@ -249,25 +249,55 @@
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
+      align-items: center;
     }
 
-    .task-form-fields input[type="text"] {
-      flex: 1 1 160px;
-      padding: 8px 10px;
-      border-radius: 12px;
-      border: 1px solid var(--border-soft);
+    .task-form-main {
+      flex: 1 1 220px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff7e7;
+      border-radius: 999px;
+      padding: 6px 10px;
+      box-shadow: inset 0 0 0 1px rgba(248, 171, 46, 0.45);
+    }
+
+    .task-form-main input[type="text"] {
+      flex: 1;
+      border: none;
+      background: transparent;
       font-size: 13px;
+      padding: 4px 4px;
+      outline: none;
     }
 
-    .task-form-fields select {
-      padding: 8px 8px;
-      border-radius: 12px;
-      border: 1px solid var(--border-soft);
-      font-size: 13px;
-      background: #fff;
+    .effort-pill-group {
+      display: inline-flex;
+      gap: 4px;
+      padding: 2px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.7);
     }
 
-    .task-form-fields button {
+    .effort-pill {
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 11px;
+      border: none;
+      cursor: pointer;
+      color: #4b5563;
+      background: transparent;
+      transition: background 0.15s ease-out, transform 0.15s ease-out;
+    }
+
+    .effort-pill.active {
+      background: linear-gradient(135deg, #ffb443, #ffd979);
+      color: #1f2933;
+      transform: translateY(-1px);
+    }
+
+    .task-add-btn {
       padding: 8px 14px;
       border-radius: 999px;
       border: none;
@@ -306,29 +336,116 @@
       color: var(--text-soft);
     }
 
-    .task-title-input {
-      width: 100%;
-      border-radius: 10px;
-      border: 1px solid rgba(148, 163, 184, 0.55);
-      padding: 4px 6px;
-      font-size: 12px;
-      background: #ffffff;
+    .task-title-span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #fef3c7;
+      cursor: pointer;
+      transition: box-shadow 0.15s ease-out, transform 0.1s ease-out,
+        background 0.15s ease-out;
     }
 
-    .status-select {
-      font-size: 11px;
-      border-radius: 999px;
-      padding: 4px 6px;
-      border: 1px solid rgba(148, 163, 184, 0.55);
+    .task-title-span:hover {
+      box-shadow: 0 4px 10px rgba(248, 171, 46, 0.4);
+      transform: translateY(-1px);
+      background: #fffbeb;
+    }
+
+    .task-title-span.editing {
       background: #fff;
+      box-shadow: 0 0 0 1px rgba(248, 171, 46, 0.7);
+    }
+
+    .task-title-span input {
+      border: none;
+      background: transparent;
+      font-size: 12px;
+      outline: none;
+      min-width: 120px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      background: #e5e7eb;
+      color: #374151;
+      transition: background 0.15s ease-out, border-color 0.15s ease-out,
+        transform 0.1s ease-out;
+    }
+
+    .status-pill:hover {
+      transform: translateY(-1px);
+    }
+
+    .status-none {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .status-progress {
+      background: #fef9c3;
+      border-color: #facc15;
+      color: #854d0e;
+    }
+
+    .status-done {
+      background: #bbf7d0;
+      border-color: #22c55e;
+      color: #166534;
+    }
+
+    .status-blocked {
+      background: #fee2e2;
+      border-color: #ef4444;
+      color: #991b1b;
+    }
+
+    .status-pill-icon {
+      font-size: 12px;
+    }
+
+    .effort-chip-row {
+      display: inline-flex;
+      gap: 4px;
+    }
+
+    .effort-chip {
+      border-radius: 999px;
+      padding: 3px 7px;
+      font-size: 11px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      cursor: pointer;
+      background: #ffffff;
+      transition: background 0.15s ease-out, border-color 0.15s ease-out,
+        transform 0.1s ease-out;
+    }
+
+    .effort-chip.active {
+      background: #fffbeb;
+      border-color: rgba(248, 171, 46, 0.9);
+      transform: translateY(-1px);
     }
 
     .btn-delete-task {
       border: none;
       background: transparent;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 14px;
       padding: 2px 4px;
+      transition: transform 0.1s ease-out;
+    }
+
+    .btn-delete-task:hover {
+      transform: translateY(-1px) scale(1.05);
     }
 
     .heatmap-header {
@@ -356,7 +473,6 @@
       width: 100%;
       aspect-ratio: 1 / 1;
       border-radius: 5px;
-      background: #e5e7eb;
       font-size: 9px;
       color: #111827;
       display: flex;
@@ -364,6 +480,7 @@
       justify-content: center;
       cursor: pointer;
       position: relative;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
     }
 
     .heat-cell span {
@@ -717,6 +834,42 @@
       color: var(--text-soft);
     }
 
+    /* Report export */
+    .report-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .report-row input[type="month"] {
+      padding: 6px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      font-size: 13px;
+      background: #fff;
+    }
+
+    .report-btn {
+      padding: 7px 14px;
+      border-radius: 999px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #ffb443, #ffd979);
+      color: #1f2933;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(248, 171, 46, 0.55);
+      white-space: nowrap;
+    }
+
+    .report-hint {
+      font-size: 11px;
+      color: var(--text-soft);
+      margin-top: 4px;
+    }
+
     /* Modal */
     .modal-backdrop {
       position: fixed;
@@ -803,7 +956,7 @@
       margin-top: 3px;
     }
 
-    .effort-chip {
+    .effort-chip-modal {
       border-radius: 999px;
       padding: 4px 8px;
       font-size: 11px;
@@ -815,7 +968,7 @@
       gap: 4px;
     }
 
-    .effort-chip.active {
+    .effort-chip-modal.active {
       border-color: rgba(248, 171, 46, 0.9);
       background: #fff7e7;
     }
@@ -954,18 +1107,21 @@
           <div class="task-flex">
             <form id="task-form">
               <div class="task-form-fields">
-                <input
-                  type="text"
-                  id="task-title"
-                  placeholder="What are you working on?"
-                  required
-                />
-                <select id="task-effort">
-                  <option value="1">Effort 1 – Small</option>
-                  <option value="2">Effort 2 – Medium</option>
-                  <option value="3">Effort 3 – Heavy</option>
-                </select>
-                <button type="submit">Add Task</button>
+                <div class="task-form-main">
+                  <input
+                    type="text"
+                    id="task-title"
+                    placeholder="What are you working on?"
+                    autocomplete="off"
+                    required
+                  />
+                  <div class="effort-pill-group" id="effort-pill-group">
+                    <button type="button" class="effort-pill active" data-effort="1">E1</button>
+                    <button type="button" class="effort-pill" data-effort="2">E2</button>
+                    <button type="button" class="effort-pill" data-effort="3">E3</button>
+                  </div>
+                </div>
+                <button type="submit" class="task-add-btn">Add Task</button>
               </div>
             </form>
 
@@ -1007,6 +1163,22 @@
               <div class="legend-swatch" style="background:#bbf7d0;"></div> <span>80–100%</span>
             </div>
           </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>Monthly Report Export</h2>
+            <span>Generate report 1 bulan untuk Tasks & Learning.</span>
+          </div>
+          <div class="report-row">
+            <input type="month" id="report-month" />
+            <button type="button" class="report-btn" id="btn-export-report">
+              Generate Monthly Report (PDF)
+            </button>
+          </div>
+          <p class="report-hint">
+            Pilih bulan yang mau di-export. Browser akan buka jendela baru & lo bisa pilih “Save as PDF”.
+          </p>
         </div>
       </section>
 
@@ -1393,9 +1565,9 @@
         <div>
           <label>Effort (durasi / kedalaman belajar)</label>
           <div class="effort-options" id="effort-options">
-            <div class="effort-chip" data-effort="small">🌱 Small (5–10 menit)</div>
-            <div class="effort-chip" data-effort="medium">🔥 Medium (deep dive)</div>
-            <div class="effort-chip" data-effort="intensive">🚀 Intensive (1–2 jam)</div>
+            <div class="effort-chip-modal" data-effort="small">🌱 Small (5–10 menit)</div>
+            <div class="effort-chip-modal" data-effort="medium">🔥 Medium (deep dive)</div>
+            <div class="effort-chip-modal" data-effort="intensive">🚀 Intensive (1–2 jam)</div>
           </div>
         </div>
       </div>
@@ -1577,6 +1749,27 @@
       updateDopamineChart(score);
     }
 
+    function getNextStatus(current) {
+      if (current === "none") return "progress";
+      if (current === "progress") return "done";
+      if (current === "done") return "blocked";
+      return "none";
+    }
+
+    function getStatusLabel(status) {
+      if (status === "progress") return "On Progress";
+      if (status === "done") return "Done";
+      if (status === "blocked") return "Blocked";
+      return "Not Started";
+    }
+
+    function getStatusIcon(status) {
+      if (status === "progress") return "⏳";
+      if (status === "done") return "✅";
+      if (status === "blocked") return "⛔";
+      return "⬜";
+    }
+
     function renderTasksList() {
       const today = todayISO();
       const day = ensureDay(today);
@@ -1585,65 +1778,103 @@
       day.tasks.forEach((t) => {
         const tr = document.createElement("tr");
 
-        // Title (editable only for today, and ini emang list hari ini)
+        // Title cell: click to edit
         const tdTitle = document.createElement("td");
-        const inputTitle = document.createElement("input");
-        inputTitle.type = "text";
-        inputTitle.value = t.title || "";
-        inputTitle.className = "task-title-input";
-        inputTitle.addEventListener("change", () => {
-          t.title = inputTitle.value.trim();
-          saveTasks();
+        const spanTitle = document.createElement("div");
+        spanTitle.className = "task-title-span";
+        const titleText = document.createElement("span");
+        titleText.textContent = t.title || "(No title)";
+        spanTitle.appendChild(titleText);
+
+        spanTitle.addEventListener("click", () => {
+          spanTitle.classList.add("editing");
+          spanTitle.innerHTML = "";
+          const input = document.createElement("input");
+          input.type = "text";
+          input.value = t.title || "";
+          spanTitle.appendChild(input);
+          input.focus();
+          input.select();
+
+          function commit() {
+            const newVal = input.value.trim();
+            t.title = newVal || "(No title)";
+            saveTasks();
+            renderTasksList();
+            renderTodaySummary();
+          }
+
+          input.addEventListener("blur", commit);
+          input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              input.blur();
+            } else if (e.key === "Escape") {
+              renderTasksList();
+            }
+          });
         });
-        tdTitle.appendChild(inputTitle);
+
+        tdTitle.appendChild(spanTitle);
         tr.appendChild(tdTitle);
 
-        // Effort (editable)
+        // Effort pill chips
         const tdEff = document.createElement("td");
-        const selectEff = document.createElement("select");
-        selectEff.className = "status-select";
-        [["1", "Effort 1"], ["2", "Effort 2"], ["3", "Effort 3"]].forEach(
-          ([val, label]) => {
-            const opt = document.createElement("option");
-            opt.value = val;
-            opt.textContent = label;
-            if (t.effort === val) opt.selected = true;
-            selectEff.appendChild(opt);
-          }
-        );
-        selectEff.addEventListener("change", () => {
-          t.effort = selectEff.value;
-          saveTasks();
-          renderTodaySummary();
-          renderHeatmap();
+        const chipRow = document.createElement("div");
+        chipRow.className = "effort-chip-row";
+        ["1", "2", "3"].forEach((val) => {
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "effort-chip" + (t.effort === val ? " active" : "");
+          chip.textContent = "E" + val;
+          chip.addEventListener("click", () => {
+            t.effort = val;
+            saveTasks();
+            renderTasksList();
+            renderTodaySummary();
+            renderHeatmap();
+          });
+          chipRow.appendChild(chip);
         });
-        tdEff.appendChild(selectEff);
+        tdEff.appendChild(chipRow);
         tr.appendChild(tdEff);
 
-        // Status
+        // Status pill (click to cycle)
         const tdStatus = document.createElement("td");
-        const select = document.createElement("select");
-        select.className = "status-select";
-        ["none", "progress", "done", "blocked"].forEach((status) => {
-          const opt = document.createElement("option");
-          opt.value = status;
-          opt.textContent =
-            status === "none"
-              ? "Not started"
-              : status.charAt(0).toUpperCase() + status.slice(1);
-          if (t.status === status) opt.selected = true;
-          select.appendChild(opt);
-        });
-        select.addEventListener("change", () => {
-          t.status = select.value;
+        const pill = document.createElement("div");
+        const status = t.status || "none";
+        pill.className =
+          "status-pill " +
+          (status === "progress"
+            ? "status-progress"
+            : status === "done"
+            ? "status-done"
+            : status === "blocked"
+            ? "status-blocked"
+            : "status-none");
+
+        const iconSpan = document.createElement("span");
+        iconSpan.className = "status-pill-icon";
+        iconSpan.textContent = getStatusIcon(status);
+
+        const labelSpan = document.createElement("span");
+        labelSpan.textContent = getStatusLabel(status);
+
+        pill.appendChild(iconSpan);
+        pill.appendChild(labelSpan);
+
+        pill.addEventListener("click", () => {
+          t.status = getNextStatus(t.status || "none");
           saveTasks();
+          renderTasksList();
           renderTodaySummary();
           renderHeatmap();
         });
-        tdStatus.appendChild(select);
+
+        tdStatus.appendChild(pill);
         tr.appendChild(tdStatus);
 
-        // Actions (delete only today – dan memang list ini hari ini)
+        // Actions (delete)
         const tdActions = document.createElement("td");
         const delBtn = document.createElement("button");
         delBtn.className = "btn-delete-task";
@@ -1666,10 +1897,14 @@
     function handleTaskFormSubmit(evt) {
       evt.preventDefault();
       const titleInput = document.getElementById("task-title");
-      const effortSelect = document.getElementById("task-effort");
       const title = titleInput.value.trim();
       if (!title) return;
-      const effort = effortSelect.value;
+
+      const selectedEff = document.querySelector(
+        "#effort-pill-group .effort-pill.active"
+      );
+      const effort = selectedEff ? selectedEff.dataset.effort : "1";
+
       const today = todayISO();
       const day = ensureDay(today);
       day.tasks.push({
@@ -2108,7 +2343,7 @@
           ? "Hard skill: bikin lo makin tajem di kerjaan teknis."
           : "Soft skill: cara lo mikir & berinteraksi sama orang.";
 
-      const chips = document.querySelectorAll(".effort-chip");
+      const chips = document.querySelectorAll(".effort-chip-modal");
       chips.forEach((chip) => {
         chip.classList.toggle("active", chip.dataset.effort === currentEffort);
       });
@@ -2125,11 +2360,11 @@
     }
 
     function handleEffortClick(e) {
-      const chip = e.target.closest(".effort-chip");
+      const chip = e.target.closest(".effort-chip-modal");
       if (!chip) return;
       currentEffort = chip.dataset.effort;
       document
-        .querySelectorAll(".effort-chip")
+        .querySelectorAll(".effort-chip-modal")
         .forEach((c) => c.classList.remove("active"));
       chip.classList.add("active");
     }
@@ -2251,6 +2486,259 @@
       hoho.addEventListener("pointerdown", onPointerDown);
     }
 
+    // ------------------- Export Monthly Report --------------------
+    function handleExportReport() {
+      const input = document.getElementById("report-month");
+      const val = input.value; // "2025-01"
+      if (!val) {
+        alert("Pilih dulu bulan yang mau di-export.");
+        return;
+      }
+      const [yearStr, monthStr] = val.split("-");
+      const year = parseInt(yearStr, 10);
+      const month = parseInt(monthStr, 10);
+
+      const monthLabel = new Date(year, month - 1, 1).toLocaleDateString(
+        undefined,
+        { month: "long", year: "numeric" }
+      );
+
+      // kumpulin data tasks
+      const taskDays = [];
+      Object.keys(tasksState.days || {}).forEach((date) => {
+        if (date.startsWith(val)) {
+          const dayData = tasksState.days[date];
+          const { score, doneCount, xp } = computeDayScore(dayData);
+          taskDays.push({
+            date,
+            score,
+            doneCount,
+            xp,
+            tasks: dayData.tasks || []
+          });
+        }
+      });
+      taskDays.sort((a, b) => (a.date < b.date ? -1 : 1));
+
+      // kumpulin data learning
+      const learningEntries = (learningState.entries || []).filter((e) =>
+        e.date.startsWith(val)
+      );
+      learningEntries.sort((a, b) => (a.date < b.date ? -1 : 1));
+
+      const learningByDate = {};
+      const xpBySkill = {};
+      learningEntries.forEach((e) => {
+        if (!learningByDate[e.date]) learningByDate[e.date] = [];
+        learningByDate[e.date].push(e);
+        xpBySkill[e.skillName] = (xpBySkill[e.skillName] || 0) + Number(e.xp || 0);
+      });
+
+      // build HTML report
+      let html = `
+        <html>
+        <head>
+          <meta charset="UTF-8" />
+          <title>HeyHoLetsGo Monthly Report – ${monthLabel}</title>
+          <style>
+            body {
+              font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+              margin: 24px;
+              color: #111827;
+              background: #fdf6ec;
+            }
+            h1,h2,h3,h4 {
+              margin: 0 0 6px 0;
+            }
+            .section {
+              margin-bottom: 18px;
+              padding: 12px 14px;
+              border-radius: 12px;
+              background: #ffffff;
+              box-shadow: 0 4px 12px rgba(15,23,42,0.06);
+            }
+            .section-title {
+              font-size: 18px;
+              font-weight: 800;
+              margin-bottom: 4px;
+            }
+            .section-sub {
+              font-size: 12px;
+              color: #6b7280;
+              margin-bottom: 8px;
+            }
+            .day-block {
+              margin-bottom: 10px;
+              padding: 8px 10px;
+              border-radius: 10px;
+              background: #fffaf0;
+              border: 1px solid rgba(248,171,46,0.35);
+            }
+            .day-header {
+              display: flex;
+              justify-content: space-between;
+              font-size: 12px;
+              margin-bottom: 4px;
+            }
+            .day-header span {
+              font-size: 12px;
+            }
+            .tag {
+              display: inline-block;
+              padding: 2px 8px;
+              border-radius: 999px;
+              font-size: 11px;
+              background: #fffbeb;
+              border: 1px solid rgba(248,171,46,0.5);
+              margin-left: 6px;
+            }
+            ul {
+              margin: 4px 0 0 16px;
+              padding: 0;
+              font-size: 11px;
+            }
+            li {
+              margin-bottom: 2px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              font-size: 11px;
+              margin-top: 6px;
+            }
+            th, td {
+              border: 1px solid rgba(148,163,184,0.6);
+              padding: 4px 6px;
+              text-align: left;
+            }
+            th {
+              background: #fffbeb;
+              font-weight: 600;
+            }
+            .skill-row {
+              display: flex;
+              justify-content: space-between;
+              padding: 3px 0;
+              font-size: 11px;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>HeyHoLetsGo – Monthly Report</h1>
+          <p style="font-size:12px;margin:4px 0 14px 0;">Periode: <strong>${monthLabel}</strong></p>
+      `;
+
+      // Tasks section
+      html += `
+        <div class="section">
+          <div class="section-title">Tasks & Dopamine Productivity</div>
+          <div class="section-sub">Ringkasan harian berdasarkan task yang di-log dan statusnya.</div>
+      `;
+
+      if (taskDays.length === 0) {
+        html += `<p style="font-size:11px;color:#6b7280;">Tidak ada data task di bulan ini.</p>`;
+      } else {
+        taskDays.forEach((d) => {
+          const dateObj = parseISO(d.date);
+          const label = dateObj.toLocaleDateString(undefined, {
+            weekday: "short",
+            day: "numeric",
+            month: "short"
+          });
+          html += `
+            <div class="day-block">
+              <div class="day-header">
+                <span><strong>${label}</strong></span>
+                <span>Dopamine: <strong>${d.score}%</strong> · Tasks done: <strong>${d.doneCount}</strong> · XP: <strong>${d.xp}</strong></span>
+              </div>
+          `;
+          if (!d.tasks || d.tasks.length === 0) {
+            html += `<p style="font-size:11px;color:#6b7280;margin:0;">Tidak ada task yang diinput hari ini.</p>`;
+          } else {
+            html += `<ul>`;
+            d.tasks.forEach((t) => {
+              const statusIcon =
+                t.status === "done"
+                  ? "✅"
+                  : t.status === "progress"
+                  ? "⏳"
+                  : t.status === "blocked"
+                  ? "⛔"
+                  : "⬜";
+              html += `<li>${statusIcon} [E${t.effort}] ${t.title || "(No title)"}</li>`;
+            });
+            html += `</ul>`;
+          }
+          html += `</div>`;
+        });
+      }
+      html += `</div>`;
+
+      // Learning section
+      html += `
+        <div class="section">
+          <div class="section-title">Learning & Skills</div>
+          <div class="section-sub">Insight yang dicatat & distribusi XP per skill.</div>
+      `;
+
+      if (learningEntries.length === 0) {
+        html += `<p style="font-size:11px;color:#6b7280;">Tidak ada learning yang di-log di bulan ini.</p>`;
+      } else {
+        // Per-day
+        Object.keys(learningByDate)
+          .sort()
+          .forEach((date) => {
+            const dateObj = parseISO(date);
+            const label = dateObj.toLocaleDateString(undefined, {
+              weekday: "short",
+              day: "numeric",
+              month: "short"
+            });
+            const xpDay = getLearningXPForDate(date);
+            html += `
+              <div class="day-block">
+                <div class="day-header">
+                  <span><strong>${label}</strong></span>
+                  <span>Total XP: <strong>${xpDay}</strong></span>
+                </div>
+                <ul>
+            `;
+            learningByDate[date].forEach((e) => {
+              html += `<li>[${e.skillName}] +${e.xp} XP – ${e.what || ""}</li>`;
+            });
+            html += `</ul></div>`;
+          });
+
+        // Skill XP table
+        html += `<h3 style="margin-top:10px;font-size:13px;">XP per Skill</h3>`;
+        html += `<table><thead><tr><th>Skill</th><th>Total XP</th></tr></thead><tbody>`;
+        Object.keys(xpBySkill)
+          .sort()
+          .forEach((skill) => {
+            html += `<tr><td>${skill}</td><td>${xpBySkill[skill]}</td></tr>`;
+          });
+        html += `</tbody></table>`;
+      }
+
+      html += `</div>`;
+
+      html += `
+        </body>
+        </html>
+      `;
+
+      const win = window.open("", "_blank");
+      if (!win) {
+        alert("Popup ke-block. Aktifkan popup dulu untuk export.");
+        return;
+      }
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+      win.focus();
+      win.print();
+    }
+
     // ------------------- Init -------------------------------------
     document.addEventListener("DOMContentLoaded", () => {
       const today = new Date();
@@ -2264,6 +2752,18 @@
         "Today · " + today.toLocaleDateString(undefined, options);
 
       loadState();
+
+      // default effort pill
+      document
+        .querySelectorAll("#effort-pill-group .effort-pill")
+        .forEach((btn) => {
+          btn.addEventListener("click", () => {
+            document
+              .querySelectorAll("#effort-pill-group .effort-pill")
+              .forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+          });
+        });
 
       document
         .getElementById("task-form")
@@ -2306,6 +2806,10 @@
           openLearningModal(skillId, skillName, skillType, null);
         });
       });
+
+      document
+        .getElementById("btn-export-report")
+        .addEventListener("click", handleExportReport);
 
       renderTodaySummary();
       renderTasksList();
