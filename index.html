@@ -2487,346 +2487,133 @@
     }
 
     // ------------------- Export Monthly Report --------------------
-    function handleExportReport() {
-      const input = document.getElementById("report-month");
-      const val = input.value; // "2025-01"
-      if (!val) {
-        alert("Pilih dulu bulan yang mau di-export.");
-        return;
-      }
-      const [yearStr, monthStr] = val.split("-");
-      const year = parseInt(yearStr, 10);
-      const month = parseInt(monthStr, 10);
+    function exportReport() {
+  const name = document.getElementById("userName")?.value || "Anonymous";
+  const position = document.getElementById("userPosition")?.value || "Staff";
+  const month = new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
 
-      const monthLabel = new Date(year, month - 1, 1).toLocaleDateString(
-        undefined,
-        { month: "long", year: "numeric" }
-      );
+  const dailyData = JSON.parse(localStorage.getItem("taskHistory") || "{}");
+  const learningData = JSON.parse(localStorage.getItem("learningHistory") || "{}");
 
-      // kumpulin data tasks
-      const taskDays = [];
-      Object.keys(tasksState.days || {}).forEach((date) => {
-        if (date.startsWith(val)) {
-          const dayData = tasksState.days[date];
-          const { score, doneCount, xp } = computeDayScore(dayData);
-          taskDays.push({
-            date,
-            score,
-            doneCount,
-            xp,
-            tasks: dayData.tasks || []
-          });
-        }
-      });
-      taskDays.sort((a, b) => (a.date < b.date ? -1 : 1));
+  // --- Calculate Monthly Summary ---
+  const days = Object.keys(dailyData);
+  const daysLogged = days.length;
 
-      // kumpulin data learning
-      const learningEntries = (learningState.entries || []).filter((e) =>
-        e.date.startsWith(val)
-      );
-      learningEntries.sort((a, b) => (a.date < b.date ? -1 : 1));
+  let totalDopamine = 0;
+  let totalTaskXP = 0;
+  let totalTasksDone = 0;
 
-      const learningByDate = {};
-      const xpBySkill = {};
-      learningEntries.forEach((e) => {
-        if (!learningByDate[e.date]) learningByDate[e.date] = [];
-        learningByDate[e.date].push(e);
-        xpBySkill[e.skillName] = (xpBySkill[e.skillName] || 0) + Number(e.xp || 0);
-      });
+  days.forEach(date => {
+    totalDopamine += dailyData[date].percentage || 0;
+    totalTaskXP += dailyData[date].xp || 0;
+    totalTasksDone += dailyData[date].doneCount || 0;
+  });
 
-      // build HTML report
-      let html = `
-        <html>
-        <head>
-          <meta charset="UTF-8" />
-          <title>HeyHoLetsGo Monthly Report – ${monthLabel}</title>
-          <style>
-            body {
-              font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-              margin: 24px;
-              color: #111827;
-              background: #fdf6ec;
-            }
-            h1,h2,h3,h4 {
-              margin: 0 0 6px 0;
-            }
-            .section {
-              margin-bottom: 18px;
-              padding: 12px 14px;
-              border-radius: 12px;
-              background: #ffffff;
-              box-shadow: 0 4px 12px rgba(15,23,42,0.06);
-            }
-            .section-title {
-              font-size: 18px;
-              font-weight: 800;
-              margin-bottom: 4px;
-            }
-            .section-sub {
-              font-size: 12px;
-              color: #6b7280;
-              margin-bottom: 8px;
-            }
-            .day-block {
-              margin-bottom: 10px;
-              padding: 8px 10px;
-              border-radius: 10px;
-              background: #fffaf0;
-              border: 1px solid rgba(248,171,46,0.35);
-            }
-            .day-header {
-              display: flex;
-              justify-content: space-between;
-              font-size: 12px;
-              margin-bottom: 4px;
-            }
-            .day-header span {
-              font-size: 12px;
-            }
-            .tag {
-              display: inline-block;
-              padding: 2px 8px;
-              border-radius: 999px;
-              font-size: 11px;
-              background: #fffbeb;
-              border: 1px solid rgba(248,171,46,0.5);
-              margin-left: 6px;
-            }
-            ul {
-              margin: 4px 0 0 16px;
-              padding: 0;
-              font-size: 11px;
-            }
-            li {
-              margin-bottom: 2px;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              font-size: 11px;
-              margin-top: 6px;
-            }
-            th, td {
-              border: 1px solid rgba(148,163,184,0.6);
-              padding: 4px 6px;
-              text-align: left;
-            }
-            th {
-              background: #fffbeb;
-              font-weight: 600;
-            }
-            .skill-row {
-              display: flex;
-              justify-content: space-between;
-              padding: 3px 0;
-              font-size: 11px;
-            }
-          </style>
-        </head>
-        <body>
-          <h1>HeyHoLetsGo – Monthly Report</h1>
-          <p style="font-size:12px;margin:4px 0 14px 0;">Periode: <strong>${monthLabel}</strong></p>
-      `;
+  const avgDopamine = daysLogged ? Math.round(totalDopamine / daysLogged) : 0;
 
-      // Tasks section
-      html += `
-        <div class="section">
-          <div class="section-title">Tasks & Dopamine Productivity</div>
-          <div class="section-sub">Ringkasan harian berdasarkan task yang di-log dan statusnya.</div>
-      `;
+  // --- Heatmap Builder ---
+  function buildHeatmap(dataObj, type = "task") {
+    let html = `
+      <div style='display:grid;grid-template-columns:repeat(7,14px);gap:4px;margin:10px 0;'>
+    `;
 
-      if (taskDays.length === 0) {
-        html += `<p style="font-size:11px;color:#6b7280;">Tidak ada data task di bulan ini.</p>`;
-      } else {
-        taskDays.forEach((d) => {
-          const dateObj = parseISO(d.date);
-          const label = dateObj.toLocaleDateString(undefined, {
-            weekday: "short",
-            day: "numeric",
-            month: "short"
-          });
-          html += `
-            <div class="day-block">
-              <div class="day-header">
-                <span><strong>${label}</strong></span>
-                <span>Dopamine: <strong>${d.score}%</strong> · Tasks done: <strong>${d.doneCount}</strong> · XP: <strong>${d.xp}</strong></span>
-              </div>
-          `;
-          if (!d.tasks || d.tasks.length === 0) {
-            html += `<p style="font-size:11px;color:#6b7280;margin:0;">Tidak ada task yang diinput hari ini.</p>`;
-          } else {
-            html += `<ul>`;
-            d.tasks.forEach((t) => {
-              const statusIcon =
-                t.status === "done"
-                  ? "✅"
-                  : t.status === "progress"
-                  ? "⏳"
-                  : t.status === "blocked"
-                  ? "⛔"
-                  : "⬜";
-              html += `<li>${statusIcon} [E${t.effort}] ${t.title || "(No title)"}</li>`;
-            });
-            html += `</ul>`;
-          }
-          html += `</div>`;
-        });
-      }
-      html += `</div>`;
+    const sorted = Object.keys(dataObj).sort();
+    sorted.forEach(date => {
+      let percent = 0;
 
-      // Learning section
-      html += `
-        <div class="section">
-          <div class="section-title">Learning & Skills</div>
-          <div class="section-sub">Insight yang dicatat & distribusi XP per skill.</div>
-      `;
+      if (type === "task") percent = dataObj[date].percentage || 0;
+      if (type === "learning") percent = dataObj[date].xp ? (dataObj[date].xp >= 5 ? 100 : Math.round((dataObj[date].xp / 5) * 100)) : 0;
 
-      if (learningEntries.length === 0) {
-        html += `<p style="font-size:11px;color:#6b7280;">Tidak ada learning yang di-log di bulan ini.</p>`;
-      } else {
-        // Per-day
-        Object.keys(learningByDate)
-          .sort()
-          .forEach((date) => {
-            const dateObj = parseISO(date);
-            const label = dateObj.toLocaleDateString(undefined, {
-              weekday: "short",
-              day: "numeric",
-              month: "short"
-            });
-            const xpDay = getLearningXPForDate(date);
-            html += `
-              <div class="day-block">
-                <div class="day-header">
-                  <span><strong>${label}</strong></span>
-                  <span>Total XP: <strong>${xpDay}</strong></span>
-                </div>
-                <ul>
-            `;
-            learningByDate[date].forEach((e) => {
-              html += `<li>[${e.skillName}] +${e.xp} XP – ${e.what || ""}</li>`;
-            });
-            html += `</ul></div>`;
-          });
-
-        // Skill XP table
-        html += `<h3 style="margin-top:10px;font-size:13px;">XP per Skill</h3>`;
-        html += `<table><thead><tr><th>Skill</th><th>Total XP</th></tr></thead><tbody>`;
-        Object.keys(xpBySkill)
-          .sort()
-          .forEach((skill) => {
-            html += `<tr><td>${skill}</td><td>${xpBySkill[skill]}</td></tr>`;
-          });
-        html += `</tbody></table>`;
-      }
-
-      html += `</div>`;
-
-      html += `
-        </body>
-        </html>
-      `;
-
-      const win = window.open("", "_blank");
-      if (!win) {
-        alert("Popup ke-block. Aktifkan popup dulu untuk export.");
-        return;
-      }
-      win.document.open();
-      win.document.write(html);
-      win.document.close();
-      win.focus();
-      win.print();
-    }
-
-    // ------------------- Init -------------------------------------
-    document.addEventListener("DOMContentLoaded", () => {
-      const today = new Date();
-      const options = {
-        weekday: "long",
-        day: "numeric",
-        month: "short",
-        year: "numeric"
-      };
-      document.getElementById("today-label").textContent =
-        "Today · " + today.toLocaleDateString(undefined, options);
-
-      loadState();
-
-      // default effort pill
-      document
-        .querySelectorAll("#effort-pill-group .effort-pill")
-        .forEach((btn) => {
-          btn.addEventListener("click", () => {
-            document
-              .querySelectorAll("#effort-pill-group .effort-pill")
-              .forEach((b) => b.classList.remove("active"));
-            btn.classList.add("active");
-          });
-        });
-
-      document
-        .getElementById("task-form")
-        .addEventListener("submit", handleTaskFormSubmit);
-
-      document
-        .getElementById("effort-options")
-        .addEventListener("click", handleEffortClick);
-      document
-        .getElementById("modal-save-btn")
-        .addEventListener("click", handleSaveLearning);
-      document
-        .getElementById("modal-close-btn")
-        .addEventListener("click", closeLearningModal);
-      document
-        .getElementById("modal-cancel-btn")
-        .addEventListener("click", closeLearningModal);
-
-      document
-        .getElementById("day-modal-close-btn")
-        .addEventListener("click", () =>
-          document
-            .getElementById("day-modal-backdrop")
-            .classList.add("hidden")
-        );
-
-      document
-        .getElementById("learning-day-modal-close-btn")
-        .addEventListener("click", () =>
-          document
-            .getElementById("learning-day-modal-backdrop")
-            .classList.add("hidden")
-        );
-
-      document.querySelectorAll(".skill-card").forEach((card) => {
-        card.addEventListener("click", () => {
-          const skillId = card.dataset.skillId;
-          const skillName = card.dataset.skillName;
-          const skillType = card.dataset.skillType;
-          openLearningModal(skillId, skillName, skillType, null);
-        });
-      });
-
-      document
-        .getElementById("btn-export-report")
-        .addEventListener("click", handleExportReport);
-
-      renderTodaySummary();
-      renderTasksList();
-      renderHeatmap();
-
-      renderLearningStatsAndProgress();
-      renderLearningHistory();
-      renderLearningHeatmap();
-      setupNav();
-      setupHoHoDrag();
-
-      // default: tasks view active, hoho tasks visible
-      const hohoTasks = document.getElementById("hoho-floating");
-      const hohoLearning = document.getElementById("hoho-learning-floating");
-      if (hohoTasks) hohoTasks.style.display = "block";
-      if (hohoLearning) hohoLearning.style.display = "none";
+      let color = percent >= 60 ? "#4ade80" : percent >= 40 ? "#facc15" : "#f87171";
+      
+      html += `<div title="${date}: ${percent}%" style="width:14px;height:14px;border-radius:4px;background:${color};"></div>`;
     });
-  </script>
-</body>
-</html>
+
+    html += "</div>";
+    return html;
+  }
+
+  // --- Learning Summary ---
+  const learningDays = Object.keys(learningData);
+  let totalLearningXP = 0;
+  let skillProgress = {};
+
+  learningDays.forEach(date => {
+    const entries = learningData[date].entries || [];
+    entries.forEach(e => {
+      totalLearningXP += e.xp;
+      if (!skillProgress[e.skill]) skillProgress[e.skill] = 0;
+      skillProgress[e.skill] += e.xp;
+    });
+  });
+
+  // Convert skill XP → progress %
+  const skillBars = Object.entries(skillProgress).map(([skill, xp]) => {
+    const percent = Math.min(100, Math.round((xp / 30) * 100)); // 30 XP = full bar sebulan
+    return `
+      <div style="margin-bottom:6px;">
+        <strong>${skill}</strong>
+        <div style="height:8px;background:#eee;border-radius:6px;margin-top:3px;">
+          <div style="height:8px;width:${percent}%;background:#60a5fa;border-radius:6px;"></div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  // --- Final HTML Report ---
+  const reportHTML = `
+    <html>
+    <head>
+      <title>Monthly Report</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          padding: 30px;
+          line-height: 1.5;
+          color: #333;
+        }
+        h2 { margin-top: 28px; }
+      </style>
+    </head>
+    <body>
+
+      <h1>Monthly Report – HeyHoLetsGo</h1>
+      <p><strong>Name:</strong> ${name}<br>
+         <strong>Position:</strong> ${position}<br>
+         <strong>Period:</strong> ${month}</p>
+
+      <h2>🧠 Productivity Summary</h2>
+      <p><strong>Avg Dopamine Sparks:</strong> ${avgDopamine}%<br>
+         <strong>Total Task XP:</strong> ${totalTaskXP}<br>
+         <strong>Total Tasks Completed:</strong> ${totalTasksDone}<br>
+         <strong>Days Logged:</strong> ${daysLogged}</p>
+
+      <h3>📅 Task Heatmap</h3>
+      ${buildHeatmap(dailyData, "task")}
+
+      <h2>📚 Learning Summary</h2>
+      <p><strong>Total Learning XP:</strong> ${totalLearningXP}<br>
+         <strong>Days with Learning:</strong> ${learningDays.length}</p>
+
+      <h3>📅 Learning Heatmap</h3>
+      ${buildHeatmap(learningData, "learning")}
+
+      <h3>📈 Skill Progress (Monthly)</h3>
+      ${skillBars || "<p>No skill data yet.</p>"}
+
+      <h2>✏️ Self Reflection (Fill Manually)</h2>
+      <p>• What worked well this month?<br><br>
+         • What made you stuck?<br><br>
+         • What will you try differently next month?</p>
+
+      <h2>📝 Manager Comments</h2>
+      <p>(Leave this section empty for manager)</p>
+
+    </body>
+    </html>
+  `;
+
+  const newWindow = window.open("", "_blank");
+  newWindow.document.write(reportHTML);
+  newWindow.document.close();
+}
