@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Savvy Dopamine Task Tracker – V1.3.1</title>
+  <title>Savvy Dopamine Task Tracker – V1.3.2</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     :root {
@@ -447,12 +447,27 @@
       color: var(--text-muted);
     }
 
-    .heat-controls {
+    .heat-controls-row-top {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .heat-controls-row-bottom {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 6px;
       margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .heat-controls-left {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
     }
 
     .heat-btn {
@@ -478,9 +493,24 @@
 
     .heat-range-label {
       flex: 1;
-      text-align: center;
       font-size: 11px;
       color: var(--text-muted);
+    }
+
+    .heat-custom-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .heat-custom-input {
+      border-radius: 999px;
+      border: 1px solid #cdd3ea;
+      background: #ffffff;
+      font-size: 11px;
+      padding: 4px 8px;
+      color: #5d6a8f;
+      outline: none;
     }
 
     .heat-grid {
@@ -554,35 +584,8 @@
     }
 
     .history-detail-list {
-      max-height: 160px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .history-detail-item {
-      background: #ffffff;
-      border-radius: 10px;
-      border: 1px solid #e1e4f2;
-      padding: 6px 8px;
-    }
-
-    .history-detail-title {
-      font-size: 12px;
-      font-weight: 600;
-      margin-bottom: 2px;
-    }
-
-    .history-detail-meta {
       font-size: 11px;
       color: var(--text-muted);
-    }
-
-    .history-detail-empty {
-      font-size: 11px;
-      color: var(--text-muted);
-      font-style: italic;
     }
 
     /* ===========================
@@ -669,6 +672,111 @@
       40%{ transform: translateY(-12px) scaleX(0.96) scaleY(1.08); }
       70%{ transform: translateY(-4px) scaleX(1.02) scaleY(0.98); }
       100%{ transform: translateY(0) scaleX(1) scaleY(1); }
+    }
+
+    /* ===========================
+       MODAL POPUP (CENTER)
+       =========================== */
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 14, 40, 0.42);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      width: min(480px, calc(100% - 32px));
+      background: #fffdf7;
+      border-radius: 18px;
+      border: 2px solid var(--card-border);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      padding: 14px 16px 12px;
+      animation: modalPop 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes modalPop {
+      0% {
+        transform: scale(0.9) translateY(10px);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .modal-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .modal-close {
+      border-radius: 999px;
+      border: none;
+      background: #ff6b6b;
+      color: #ffffff;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 3px 0 rgba(160, 40, 40, 0.7);
+    }
+
+    .modal-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .modal-list {
+      max-height: 260px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .modal-item {
+      background: #ffffff;
+      border-radius: 10px;
+      border: 1px solid #e1e4f2;
+      padding: 6px 8px;
+    }
+
+    .modal-item-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .modal-item-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .modal-empty {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-style: italic;
     }
   </style>
 </head>
@@ -785,27 +893,46 @@
 
       <div class="history-title" style="margin-top:4px;">28-Day Heatmap</div>
 
-      <div class="heat-controls">
-        <button class="heat-btn" id="heatPrevBtn">⟵ Older</button>
+      <!-- Heatmap Controls -->
+      <div class="heat-controls-row-top">
+        <div class="heat-controls-left">
+          <button class="heat-btn" id="heatEarliestBtn">⏮ Earliest</button>
+          <button class="heat-btn" id="heatPrevBtn">⟵ Older</button>
+          <button class="heat-btn" id="heatNextBtn">Newer ⟶</button>
+          <button class="heat-btn" id="heatLatestBtn">Latest ⏭</button>
+        </div>
+      </div>
+
+      <div class="heat-controls-row-bottom">
         <div class="heat-range-label" id="heatRangeLabel">Last 28 days</div>
-        <button class="heat-btn" id="heatNextBtn">Newer ⟶</button>
+        <div class="heat-custom-wrap">
+          <input
+            type="date"
+            id="heatCustomDate"
+            class="heat-custom-input"
+            min="2025-01-01"
+          />
+          <button class="heat-btn" id="heatGoBtn">Go</button>
+        </div>
       </div>
 
       <div class="heat-grid" id="heatGrid"></div>
       <div class="heat-label-row">
         <span>older</span>
-        <span>today</span>
+        <span>newer</span>
       </div>
       <div class="hint">
         Click a square to see what you did that day. Red = low, Yellow = okay, Green = day well-played.
       </div>
 
       <div class="history-detail">
-        <div class="history-title">Day Detail</div>
+        <div class="history-title">Day Summary</div>
         <div class="history-detail-date" id="historyDetailDate">
-          Click a square above to see tasks for that day.
+          Click a square above to open the day recap popup.
         </div>
-        <div class="history-detail-list" id="historyDetailList"></div>
+        <div class="history-detail-list" id="historyDetailList">
+          Ho-Ho will comment on your performance when you open a day.
+        </div>
       </div>
     </div>
   </div>
@@ -814,6 +941,20 @@
   <div class="hoho-wrapper">
     <div class="hoho-bubble" id="hohoSpeech">One more task and you’re golden.</div>
     <img src="hoho-happy.png" alt="Ho-Ho mascot" class="hoho hoho-idle" id="hohoMascot" />
+  </div>
+
+  <!-- HISTORY MODAL -->
+  <div class="modal-overlay" id="historyModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modalDate">Day recap</div>
+        <button class="modal-close" id="modalCloseBtn">×</button>
+      </div>
+      <div class="modal-subtitle" id="modalHohoComment">
+        Ho-Ho will hype or roast you softly based on this day’s score.
+      </div>
+      <div class="modal-list" id="modalTaskList"></div>
+    </div>
   </div>
 
   <script>
@@ -836,7 +977,9 @@
     let dragOffsetX = 0;
     let dragOffsetY = 0;
 
-    let heatWindowOffset = 0; // how many days back from the most recent window
+    // Heatmap window state
+    let heatWindowStartIndex = null; // index in lastHistoryDays
+    let lastHistoryDays = [];
     let selectedHistoryDate = null;
 
     function todayKey() {
@@ -959,9 +1102,13 @@
     const bestDaySubEl = document.getElementById("bestDaySub");
     const heatGridEl = document.getElementById("heatGrid");
 
+    const heatEarliestBtn = document.getElementById("heatEarliestBtn");
     const heatPrevBtn = document.getElementById("heatPrevBtn");
     const heatNextBtn = document.getElementById("heatNextBtn");
+    const heatLatestBtn = document.getElementById("heatLatestBtn");
     const heatRangeLabelEl = document.getElementById("heatRangeLabel");
+    const heatCustomDateEl = document.getElementById("heatCustomDate");
+    const heatGoBtn = document.getElementById("heatGoBtn");
 
     const historyDetailDateEl = document.getElementById("historyDetailDate");
     const historyDetailListEl = document.getElementById("historyDetailList");
@@ -969,6 +1116,12 @@
     const hohoMascot = document.getElementById("hohoMascot");
     const hohoSpeech = document.getElementById("hohoSpeech");
     const hohoWrapper = document.querySelector(".hoho-wrapper");
+
+    const historyModal = document.getElementById("historyModal");
+    const modalDateEl = document.getElementById("modalDate");
+    const modalHohoCommentEl = document.getElementById("modalHohoComment");
+    const modalTaskListEl = document.getElementById("modalTaskList");
+    const modalCloseBtn = document.getElementById("modalCloseBtn");
 
     function getRingColor(percent) {
       if (percent >= 80) return "#00c853";
@@ -1355,85 +1508,161 @@
       }
     }
 
-    function showDayDetail(dateStr) {
-      selectedHistoryDate = dateStr;
-      if (!historyDetailDateEl || !historyDetailListEl) return;
-
+    function getDayRecord(dateStr) {
       const allHistory = loadHistory();
       const today = todayKey();
-      let tasks = [];
-      let score = 0;
-
       if (dateStr === today) {
         const currentTasks = state.tasks || [];
-        tasks = currentTasks.map(t => ({ ...t }));
-        score = calcScore(currentTasks);
+        const score = Math.round(calcScore(currentTasks) * 10) / 10;
+        return {
+          date: today,
+          score,
+          total: currentTasks.length,
+          done: currentTasks.filter(t => t.status === "done").length,
+          tasks: currentTasks.map(t => ({ ...t }))
+        };
       } else {
         const day =
           allHistory.days && allHistory.days[dateStr]
             ? allHistory.days[dateStr]
             : null;
-        if (day) {
-          tasks = (day.tasks || []).map(t => ({ ...t }));
-          score = day.score || 0;
+        if (!day) {
+          return {
+            date: dateStr,
+            score: 0,
+            total: 0,
+            done: 0,
+            tasks: []
+          };
         }
+        let tasks = day.tasks || [];
+        // Auto-insert placeholder kalau dulu belum nyimpen detail, tapi ada skor / total
+        if ((!tasks || tasks.length === 0) && (day.score > 0 || day.total > 0)) {
+          tasks = [
+            {
+              id: "placeholder-" + dateStr,
+              title: "No detailed tasks stored for this day (older data).",
+              category: "System",
+              effort: 1,
+              status: "info"
+            }
+          ];
+        }
+        return {
+          date: day.date,
+          score: day.score || 0,
+          total: day.total || tasks.length || 0,
+          done: day.done || 0,
+          tasks: tasks.map(t => ({ ...t }))
+        };
       }
+    }
 
+    function getHohoDayComment(pct) {
+      if (pct >= 90) {
+        return "This day was cracked. Kalau semua hari kayak gini, lo bahaya sih 🔥";
+      } else if (pct >= 80) {
+        return "Green zone. Ini template hari yang pengen lo ulang terus.";
+      } else if (pct >= 40) {
+        return "Mid but moving. Besok tinggal naikin 1–2 task jadi done.";
+      } else if (pct > 0) {
+        return "Red day, but at least you logged it. Next time, satu small win aja udah ngegeser grafik.";
+      } else {
+        return "No points this day. Bisa jadi off-day, yang penting jangan jadi default mode.";
+      }
+    }
+
+    function openHistoryModal(dateStr) {
+      const record = getDayRecord(dateStr);
       const pct =
         TARGET_SCORE === 0
           ? 0
           : Math.max(
               0,
-              Math.min(100, Math.round((score / TARGET_SCORE) * 100))
+              Math.min(100, Math.round((record.score / TARGET_SCORE) * 100))
             );
 
-      historyDetailDateEl.textContent =
-        formatShortDate(dateStr) +
+      modalDateEl.textContent =
+        formatShortDate(record.date) +
         " — " +
         pct +
         "% of target (" +
-        score.toFixed(1) +
+        record.score.toFixed(1) +
         " pts)";
+      modalHohoCommentEl.textContent = getHohoDayComment(pct);
 
-      historyDetailListEl.innerHTML = "";
-      if (!tasks || tasks.length === 0) {
-        const empty = document.createElement("div");
-        empty.className = "history-detail-empty";
-        empty.textContent = "No tasks logged for this day.";
-        historyDetailListEl.appendChild(empty);
-        return;
+      // Atur mood Ho-Ho sesuai hari itu
+      if (pct >= 80) {
+        setHohoSprite("cheer");
+      } else if (pct >= 40) {
+        setHohoSprite("idle");
+      } else if (pct > 0) {
+        setHohoSprite("sad");
+      } else {
+        setHohoSprite("sad");
       }
 
-      tasks.forEach(t => {
-        const row = document.createElement("div");
-        row.className = "history-detail-item";
+      modalTaskListEl.innerHTML = "";
+      const tasks = record.tasks || [];
+      if (tasks.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "modal-empty";
+        empty.textContent = "No tasks logged for this day.";
+        modalTaskListEl.appendChild(empty);
+      } else {
+        tasks.forEach(t => {
+          const row = document.createElement("div");
+          row.className = "modal-item";
 
-        const title = document.createElement("div");
-        title.className = "history-detail-title";
-        title.textContent = t.title || "(Untitled task)";
+          const title = document.createElement("div");
+          title.className = "modal-item-title";
+          title.textContent = t.title || "(Untitled task)";
 
-        const meta = document.createElement("div");
-        meta.className = "history-detail-meta";
-        const parts = [];
-        if (t.category) parts.push(t.category);
-        if (t.effort)
-          parts.push("Effort " + t.effort);
-        if (t.status)
-          parts.push(
-            t.status === "done"
-              ? "Done"
-              : t.status === "blocked"
-              ? "Blocked"
-              : t.status === "progress"
-              ? "Progress"
-              : "Todo"
-          );
+          const meta = document.createElement("div");
+          meta.className = "modal-item-meta";
 
-        meta.textContent = parts.join(" • ");
-        row.appendChild(title);
-        row.appendChild(meta);
-        historyDetailListEl.appendChild(row);
-      });
+          const parts = [];
+          if (t.category) parts.push(t.category);
+          if (t.effort)
+            parts.push("Effort " + t.effort);
+          if (t.status) {
+            const label =
+              t.status === "done"
+                ? "Done"
+                : t.status === "blocked"
+                ? "Blocked"
+                : t.status === "progress"
+                ? "Progress"
+                : t.status === "info"
+                ? "Logged (no detail)"
+                : "Todo";
+            parts.push(label);
+          }
+
+          meta.textContent = parts.join(" • ");
+          row.appendChild(title);
+          row.appendChild(meta);
+          modalTaskListEl.appendChild(row);
+        });
+      }
+
+      historyModal.classList.add("active");
+      historyDetailDateEl.textContent =
+        "Last opened: " +
+        formatShortDate(record.date) +
+        " · " +
+        pct +
+        "% of target (" +
+        record.score.toFixed(1) +
+        " pts)";
+      historyDetailListEl.textContent =
+        "Open another date from the heatmap to compare.";
+    }
+
+    function closeHistoryModal() {
+      historyModal.classList.remove("active");
+      // Balikin Ho-Ho ke idle setelah modal ditutup
+      setHohoSprite("idle");
     }
 
     function renderHistory() {
@@ -1447,6 +1676,7 @@
       let todayDone = 0;
       currentTasks.forEach(t => { if (t.status === "done") todayDone++; });
 
+      // Inject / override today's data
       daysObj[today] = {
         date: today,
         score: todayScore,
@@ -1459,13 +1689,15 @@
         .map(k => daysObj[k])
         .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
 
+      lastHistoryDays = allDays;
+
       if (allDays.length === 0) {
         weeklyTextEl.textContent = "No data yet";
         monthlyTextEl.textContent = "No data yet";
         bestDayTextEl.textContent = "No data yet";
         heatGridEl.innerHTML = "";
         historyDetailDateEl.textContent = "No data yet.";
-        historyDetailListEl.innerHTML = "";
+        historyDetailListEl.textContent = "";
         return;
       }
 
@@ -1513,16 +1745,22 @@
       const windowSize = 28;
       const total = allDays.length;
       let startIndex = 0;
-      let endIndex = total;
 
-      if (total > windowSize) {
-        const maxOffset = total - windowSize;
-        if (heatWindowOffset > maxOffset) heatWindowOffset = maxOffset;
-        if (heatWindowOffset < 0) heatWindowOffset = 0;
-        endIndex = total - heatWindowOffset;
-        startIndex = endIndex - windowSize;
+      if (total <= windowSize) {
+        startIndex = 0;
+      } else {
+        const maxStart = total - windowSize;
+        if (heatWindowStartIndex === null) {
+          startIndex = maxStart; // default: latest 28 days
+        } else {
+          startIndex = heatWindowStartIndex;
+          if (startIndex < 0) startIndex = 0;
+          if (startIndex > maxStart) startIndex = maxStart;
+        }
       }
 
+      heatWindowStartIndex = startIndex;
+      const endIndex = Math.min(total, startIndex + windowSize);
       const windowDays = allDays.slice(startIndex, endIndex);
 
       if (heatRangeLabelEl && windowDays.length > 0) {
@@ -1535,12 +1773,18 @@
         heatRangeLabelEl.textContent = "No data";
       }
 
+      const maxStart = total > windowSize ? total - windowSize : 0;
+      if (heatEarliestBtn) {
+        heatEarliestBtn.disabled = startIndex === 0;
+      }
       if (heatPrevBtn) {
-        const maxOffset = total > windowSize ? total - windowSize : 0;
-        heatPrevBtn.disabled = total <= windowSize || heatWindowOffset >= maxOffset;
+        heatPrevBtn.disabled = startIndex === 0;
+      }
+      if (heatLatestBtn) {
+        heatLatestBtn.disabled = startIndex === maxStart;
       }
       if (heatNextBtn) {
-        heatNextBtn.disabled = heatWindowOffset === 0;
+        heatNextBtn.disabled = startIndex === maxStart;
       }
 
       heatGridEl.innerHTML = "";
@@ -1585,16 +1829,13 @@
 
         inner.addEventListener("click", () => {
           selectedHistoryDate = d.date;
-          renderHistory(); // re-render to update selected styling
+          renderHistory(); // refresh highlight
+          openHistoryModal(d.date);
         });
 
         cell.appendChild(inner);
         heatGridEl.appendChild(cell);
       });
-
-      if (selectedHistoryDate) {
-        showDayDetail(selectedHistoryDate);
-      }
     }
 
     addTaskBtn.addEventListener("click", addTask);
@@ -1603,17 +1844,73 @@
     });
     resetDayBtn.addEventListener("click", resetToday);
 
+    if (heatEarliestBtn) {
+      heatEarliestBtn.addEventListener("click", () => {
+        heatWindowStartIndex = 0;
+        renderHistory();
+      });
+    }
+
+    if (heatLatestBtn) {
+      heatLatestBtn.addEventListener("click", () => {
+        const total = lastHistoryDays.length;
+        const windowSize = 28;
+        const maxStart = total > windowSize ? total - windowSize : 0;
+        heatWindowStartIndex = maxStart;
+        renderHistory();
+      });
+    }
+
     if (heatPrevBtn) {
       heatPrevBtn.addEventListener("click", () => {
-        heatWindowOffset += 28;
+        const windowSize = 28;
+        const total = lastHistoryDays.length;
+        if (total <= windowSize) return;
+        heatWindowStartIndex = Math.max(0, (heatWindowStartIndex || 0) - windowSize);
         renderHistory();
       });
     }
 
     if (heatNextBtn) {
       heatNextBtn.addEventListener("click", () => {
-        heatWindowOffset -= 28;
-        if (heatWindowOffset < 0) heatWindowOffset = 0;
+        const windowSize = 28;
+        const total = lastHistoryDays.length;
+        if (total <= windowSize) return;
+        const maxStart = total - windowSize;
+        heatWindowStartIndex = Math.min(
+          maxStart,
+          (heatWindowStartIndex || 0) + windowSize
+        );
+        renderHistory();
+      });
+    }
+
+    if (heatGoBtn) {
+      heatGoBtn.addEventListener("click", () => {
+        const val = heatCustomDateEl.value;
+        if (!val || lastHistoryDays.length === 0) return;
+
+        const target = val;
+        const total = lastHistoryDays.length;
+        const windowSize = 28;
+        const maxStart = total > windowSize ? total - windowSize : 0;
+
+        let idx = lastHistoryDays.findIndex(d => d.date === target);
+        if (idx === -1) {
+          // kalau gak ada exact, cari yang pertama >= target
+          idx = lastHistoryDays.findIndex(d => d.date >= target);
+          if (idx === -1) {
+            // kalau semua lebih kecil, pakai latest
+            heatWindowStartIndex = maxStart;
+            renderHistory();
+            return;
+          }
+        }
+        // kita pengen target masuk dalam window, ideally dekat ujung
+        let start = idx - windowSize + 1;
+        if (start < 0) start = 0;
+        if (start > maxStart) start = maxStart;
+        heatWindowStartIndex = start;
         renderHistory();
       });
     }
@@ -1622,6 +1919,13 @@
       hohoMascot.addEventListener("click", () => {
         triggerHohoBounceOnce();
         showHohoMessage("Let’s ship one more small win.");
+      });
+    }
+
+    if (historyModal && modalCloseBtn) {
+      modalCloseBtn.addEventListener("click", closeHistoryModal);
+      historyModal.addEventListener("click", (e) => {
+        if (e.target === historyModal) closeHistoryModal();
       });
     }
 
