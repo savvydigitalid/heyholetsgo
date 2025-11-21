@@ -147,36 +147,35 @@
       gap: 14px;
     }
 
-    /* Dopamine layout (Tasks top card) ---------------------------- */
-    .dopamine-layout {
-      display: flex;
-      gap: 18px;
-      flex-wrap: wrap;
-      align-items: stretch;
+    /* ================== TASKS VIEW =================== */
+
+    #tasks-view {
+      display: block;
     }
 
-    .dopamine-main {
-      flex: 1 1 260px;
-      min-width: 0;
-    }
-
-    .dopamine-title {
-      font-size: 16px;
-      font-weight: 800;
+    .dopamine-card-title {
+      font-size: 15px;
+      font-weight: 700;
       margin-bottom: 4px;
     }
 
-    .dopamine-sub {
+    .dopamine-card-sub {
       font-size: 12px;
       color: var(--text-soft);
-      margin-top: 4px;
+    }
+
+    .dopamine-chart-container {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
     }
 
     .dopamine-chart-wrapper {
       position: relative;
-      width: 170px;
-      height: 170px;
-      margin: 8px auto 4px;
+      width: 190px;
+      height: 190px;
     }
 
     .dopamine-chart-wrapper svg {
@@ -191,10 +190,11 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      gap: 2px;
     }
 
     .dopamine-center-main {
-      font-size: 26px;
+      font-size: 28px;
       font-weight: 800;
     }
 
@@ -205,21 +205,6 @@
 
     #dopamine-ring {
       transition: stroke-dashoffset 0.3s ease-out, stroke 0.3s ease-out;
-    }
-
-    .dopamine-side {
-      flex: 0 0 260px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .dopamine-hoho {
-      width: 130px;
-      max-width: 150px;
-      height: auto;
-      display: block;
     }
 
     .summary-row {
@@ -252,11 +237,6 @@
     .summary-caption {
       font-size: 11px;
       color: var(--text-soft);
-    }
-
-    /* Tasks View --------------------------------------------------- */
-    #tasks-view {
-      display: block;
     }
 
     .task-flex {
@@ -458,33 +438,104 @@
       border-radius: 3px;
     }
 
-    /* Learning View ------------------------------------------------- */
+    /* Floating Ho-Ho (Tasks) */
+    .hoho-floating {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 110px;
+      height: auto;
+      cursor: grab;
+      z-index: 50;
+      filter: drop-shadow(0 10px 20px rgba(15, 23, 42, 0.35));
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .hoho-floating:active {
+      cursor: grabbing;
+    }
+
+    /* ================== LEARNING VIEW =================== */
+
     #learning-view {
       display: none;
     }
 
-    .learning-top-layout {
+    .learning-chart-card {
       display: flex;
-      gap: 12px;
       flex-wrap: wrap;
-      align-items: stretch;
+      gap: 14px;
+      align-items: center;
+      justify-content: space-between;
     }
 
-    .learning-header-stats {
-      flex: 1 1 260px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 10px;
+    .learning-chart-left {
+      flex: 1 1 230px;
+      min-width: 0;
+    }
+
+    .learning-chart-title {
+      font-size: 15px;
+      font-weight: 700;
       margin-bottom: 4px;
+    }
+
+    .learning-chart-sub {
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    .learning-chart-wrapper {
+      position: relative;
+      width: 170px;
+      height: 170px;
+      margin: 10px auto 6px;
+    }
+
+    .learning-chart-wrapper svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .learning-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
+
+    .learning-center-main {
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .learning-center-sub {
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    #learning-ring {
+      transition: stroke-dashoffset 0.3s ease-out, stroke 0.3s ease-out;
+    }
+
+    .learning-stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 8px;
+      margin-top: 4px;
     }
 
     .learning-stat {
       background: #fff7e7;
       border-radius: 16px;
-      padding: 10px;
+      padding: 8px 10px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
     }
 
     .learning-stat-label {
@@ -493,7 +544,7 @@
     }
 
     .learning-stat-value {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 800;
     }
 
@@ -503,7 +554,7 @@
     }
 
     .learning-hoho-wrap {
-      flex: 0 0 180px;
+      flex: 0 0 190px;
       text-align: center;
       font-size: 11px;
       color: var(--text-soft);
@@ -615,7 +666,7 @@
       transition: width 0.25s ease-out;
     }
 
-    /* Color variants for hard skills */
+    /* Hard skill icon colors */
     .icon-tools {
       background: linear-gradient(135deg, #bfe3ff, #e3f2ff);
     }
@@ -652,7 +703,7 @@
       background: linear-gradient(135deg, #e0f4ff, #f0fbff);
     }
 
-    /* Soft skills */
+    /* Soft skills icon colors */
     .icon-cognitive {
       background: linear-gradient(135deg, #c8ffd7, #e9fff1);
     }
@@ -843,16 +894,12 @@
       cursor: pointer;
     }
 
-    /* Responsive ---------------------------------------------------- */
     @media (max-width: 640px) {
       header.app-header {
         flex-direction: column;
         align-items: flex-start;
       }
       .top-right {
-        align-items: flex-start;
-      }
-      .dopamine-side {
         align-items: flex-start;
       }
     }
@@ -878,75 +925,67 @@
     </header>
 
     <main>
-      <!-- TASKS VIEW ------------------------------------------------>
+      <!-- ============== TASKS VIEW ============== -->
       <section id="tasks-view">
         <div class="card">
           <div class="card-header">
             <h2>Today’s Focus Score</h2>
-            <span id="tasks-header-caption">Target good day: ≥ 60% focus score.</span>
+            <span>Target “good day”: ≥ 60% focus score.</span>
           </div>
-          <div class="dopamine-layout">
-            <div class="dopamine-main">
-              <div class="dopamine-title" id="dopamine-title">
-                Let’s warm up this day.
-              </div>
-              <div class="dopamine-chart-wrapper">
-                <svg viewBox="0 0 160 160">
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r="60"
-                    stroke="rgba(209,213,219,0.8)"
-                    stroke-width="14"
-                    fill="none"
-                    stroke-linecap="round"
-                  ></circle>
-                  <circle
-                    id="dopamine-ring"
-                    cx="80"
-                    cy="80"
-                    r="60"
-                    stroke="#22c55e"
-                    stroke-width="14"
-                    fill="none"
-                    stroke-linecap="round"
-                    stroke-dasharray="377"
-                    stroke-dashoffset="377"
-                    transform="rotate(-90 80 80)"
-                  ></circle>
-                </svg>
-                <div class="dopamine-center">
-                  <div class="dopamine-center-main" id="dopamine-percent">0%</div>
-                  <div class="dopamine-center-sub">of today’s focus target</div>
-                </div>
-              </div>
-              <div class="dopamine-sub" id="dopamine-sub">
-                Aim for 60%+ to call today a “good day”.
+          <div class="dopamine-card-title" id="dopamine-title">
+            Let’s warm up this day.
+          </div>
+          <div class="dopamine-card-sub" id="dopamine-sub">
+            Aim for 60%+ — cukup 1–2 task meaningful dulu.
+          </div>
+
+          <div class="dopamine-chart-container">
+            <div class="dopamine-chart-wrapper">
+              <svg viewBox="0 0 160 160">
+                <circle
+                  cx="80"
+                  cy="80"
+                  r="60"
+                  stroke="rgba(209,213,219,0.8)"
+                  stroke-width="14"
+                  fill="none"
+                  stroke-linecap="round"
+                ></circle>
+                <circle
+                  id="dopamine-ring"
+                  cx="80"
+                  cy="80"
+                  r="60"
+                  stroke="#22c55e"
+                  stroke-width="14"
+                  fill="none"
+                  stroke-linecap="round"
+                  stroke-dasharray="377"
+                  stroke-dashoffset="377"
+                  transform="rotate(-90 80 80)"
+                ></circle>
+              </svg>
+              <div class="dopamine-center">
+                <div class="dopamine-center-main" id="dopamine-percent">0%</div>
+                <div class="dopamine-center-sub">today’s focus score</div>
               </div>
             </div>
-            <div class="dopamine-side">
-              <img
-                id="hoho-mood"
-                src="hoho-thinking.png"
-                alt="Ho-Ho mood"
-                class="dopamine-hoho"
-              />
-              <div class="summary-row">
-                <div class="summary-item">
-                  <span class="summary-label">Focus Score</span>
-                  <span class="summary-value" id="today-score">0%</span>
-                  <span class="summary-caption" id="score-caption">Let’s start cooking.</span>
-                </div>
-                <div class="summary-item">
-                  <span class="summary-label">Tasks Done</span>
-                  <span class="summary-value" id="tasks-done">0</span>
-                  <span class="summary-caption" id="tasks-done-caption">Completed today.</span>
-                </div>
-                <div class="summary-item">
-                  <span class="summary-label">XP from Tasks</span>
-                  <span class="summary-value" id="tasks-xp">0</span>
-                  <span class="summary-caption">Only from today’s tasks.</span>
-                </div>
+
+            <div class="summary-row">
+              <div class="summary-item">
+                <span class="summary-label">Focus Score</span>
+                <span class="summary-value" id="today-score">0%</span>
+                <span class="summary-caption" id="score-caption">Let’s start cooking.</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Tasks Done</span>
+                <span class="summary-value" id="tasks-done">0</span>
+                <span class="summary-caption" id="tasks-done-caption">Completed today.</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">XP from Tasks</span>
+                <span class="summary-value" id="tasks-xp">0</span>
+                <span class="summary-caption">Only from today’s tasks.</span>
               </div>
             </div>
           </div>
@@ -955,7 +994,7 @@
         <div class="card">
           <div class="card-header">
             <h2>Tasks & Progress</h2>
-            <span>Keep it light: only track what really matters.</span>
+            <span>Keep it ringan: cukup track pekerjaan yang bener-bener penting.</span>
           </div>
           <div class="task-flex">
             <form id="task-form">
@@ -994,7 +1033,7 @@
           <div class="heatmap-header">
             <div>
               <h2 style="margin:0;font-size:14px;">28-Day Productivity Heatmap</h2>
-              <small>Click a day to see what you did. Colors auto-adjust by focus score.</small>
+              <small>Click a day to see what you did. Colors based on focus score.</small>
             </div>
             <div class="heatmap-control">
               <span>Start date:</span>
@@ -1019,30 +1058,74 @@
         </div>
       </section>
 
-      <!-- LEARNING VIEW --------------------------------------------->
+      <!-- ============== LEARNING VIEW ============== -->
       <section id="learning-view">
         <div class="card">
           <div class="card-header">
             <h2>Learning & Skills</h2>
-            <span>1 insight per day = compound growth.</span>
+            <span>1 insight per hari = compound growth buat otak lo.</span>
           </div>
 
-          <div class="learning-top-layout">
-            <div class="learning-header-stats">
-              <div class="learning-stat">
-                <span class="learning-stat-label">Today’s Learning XP</span>
-                <span class="learning-stat-value" id="learning-xp-today">0</span>
-                <span class="learning-stat-caption">From insights logged today.</span>
+          <div class="learning-chart-card">
+            <div class="learning-chart-left">
+              <div class="learning-chart-title" id="learning-title">
+                Today’s Learning Dose
               </div>
-              <div class="learning-stat">
-                <span class="learning-stat-label">Total Learning XP (6 months)</span>
-                <span class="learning-stat-value" id="learning-xp-total">0</span>
-                <span class="learning-stat-caption">Across all skills.</span>
+              <div class="learning-chart-sub" id="learning-sub">
+                Target harian: 3 XP (1–2 insight kecil udah cukup).
               </div>
-              <div class="learning-stat">
-                <span class="learning-stat-label">Learning Streak</span>
-                <span class="learning-stat-value" id="learning-streak">0 days</span>
-                <span class="learning-stat-caption">Consecutive days with learning.</span>
+
+              <div class="learning-chart-wrapper">
+                <svg viewBox="0 0 160 160">
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="60"
+                    stroke="rgba(209,213,219,0.8)"
+                    stroke-width="14"
+                    fill="none"
+                    stroke-linecap="round"
+                  ></circle>
+                  <circle
+                    id="learning-ring"
+                    cx="80"
+                    cy="80"
+                    r="60"
+                    stroke="#22c55e"
+                    stroke-width="14"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-dasharray="377"
+                    stroke-dashoffset="377"
+                    transform="rotate(-90 80 80)"
+                  ></circle>
+                </svg>
+                <div class="learning-center">
+                  <div class="learning-center-main" id="learning-percent">0%</div>
+                  <div class="learning-center-sub">of today’s learning target</div>
+                </div>
+              </div>
+
+              <div class="learning-stats-row">
+                <div class="learning-stat">
+                  <span class="learning-stat-label">Today’s Learning XP</span>
+                  <span class="learning-stat-value" id="learning-xp-today">0</span>
+                  <span class="learning-stat-caption">Dari insight yang lo log hari ini.</span>
+                </div>
+                <div class="learning-stat">
+                  <span class="learning-stat-label">Total Learning XP (6 months)</span>
+                  <span class="learning-stat-value" id="learning-xp-total">0</span>
+                  <span class="learning-stat-caption">Across all skills.</span>
+                </div>
+                <div class="learning-stat">
+                  <span class="learning-stat-label">Learning Streak</span>
+                  <span class="learning-stat-value" id="learning-streak">0 days</span>
+                  <span class="learning-stat-caption">Hari beruntun isi learning.</span>
+                </div>
+              </div>
+
+              <div id="learning-warning" class="warning-chip" style="display:none;">
+                ⚠️ Today has no learning entry yet. Ho-Ho wants at least 1 insight.
               </div>
             </div>
 
@@ -1052,12 +1135,8 @@
                 alt="Ho-Ho Learning"
                 class="learning-hoho"
               />
-              <span>Ho-Ho cuma minta 1 insight kecil per hari. Gak perlu sempurna, yang penting konsisten.</span>
+              <span>Ho-Ho cuma minta 1 insight kecil per hari. Gak perlu perfect, yang penting konsisten.</span>
             </div>
-          </div>
-
-          <div id="learning-warning" class="warning-chip" style="display:none;">
-            ⚠️ Today has no learning entry yet. Ho-Ho wants at least 1 insight.
           </div>
         </div>
 
@@ -1309,6 +1388,14 @@
     </main>
   </div>
 
+  <!-- Floating Ho-Ho (Tasks) -->
+  <img
+    id="hoho-floating"
+    src="hoho-thinking.png"
+    alt="Ho-Ho"
+    class="hoho-floating"
+  />
+
   <!-- Learning Modal -->
   <div id="learning-modal-backdrop" class="modal-backdrop hidden">
     <div class="modal">
@@ -1379,11 +1466,9 @@
       return new Date(y, m - 1, d);
     }
 
-    // ------------------- Storage Keys -----------------------------
     const STORAGE_TASKS = "heyho_tasks_v1";
     const STORAGE_LEARNING = "heyho_learning_v1";
 
-    // ------------------- State ------------------------------------
     let tasksState = { days: {} };
     let learningState = { entries: [] };
 
@@ -1413,9 +1498,7 @@
     // ------------------- Tasks Logic ------------------------------
     function ensureDay(dateStr) {
       if (!tasksState.days[dateStr]) {
-        tasksState.days[dateStr] = {
-          tasks: []
-        };
+        tasksState.days[dateStr] = { tasks: [] };
       }
       return tasksState.days[dateStr];
     }
@@ -1439,7 +1522,7 @@
       return {
         score,
         doneCount,
-        xp: Math.round(gainedEffort * 10) // simple XP scaling
+        xp: Math.round(gainedEffort * 10)
       };
     }
 
@@ -1448,7 +1531,7 @@
       const percentEl = document.getElementById("dopamine-percent");
       const titleEl = document.getElementById("dopamine-title");
       const subEl = document.getElementById("dopamine-sub");
-      const hohoImg = document.getElementById("hoho-mood");
+      const hoho = document.getElementById("hoho-floating");
 
       const clamped = Math.max(0, Math.min(100, score));
       const circumference = 377;
@@ -1456,43 +1539,40 @@
       if (ring) {
         const offset = circumference * (1 - clamped / 100);
         ring.style.strokeDashoffset = offset;
-
-        // warna stroke berubah dari orange ke hijau
-        const hue = 30 + (clamped / 100) * 90; // 30 = orange, 120 = hijau
+        const hue = 30 + (clamped / 100) * 90;
         ring.style.stroke = `hsl(${hue}, 90%, 55%)`;
       }
-
       if (percentEl) percentEl.textContent = clamped + "%";
 
       let title = "Let’s warm up this day.";
-      let sub = "Aim for 60%+ to call today a “good day”.";
+      let sub = "Aim for 60%+ — cukup 1–2 task meaningful dulu.";
       let hohoSrc = "hoho-thinking.png";
 
       if (clamped === 0) {
         title = "Blank canvas. You’re one task away.";
-        sub = "Mulai dari 1 task kecil dulu aja.";
+        sub = "Mulai dari 1 small task aja dulu.";
         hohoSrc = "hoho-thinking.png";
       } else if (clamped < 40) {
         title = "You’ve started. Keep going.";
-        sub = "Tambah 1–2 task lagi biar nge-dopamine.";
+        sub = "Tambah 1–2 task lagi biar mulai kerasa.";
         hohoSrc = "hoho-thinking.png";
       } else if (clamped < 60) {
         title = "Momentum udah kebentuk.";
-        sub = "Dikit lagi tembus 60%. Pick one more meaningful task.";
+        sub = "Dikit lagi tembus 60%. Pilih satu task yang meaningful.";
         hohoSrc = "hoho-thinking.png";
       } else if (clamped < 80) {
         title = "Good day unlocked.";
-        sub = "Lo udah lewat target 60%. Kalau mau, gas dikit lagi.";
+        sub = "Lo udah lewat target 60%. Gas dikit lagi kalau mau.";
         hohoSrc = "hoho-levelup.png";
       } else {
         title = "Satisfying AF. 🔥";
-        sub = "Lo bukan cuma productive, ini udah mode highlight reel.";
+        sub = "Ini hari yang bakal lo inget kalo liat heatmap.";
         hohoSrc = "hoho-levelup.png";
       }
 
       if (titleEl) titleEl.textContent = title;
       if (subEl) subEl.textContent = sub;
-      if (hohoImg) hohoImg.src = hohoSrc;
+      if (hoho) hoho.src = hohoSrc;
     }
 
     function renderTodaySummary() {
@@ -1517,7 +1597,7 @@
       const day = ensureDay(today);
       const tbody = document.getElementById("tasks-body");
       tbody.innerHTML = "";
-      day.tasks.forEach((t, idx) => {
+      day.tasks.forEach((t) => {
         const tr = document.createElement("tr");
 
         const tdTitle = document.createElement("td");
@@ -1611,7 +1691,6 @@
         else if (score < 80) cell.classList.add("heat-mid");
         else cell.classList.add("heat-high");
         cell.dataset.date = iso;
-        cell.textContent = "";
         const label = document.createElement("span");
         label.textContent = d.getDate();
         cell.appendChild(label);
@@ -1636,7 +1715,7 @@
       bodyEl.innerHTML = "";
       if (!day || day.tasks.length === 0) {
         bodyEl.innerHTML =
-          "<p style='font-size:12px;color:#6b7280;'>No tasks logged on this day. Maybe it was a chill day, or data belum ke-input.</p>";
+          "<p style='font-size:12px;color:#6b7280;'>No tasks logged on this day. Maybe it was a chill day, atau memang belum ke-input.</p>";
       } else {
         const list = document.createElement("ul");
         list.style.paddingLeft = "18px";
@@ -1665,17 +1744,8 @@
     }
 
     // ------------------- Learning Logic ---------------------------
-    const EFFORT_XP = {
-      small: 1,
-      medium: 3,
-      intensive: 6
-    };
-
-    const EFFORT_PROGRESS = {
-      small: 5,
-      medium: 10,
-      intensive: 15
-    };
+    const EFFORT_XP = { small: 1, medium: 3, intensive: 6 };
+    const EFFORT_PROGRESS = { small: 5, medium: 10, intensive: 15 };
 
     function logLearningEntry(entry) {
       learningState.entries.push(entry);
@@ -1688,15 +1758,54 @@
       return formatDateISO(d);
     }
 
+    function updateLearningChart(todayXP) {
+      const ring = document.getElementById("learning-ring");
+      const percentEl = document.getElementById("learning-percent");
+      const titleEl = document.getElementById("learning-title");
+      const subEl = document.getElementById("learning-sub");
+
+      const target = 3; // XP target harian
+      const ratio = target > 0 ? Math.min(1, todayXP / target) : 0;
+      const percent = Math.round(ratio * 100);
+      const circumference = 377;
+
+      if (ring) {
+        const offset = circumference * (1 - percent / 100);
+        ring.style.strokeDashoffset = offset;
+        const hue = 40 + ratio * 80;
+        ring.style.stroke = `hsl(${hue}, 90%, 55%)`;
+      }
+      if (percentEl) percentEl.textContent = percent + "%";
+
+      let title = "Today’s Learning Dose";
+      let sub = "Target harian: 3 XP (1–2 insight kecil udah cukup).";
+
+      if (todayXP === 0) {
+        title = "No learning logged (yet).";
+        sub = "Ambil 1 video / artikel / diskusi kecil, lalu tulis insight-nya.";
+      } else if (todayXP < 3) {
+        title = "Nice, otak udah kepancing.";
+        sub = "Satu insight lagi bisa nutup target harian.";
+      } else if (todayXP < 6) {
+        title = "Learning target tercapai.";
+        sub = "Kalau lagi mood, gasin dikit lagi buat bonus XP.";
+      } else {
+        title = "Deep learning mode. 🔥";
+        sub = "Jangan lupa istirahat, otak juga butuh cooldown.";
+      }
+
+      if (titleEl) titleEl.textContent = title;
+      if (subEl) subEl.textContent = sub;
+    }
+
     function renderLearningStatsAndProgress() {
       const today = todayISO();
       const sixMonthsAgo = getSixMonthsAgoISO();
-
       const entries = learningState.entries || [];
+
       let todayXP = 0;
       let totalXP = 0;
       const progressBySkill = {};
-
       const datesWithLearning = new Set();
 
       entries.forEach((e) => {
@@ -1712,7 +1821,6 @@
         }
       });
 
-      // clamp to 0-100
       Object.keys(progressBySkill).forEach((k) => {
         progressBySkill[k] = Math.min(100, progressBySkill[k]);
       });
@@ -1720,7 +1828,7 @@
       document.getElementById("learning-xp-today").textContent = todayXP;
       document.getElementById("learning-xp-total").textContent = totalXP;
 
-      // Learning streak
+      // streak
       let streak = 0;
       let cursor = new Date();
       while (true) {
@@ -1735,27 +1843,26 @@
       document.getElementById("learning-streak").textContent =
         streak + (streak === 1 ? " day" : " days");
 
-      // Warning if today has no learning
       const warningEl = document.getElementById("learning-warning");
       warningEl.style.display = todayXP === 0 ? "inline-flex" : "none";
 
-      // Progress bars
+      // progress bars
       const fills = document.querySelectorAll(".skill-progress-fill");
       fills.forEach((el) => {
         const skillId = el.dataset.progressFor;
         const value = progressBySkill[skillId] || 0;
         el.style.width = value + "%";
-        // hue from 10 (orange) to 140 (green) based on progress
         const hue = 10 + (value / 100) * 80;
         el.style.background = `linear-gradient(90deg, hsl(${hue},90%,60%), hsl(${hue + 20},90%,55%))`;
       });
+
+      updateLearningChart(todayXP);
     }
 
     function renderLearningHistory() {
       const container = document.getElementById("learning-history");
       container.innerHTML = "";
       const entries = [...(learningState.entries || [])];
-      // sort by date desc
       entries.sort((a, b) => (a.date < b.date ? 1 : -1));
       const recent = entries.slice(0, 8);
       if (recent.length === 0) {
@@ -1803,7 +1910,7 @@
       });
     }
 
-    // ------------------- Learning Modal Handlers -------------------
+    // ------------------- Learning Modal ---------------------------
     let currentSkillContext = null;
     let currentEffort = "small";
 
@@ -1874,7 +1981,7 @@
       renderLearningHistory();
     }
 
-    // ------------------- Nav Switch -------------------------------
+    // ------------------- Nav & HoHo Drag --------------------------
     function setupNav() {
       const tabs = document.querySelectorAll(".nav-tab");
       tabs.forEach((tab) => {
@@ -1890,9 +1997,51 @@
       });
     }
 
+    function setupHoHoDrag() {
+      const hoho = document.getElementById("hoho-floating");
+      if (!hoho) return;
+      let isDragging = false;
+      let startX = 0;
+      let startY = 0;
+      let startLeft = 0;
+      let startTop = 0;
+
+      function onPointerDown(e) {
+        isDragging = true;
+        hoho.style.transition = "none";
+        const rect = hoho.getBoundingClientRect();
+        startLeft = rect.left;
+        startTop = rect.top;
+        startX = e.clientX;
+        startY = e.clientY;
+        window.addEventListener("pointermove", onPointerMove);
+        window.addEventListener("pointerup", onPointerUp);
+      }
+
+      function onPointerMove(e) {
+        if (!isDragging) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        const newLeft = startLeft + dx;
+        const newTop = startTop + dy;
+        hoho.style.left = newLeft + "px";
+        hoho.style.top = newTop + "px";
+        hoho.style.right = "auto";
+        hoho.style.bottom = "auto";
+      }
+
+      function onPointerUp() {
+        isDragging = false;
+        hoho.style.transition = "";
+        window.removeEventListener("pointermove", onPointerMove);
+        window.removeEventListener("pointerup", onPointerUp);
+      }
+
+      hoho.addEventListener("pointerdown", onPointerDown);
+    }
+
     // ------------------- Init -------------------------------------
     document.addEventListener("DOMContentLoaded", () => {
-      // set today label
       const today = new Date();
       const options = {
         weekday: "long",
@@ -1905,20 +2054,13 @@
 
       loadState();
 
-      // tasks
       document
         .getElementById("task-form")
         .addEventListener("submit", handleTaskFormSubmit);
-
       document
         .getElementById("heatmap-start")
         .addEventListener("change", renderHeatmap);
 
-      renderTodaySummary();
-      renderTasksList();
-      renderHeatmap();
-
-      // learning view events
       document
         .getElementById("effort-options")
         .addEventListener("click", handleEffortClick);
@@ -1940,7 +2082,6 @@
             .classList.add("hidden")
         );
 
-      // open learning modal on skill-card click
       document.querySelectorAll(".skill-card").forEach((card) => {
         card.addEventListener("click", () => {
           const skillId = card.dataset.skillId;
@@ -1950,9 +2091,14 @@
         });
       });
 
+      renderTodaySummary();
+      renderTasksList();
+      renderHeatmap();
+
       renderLearningStatsAndProgress();
       renderLearningHistory();
       setupNav();
+      setupHoHoDrag();
     });
   </script>
 </body>
