@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Savvy Dopamine Task Tracker</title>
+  <title>Savvy Dopamine Task Tracker – V1.3.1</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     :root {
@@ -390,6 +390,12 @@
       color: #e44747;
     }
 
+    .status-btn.active-progress {
+      border-color: #ffd93d;
+      background: #fff4a3;
+      color: #c09000;
+    }
+
     .no-tasks {
       text-align: center;
       font-size: 12px;
@@ -441,6 +447,42 @@
       color: var(--text-muted);
     }
 
+    .heat-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .heat-btn {
+      border-radius: 999px;
+      border: 1px solid #cdd3ea;
+      background: #ffffff;
+      font-size: 11px;
+      padding: 4px 10px;
+      color: #5d6a8f;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.12s ease;
+    }
+
+    .heat-btn:active {
+      transform: scale(0.95);
+    }
+
+    .heat-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+      transform: none;
+    }
+
+    .heat-range-label {
+      flex: 1;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
     .heat-grid {
       display: grid;
       grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -454,12 +496,20 @@
       border-radius: 6px;
       background: #e4e7f5;
       position: relative;
+      overflow: hidden;
     }
 
     .heat-cell-inner {
       position: absolute;
       inset: 0;
       border-radius: 6px;
+      transition: transform 0.12s ease-out, box-shadow 0.12s ease-out;
+      cursor: pointer;
+    }
+
+    .heat-cell-inner:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.18);
     }
 
     .heat-0 {
@@ -467,19 +517,19 @@
     }
 
     .heat-1 {
-      background: #d3f8df;
+      background: #ff6b6b; /* red */
     }
 
     .heat-2 {
-      background: #9be6b5;
+      background: #ffd93d; /* yellow */
     }
 
     .heat-3 {
-      background: #4cd77f;
+      background: #2ecc71; /* green */
     }
 
-    .heat-4 {
-      background: #00c853;
+    .heat-selected {
+      box-shadow: 0 0 0 2px #0b4f82;
     }
 
     .heat-label-row {
@@ -488,6 +538,51 @@
       font-size: 10px;
       color: var(--text-muted);
       margin-top: 3px;
+    }
+
+    .history-detail {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px dashed #d0d6ea;
+    }
+
+    .history-detail-date {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-main);
+    }
+
+    .history-detail-list {
+      max-height: 160px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .history-detail-item {
+      background: #ffffff;
+      border-radius: 10px;
+      border: 1px solid #e1e4f2;
+      padding: 6px 8px;
+    }
+
+    .history-detail-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .history-detail-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .history-detail-empty {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-style: italic;
     }
 
     /* ===========================
@@ -662,7 +757,8 @@
       </div>
 
       <div class="hint">
-        Effort 1 = 1 pt · Effort 2 = 3 pts · Effort 3 = 6 pts (hanya yang statusnya <b>Done</b> keitung skor).
+        Effort 1 = 1 pt · Effort 2 = 3 pts · Effort 3 = 6 pts.<br />
+        Status <b>Done</b> = 100% poin · <b>Progress</b> = 20% poin per hari · <b>Blocked</b> = warning only (no point).
       </div>
     </div>
 
@@ -688,13 +784,28 @@
       </div>
 
       <div class="history-title" style="margin-top:4px;">28-Day Heatmap</div>
+
+      <div class="heat-controls">
+        <button class="heat-btn" id="heatPrevBtn">⟵ Older</button>
+        <div class="heat-range-label" id="heatRangeLabel">Last 28 days</div>
+        <button class="heat-btn" id="heatNextBtn">Newer ⟶</button>
+      </div>
+
       <div class="heat-grid" id="heatGrid"></div>
       <div class="heat-label-row">
         <span>older</span>
         <span>today</span>
       </div>
       <div class="hint">
-        Each square is one day. Darker green = closer to or above target score. This can grow year by year; browser keeps the log.
+        Click a square to see what you did that day. Red = low, Yellow = okay, Green = day well-played.
+      </div>
+
+      <div class="history-detail">
+        <div class="history-title">Day Detail</div>
+        <div class="history-detail-date" id="historyDetailDate">
+          Click a square above to see tasks for that day.
+        </div>
+        <div class="history-detail-list" id="historyDetailList"></div>
       </div>
     </div>
   </div>
@@ -725,6 +836,9 @@
     let dragOffsetX = 0;
     let dragOffsetY = 0;
 
+    let heatWindowOffset = 0; // how many days back from the most recent window
+    let selectedHistoryDate = null;
+
     function todayKey() {
       const d = new Date();
       return d.toISOString().slice(0, 10);
@@ -737,9 +851,12 @@
       return 0;
     }
 
+    // Done = 100% poin, Progress = 20% poin per hari, Blocked/Todo = 0
     function calcScore(tasks) {
       return tasks.reduce((sum, t) => {
-        if (t.status === "done") return sum + weightForEffort(t.effort);
+        const base = weightForEffort(t.effort);
+        if (t.status === "done") return sum + base;
+        if (t.status === "progress") return sum + base * 0.2;
         return sum;
       }, 0);
     }
@@ -765,12 +882,19 @@
       const history = loadHistory();
       const date = dayState.date || todayKey();
       const tasks = dayState.tasks || [];
-      const score = calcScore(tasks);
+      const rawScore = calcScore(tasks);
+      const score = Math.round(rawScore * 10) / 10;
       const total = tasks.length;
       let done = 0;
       tasks.forEach(t => { if (t.status === "done") done++; });
 
-      history.days[date] = { date, score, total, done };
+      history.days[date] = {
+        date,
+        score,
+        total,
+        done,
+        tasks: tasks.map(t => ({ ...t }))
+      };
       saveHistory(history);
       localStorage.setItem(LAST_SCORE_KEY, String(score));
     }
@@ -782,7 +906,7 @@
         if (!raw) return { date: today, tasks: [], streakCounted: false };
         const parsed = JSON.parse(raw);
 
-        // kalau beda hari: archive + carry over task yang belum done
+        // Kalau beda hari: archive + carry over task yang belum done
         if (!parsed.date || parsed.date !== today) {
           archiveDay(parsed);
           const carried = (parsed.tasks || []).filter(t => t.status !== "done");
@@ -834,6 +958,13 @@
     const bestDayTextEl = document.getElementById("bestDayText");
     const bestDaySubEl = document.getElementById("bestDaySub");
     const heatGridEl = document.getElementById("heatGrid");
+
+    const heatPrevBtn = document.getElementById("heatPrevBtn");
+    const heatNextBtn = document.getElementById("heatNextBtn");
+    const heatRangeLabelEl = document.getElementById("heatRangeLabel");
+
+    const historyDetailDateEl = document.getElementById("historyDetailDate");
+    const historyDetailListEl = document.getElementById("historyDetailList");
 
     const hohoMascot = document.getElementById("hohoMascot");
     const hohoSpeech = document.getElementById("hohoSpeech");
@@ -978,7 +1109,9 @@
             ? "To do"
             : t.status === "done"
             ? "Done"
-            : "Blocked";
+            : t.status === "blocked"
+            ? "Blocked"
+            : "Progress";
         meta.appendChild(statusSpan);
 
         main.appendChild(title);
@@ -992,6 +1125,12 @@
           "status-btn" + (t.status === "done" ? " active-done" : "");
         btnDone.textContent = "Done";
         btnDone.onclick = () => updateTaskStatus(t.id, "done");
+
+        const btnProgress = document.createElement("button");
+        btnProgress.className =
+          "status-btn" + (t.status === "progress" ? " active-progress" : "");
+        btnProgress.textContent = "Progress";
+        btnProgress.onclick = () => updateTaskStatus(t.id, "progress");
 
         const btnBlocked = document.createElement("button");
         btnBlocked.className =
@@ -1010,6 +1149,7 @@
         btnEdit.onclick = () => editTask(t.id);
 
         statusButtons.appendChild(btnDone);
+        statusButtons.appendChild(btnProgress);
         statusButtons.appendChild(btnBlocked);
         statusButtons.appendChild(btnTodo);
         statusButtons.appendChild(btnEdit);
@@ -1062,7 +1202,7 @@
       focusScoreEl.textContent = percent + "%";
       const lastStr = localStorage.getItem(LAST_SCORE_KEY);
       if (lastStr) {
-        const last = parseInt(lastStr, 10) || 0;
+        const last = parseFloat(lastStr) || 0;
         if (last > 0) {
           const diff = score - last;
           const diffPct = Math.round((diff / last) * 100);
@@ -1143,6 +1283,8 @@
       const t = state.tasks.find(task => task.id === id);
       if (!t) return;
       const prevStatus = t.status;
+
+      // progress & blocked nggak boleh digabung, status single
       t.status = status;
 
       const score = calcScore(state.tasks);
@@ -1201,107 +1343,6 @@
       showHohoMessage("Fresh board. New day, new run.");
     }
 
-    function renderHistory() {
-      const history = loadHistory();
-      const daysObj = history.days || {};
-
-      const today = todayKey();
-      const currentTasks = state.tasks || [];
-      const todayScore = calcScore(currentTasks);
-      let todayDone = 0;
-      currentTasks.forEach(t => { if (t.status === "done") todayDone++; });
-      daysObj[today] = {
-        date: today,
-        score: todayScore,
-        total: currentTasks.length,
-        done: todayDone
-      };
-
-      const allDays = Object.keys(daysObj)
-        .map(k => daysObj[k])
-        .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
-
-      if (allDays.length === 0) {
-        weeklyTextEl.textContent = "No data yet";
-        monthlyTextEl.textContent = "No data yet";
-        bestDayTextEl.textContent = "No data yet";
-        heatGridEl.innerHTML = "";
-        return;
-      }
-
-      const last7 = allDays.slice(-7);
-      let sum7 = 0;
-      last7.forEach(d => { sum7 += d.score || 0; });
-      const max7 = TARGET_SCORE * last7.length || 1;
-      const pct7 = Math.round((sum7 / max7) * 100);
-      weeklyTextEl.textContent = pct7 + "% of target";
-      weeklySubEl.textContent =
-        "Across " +
-        last7.length +
-        " days. Keep nudging it closer to 100%.";
-
-      const last30 = allDays.slice(-30);
-      let sum30 = 0;
-      last30.forEach(d => { sum30 += d.score || 0; });
-      const avg30 =
-        last30.length === 0 ? 0 : Math.round(sum30 / last30.length);
-      const avgPct30 = Math.round((avg30 / TARGET_SCORE) * 100);
-      monthlyTextEl.textContent = avgPct30 + "% avg";
-      monthlySubEl.textContent =
-        "Avg score " +
-        avg30 +
-        " pts over " +
-        last30.length +
-        " days.";
-
-      let best = allDays[0];
-      allDays.forEach(d => {
-        if (!best || (d.score || 0) > (best.score || 0)) best = d;
-      });
-      if (best) {
-        const bestPct = Math.round(((best.score || 0) / TARGET_SCORE) * 100);
-        const dateLabel = formatShortDate(best.date);
-        bestDayTextEl.textContent = bestPct + "% · " + dateLabel;
-        bestDaySubEl.textContent =
-          "Score " + (best.score || 0) + " pts on your cleanest day.";
-      }
-
-      const last28 = allDays.slice(-28);
-      heatGridEl.innerHTML = "";
-      last28.forEach(d => {
-        const pct =
-          TARGET_SCORE === 0
-            ? 0
-            : Math.max(
-                0,
-                Math.min(
-                  100,
-                  Math.round(((d.score || 0) / TARGET_SCORE) * 100)
-                )
-              );
-        let level = 0;
-        if (pct === 0) level = 0;
-        else if (pct < 40) level = 1;
-        else if (pct < 70) level = 2;
-        else if (pct < 100) level = 3;
-        else level = 4;
-
-        const cell = document.createElement("div");
-        cell.className = "heat-cell";
-        const inner = document.createElement("div");
-        inner.className = "heat-cell-inner heat-" + level;
-        inner.title =
-          formatShortDate(d.date) +
-          " · " +
-          (d.score || 0) +
-          " pts (" +
-          pct +
-          "%)";
-        cell.appendChild(inner);
-        heatGridEl.appendChild(cell);
-      });
-    }
-
     function formatShortDate(dateStr) {
       try {
         const d = new Date(dateStr);
@@ -1314,11 +1355,268 @@
       }
     }
 
+    function showDayDetail(dateStr) {
+      selectedHistoryDate = dateStr;
+      if (!historyDetailDateEl || !historyDetailListEl) return;
+
+      const allHistory = loadHistory();
+      const today = todayKey();
+      let tasks = [];
+      let score = 0;
+
+      if (dateStr === today) {
+        const currentTasks = state.tasks || [];
+        tasks = currentTasks.map(t => ({ ...t }));
+        score = calcScore(currentTasks);
+      } else {
+        const day =
+          allHistory.days && allHistory.days[dateStr]
+            ? allHistory.days[dateStr]
+            : null;
+        if (day) {
+          tasks = (day.tasks || []).map(t => ({ ...t }));
+          score = day.score || 0;
+        }
+      }
+
+      const pct =
+        TARGET_SCORE === 0
+          ? 0
+          : Math.max(
+              0,
+              Math.min(100, Math.round((score / TARGET_SCORE) * 100))
+            );
+
+      historyDetailDateEl.textContent =
+        formatShortDate(dateStr) +
+        " — " +
+        pct +
+        "% of target (" +
+        score.toFixed(1) +
+        " pts)";
+
+      historyDetailListEl.innerHTML = "";
+      if (!tasks || tasks.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "history-detail-empty";
+        empty.textContent = "No tasks logged for this day.";
+        historyDetailListEl.appendChild(empty);
+        return;
+      }
+
+      tasks.forEach(t => {
+        const row = document.createElement("div");
+        row.className = "history-detail-item";
+
+        const title = document.createElement("div");
+        title.className = "history-detail-title";
+        title.textContent = t.title || "(Untitled task)";
+
+        const meta = document.createElement("div");
+        meta.className = "history-detail-meta";
+        const parts = [];
+        if (t.category) parts.push(t.category);
+        if (t.effort)
+          parts.push("Effort " + t.effort);
+        if (t.status)
+          parts.push(
+            t.status === "done"
+              ? "Done"
+              : t.status === "blocked"
+              ? "Blocked"
+              : t.status === "progress"
+              ? "Progress"
+              : "Todo"
+          );
+
+        meta.textContent = parts.join(" • ");
+        row.appendChild(title);
+        row.appendChild(meta);
+        historyDetailListEl.appendChild(row);
+      });
+    }
+
+    function renderHistory() {
+      const history = loadHistory();
+      const daysObj = history.days || {};
+
+      const today = todayKey();
+      const currentTasks = state.tasks || [];
+      const todayScoreRaw = calcScore(currentTasks);
+      const todayScore = Math.round(todayScoreRaw * 10) / 10;
+      let todayDone = 0;
+      currentTasks.forEach(t => { if (t.status === "done") todayDone++; });
+
+      daysObj[today] = {
+        date: today,
+        score: todayScore,
+        total: currentTasks.length,
+        done: todayDone,
+        tasks: currentTasks.map(t => ({ ...t }))
+      };
+
+      const allDays = Object.keys(daysObj)
+        .map(k => daysObj[k])
+        .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+
+      if (allDays.length === 0) {
+        weeklyTextEl.textContent = "No data yet";
+        monthlyTextEl.textContent = "No data yet";
+        bestDayTextEl.textContent = "No data yet";
+        heatGridEl.innerHTML = "";
+        historyDetailDateEl.textContent = "No data yet.";
+        historyDetailListEl.innerHTML = "";
+        return;
+      }
+
+      // Weekly stats (last 7)
+      const last7 = allDays.slice(-7);
+      let sum7 = 0;
+      last7.forEach(d => { sum7 += d.score || 0; });
+      const max7 = TARGET_SCORE * last7.length || 1;
+      const pct7 = Math.round((sum7 / max7) * 100);
+      weeklyTextEl.textContent = pct7 + "% of target";
+      weeklySubEl.textContent =
+        "Across " +
+        last7.length +
+        " days. Keep nudging it closer to 100%.";
+
+      // Monthly stats (last 30)
+      const last30 = allDays.slice(-30);
+      let sum30 = 0;
+      last30.forEach(d => { sum30 += d.score || 0; });
+      const avg30 =
+        last30.length === 0 ? 0 : Math.round((sum30 / last30.length) * 10) / 10;
+      const avgPct30 = Math.round((avg30 / TARGET_SCORE) * 100);
+      monthlyTextEl.textContent = avgPct30 + "% avg";
+      monthlySubEl.textContent =
+        "Avg score " +
+        avg30.toFixed(1) +
+        " pts over " +
+        last30.length +
+        " days.";
+
+      // Best day
+      let best = allDays[0];
+      allDays.forEach(d => {
+        if (!best || (d.score || 0) > (best.score || 0)) best = d;
+      });
+      if (best) {
+        const bestPct = Math.round(((best.score || 0) / TARGET_SCORE) * 100);
+        const dateLabel = formatShortDate(best.date);
+        bestDayTextEl.textContent = bestPct + "% · " + dateLabel;
+        bestDaySubEl.textContent =
+          "Score " + (best.score || 0).toFixed(1) + " pts on your cleanest day.";
+      }
+
+      // Heatmap window (28 days, with range control)
+      const windowSize = 28;
+      const total = allDays.length;
+      let startIndex = 0;
+      let endIndex = total;
+
+      if (total > windowSize) {
+        const maxOffset = total - windowSize;
+        if (heatWindowOffset > maxOffset) heatWindowOffset = maxOffset;
+        if (heatWindowOffset < 0) heatWindowOffset = 0;
+        endIndex = total - heatWindowOffset;
+        startIndex = endIndex - windowSize;
+      }
+
+      const windowDays = allDays.slice(startIndex, endIndex);
+
+      if (heatRangeLabelEl && windowDays.length > 0) {
+        const startLabel = formatShortDate(windowDays[0].date);
+        const endLabel = formatShortDate(
+          windowDays[windowDays.length - 1].date
+        );
+        heatRangeLabelEl.textContent = startLabel + " – " + endLabel;
+      } else if (heatRangeLabelEl) {
+        heatRangeLabelEl.textContent = "No data";
+      }
+
+      if (heatPrevBtn) {
+        const maxOffset = total > windowSize ? total - windowSize : 0;
+        heatPrevBtn.disabled = total <= windowSize || heatWindowOffset >= maxOffset;
+      }
+      if (heatNextBtn) {
+        heatNextBtn.disabled = heatWindowOffset === 0;
+      }
+
+      heatGridEl.innerHTML = "";
+
+      if (!selectedHistoryDate && windowDays.length > 0) {
+        selectedHistoryDate = windowDays[windowDays.length - 1].date;
+      }
+
+      windowDays.forEach(d => {
+        const pct =
+          TARGET_SCORE === 0
+            ? 0
+            : Math.max(
+                0,
+                Math.min(
+                  100,
+                  Math.round(((d.score || 0) / TARGET_SCORE) * 100)
+                )
+              );
+
+        let levelClass = "heat-1"; // default merah
+        if (pct >= 80) {
+          levelClass = "heat-3"; // hijau
+        } else if (pct >= 40) {
+          levelClass = "heat-2"; // kuning
+        } // else merah tetap
+
+        const cell = document.createElement("div");
+        cell.className = "heat-cell";
+        const inner = document.createElement("div");
+        inner.className =
+          "heat-cell-inner " +
+          levelClass +
+          (d.date === selectedHistoryDate ? " heat-selected" : "");
+        inner.title =
+          formatShortDate(d.date) +
+          " · " +
+          (d.score || 0).toFixed(1) +
+          " pts (" +
+          pct +
+          "%)";
+
+        inner.addEventListener("click", () => {
+          selectedHistoryDate = d.date;
+          renderHistory(); // re-render to update selected styling
+        });
+
+        cell.appendChild(inner);
+        heatGridEl.appendChild(cell);
+      });
+
+      if (selectedHistoryDate) {
+        showDayDetail(selectedHistoryDate);
+      }
+    }
+
     addTaskBtn.addEventListener("click", addTask);
     taskTitleInput.addEventListener("keydown", e => {
       if (e.key === "Enter") addTask();
     });
     resetDayBtn.addEventListener("click", resetToday);
+
+    if (heatPrevBtn) {
+      heatPrevBtn.addEventListener("click", () => {
+        heatWindowOffset += 28;
+        renderHistory();
+      });
+    }
+
+    if (heatNextBtn) {
+      heatNextBtn.addEventListener("click", () => {
+        heatWindowOffset -= 28;
+        if (heatWindowOffset < 0) heatWindowOffset = 0;
+        renderHistory();
+      });
+    }
 
     if (hohoMascot) {
       hohoMascot.addEventListener("click", () => {
