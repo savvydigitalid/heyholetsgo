@@ -843,6 +843,15 @@
       margin-top: 8px;
     }
 
+    .report-row input[type="text"] {
+      padding: 6px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      font-size: 13px;
+      background: #fff;
+      flex: 1 1 160px;
+    }
+
     .report-row input[type="month"] {
       padding: 6px 10px;
       border-radius: 12px;
@@ -1168,7 +1177,12 @@
         <div class="card">
           <div class="card-header">
             <h2>Monthly Report Export</h2>
-            <span>Generate report 1 bulan untuk Tasks & Learning.</span>
+            <span>Summary 1 bulan buat dikirim ke manager.</span>
+          </div>
+
+          <div class="report-row">
+            <input type="text" id="report-name" placeholder="Your name (optional)" />
+            <input type="text" id="report-position" placeholder="Position / Role (optional)" />
           </div>
           <div class="report-row">
             <input type="month" id="report-month" />
@@ -1177,7 +1191,8 @@
             </button>
           </div>
           <p class="report-hint">
-            Pilih bulan yang mau di-export. Browser akan buka jendela baru & lo bisa pilih “Save as PDF”.
+            Pilih bulan, isi nama & posisi (kalau mau), lalu klik export. Browser bakal buka jendela baru
+            dan lo bisa pilih “Save as PDF”.
           </p>
         </div>
       </section>
@@ -2487,133 +2502,387 @@
     }
 
     // ------------------- Export Monthly Report --------------------
-    function exportReport() {
-  const name = document.getElementById("userName")?.value || "Anonymous";
-  const position = document.getElementById("userPosition")?.value || "Staff";
-  const month = new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
+    function handleExportReport() {
+      const nameInput = document.getElementById("report-name");
+      const positionInput = document.getElementById("report-position");
+      const monthInput = document.getElementById("report-month");
 
-  const dailyData = JSON.parse(localStorage.getItem("taskHistory") || "{}");
-  const learningData = JSON.parse(localStorage.getItem("learningHistory") || "{}");
+      const name = nameInput.value.trim() || "Unnamed";
+      const position = positionInput.value.trim() || "Staff";
 
-  // --- Calculate Monthly Summary ---
-  const days = Object.keys(dailyData);
-  const daysLogged = days.length;
+      if (!monthInput.value) {
+        alert("Pilih dulu bulan yang mau di-export.");
+        return;
+      }
 
-  let totalDopamine = 0;
-  let totalTaskXP = 0;
-  let totalTasksDone = 0;
+      const [yearStr, monthStr] = monthInput.value.split("-");
+      const year = parseInt(yearStr, 10);
+      const month = parseInt(monthStr, 10); // 1-12
+      const monthLabel = new Date(year, month - 1, 1).toLocaleDateString(
+        undefined,
+        { month: "long", year: "numeric" }
+      );
 
-  days.forEach(date => {
-    totalDopamine += dailyData[date].percentage || 0;
-    totalTaskXP += dailyData[date].xp || 0;
-    totalTasksDone += dailyData[date].doneCount || 0;
-  });
+      const monthPrefix = monthInput.value; // "2025-08"
 
-  const avgDopamine = daysLogged ? Math.round(totalDopamine / daysLogged) : 0;
+      // --- Tasks monthly summary ---
+      const allTaskDates = Object.keys(tasksState.days || {});
+      const taskDates = allTaskDates.filter((d) => d.startsWith(monthPrefix));
+      taskDates.sort();
 
-  // --- Heatmap Builder ---
-  function buildHeatmap(dataObj, type = "task") {
-    let html = `
-      <div style='display:grid;grid-template-columns:repeat(7,14px);gap:4px;margin:10px 0;'>
-    `;
+      let totalDopamine = 0;
+      let totalTaskXP = 0;
+      let totalTasksDone = 0;
 
-    const sorted = Object.keys(dataObj).sort();
-    sorted.forEach(date => {
-      let percent = 0;
+      taskDates.forEach((date) => {
+        const dayData = tasksState.days[date];
+        const { score, doneCount, xp } = computeDayScore(dayData);
+        totalDopamine += score;
+        totalTaskXP += xp;
+        totalTasksDone += doneCount;
+      });
 
-      if (type === "task") percent = dataObj[date].percentage || 0;
-      if (type === "learning") percent = dataObj[date].xp ? (dataObj[date].xp >= 5 ? 100 : Math.round((dataObj[date].xp / 5) * 100)) : 0;
+      const daysLogged = taskDates.length;
+      const daysInMonth = new Date(year, month, 0).getDate(); // last day date number
+      const avgDopamine =
+        daysLogged > 0 ? Math.round(totalDopamine / daysLogged) : 0;
 
-      let color = percent >= 60 ? "#4ade80" : percent >= 40 ? "#facc15" : "#f87171";
-      
-      html += `<div title="${date}: ${percent}%" style="width:14px;height:14px;border-radius:4px;background:${color};"></div>`;
-    });
+      function buildTaskHeatmapHTML() {
+        let html =
+          '<div style="display:grid;grid-template-columns:repeat(7,16px);gap:4px;margin:8px 0 4px 0;">';
 
-    html += "</div>";
-    return html;
-  }
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dayStr = String(day).padStart(2, "0");
+          const iso = `${yearStr}-${monthStr}-${dayStr}`;
+          const dayData = tasksState.days[iso];
+          let color = "#e5e7eb";
+          let title = iso + " – no data";
+          let score = 0;
 
-  // --- Learning Summary ---
-  const learningDays = Object.keys(learningData);
-  let totalLearningXP = 0;
-  let skillProgress = {};
+          if (dayData) {
+            const res = computeDayScore(dayData);
+            score = res.score;
+            title = iso + " – " + score + "%";
+            if (score < 40) color = "#fecaca";
+            else if (score < 80) color = "#fef9c3";
+            else color = "#bbf7d0";
+          }
 
-  learningDays.forEach(date => {
-    const entries = learningData[date].entries || [];
-    entries.forEach(e => {
-      totalLearningXP += e.xp;
-      if (!skillProgress[e.skill]) skillProgress[e.skill] = 0;
-      skillProgress[e.skill] += e.xp;
-    });
-  });
-
-  // Convert skill XP → progress %
-  const skillBars = Object.entries(skillProgress).map(([skill, xp]) => {
-    const percent = Math.min(100, Math.round((xp / 30) * 100)); // 30 XP = full bar sebulan
-    return `
-      <div style="margin-bottom:6px;">
-        <strong>${skill}</strong>
-        <div style="height:8px;background:#eee;border-radius:6px;margin-top:3px;">
-          <div style="height:8px;width:${percent}%;background:#60a5fa;border-radius:6px;"></div>
-        </div>
-      </div>
-    `;
-  }).join("");
-
-  // --- Final HTML Report ---
-  const reportHTML = `
-    <html>
-    <head>
-      <title>Monthly Report</title>
-      <style>
-        body {
-          font-family: Arial, sans-serif;
-          padding: 30px;
-          line-height: 1.5;
-          color: #333;
+          html += `<div title="${title}" style="width:16px;height:16px;border-radius:4px;background:${color};"></div>`;
         }
-        h2 { margin-top: 28px; }
-      </style>
-    </head>
-    <body>
 
-      <h1>Monthly Report – HeyHoLetsGo</h1>
-      <p><strong>Name:</strong> ${name}<br>
-         <strong>Position:</strong> ${position}<br>
-         <strong>Period:</strong> ${month}</p>
+        html += "</div>";
+        html +=
+          '<div style="font-size:10px;color:#6b7280;margin-top:2px;">' +
+          '<span style="display:inline-flex;align-items:center;margin-right:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#fecaca;margin-right:4px;"></span>0–39%</span>' +
+          '<span style="display:inline-flex;align-items:center;margin-right:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#fef9c3;margin-right:4px;"></span>40–79%</span>' +
+          '<span style="display:inline-flex;align-items:center;"><span style="width:10px;height:10px;border-radius:3px;background:#bbf7d0;margin-right:4px;"></span>80–100%</span>' +
+          "</div>";
+        return html;
+      }
 
-      <h2>🧠 Productivity Summary</h2>
-      <p><strong>Avg Dopamine Sparks:</strong> ${avgDopamine}%<br>
-         <strong>Total Task XP:</strong> ${totalTaskXP}<br>
-         <strong>Total Tasks Completed:</strong> ${totalTasksDone}<br>
-         <strong>Days Logged:</strong> ${daysLogged}</p>
+      // --- Learning monthly summary ---
+      const allEntries = learningState.entries || [];
+      const monthEntries = allEntries.filter(
+        (e) => e.date && e.date.startsWith(monthPrefix)
+      );
 
-      <h3>📅 Task Heatmap</h3>
-      ${buildHeatmap(dailyData, "task")}
+      const learningDaySet = new Set();
+      let totalLearningXP = 0;
+      const xpBySkill = {};
 
-      <h2>📚 Learning Summary</h2>
-      <p><strong>Total Learning XP:</strong> ${totalLearningXP}<br>
-         <strong>Days with Learning:</strong> ${learningDays.length}</p>
+      monthEntries.forEach((e) => {
+        const xp = Number(e.xp || 0);
+        totalLearningXP += xp;
+        learningDaySet.add(e.date);
+        const key = e.skillName || e.skillId || "Unknown skill";
+        xpBySkill[key] = (xpBySkill[key] || 0) + xp;
+      });
 
-      <h3>📅 Learning Heatmap</h3>
-      ${buildHeatmap(learningData, "learning")}
+      const learningDaysCount = learningDaySet.size;
 
-      <h3>📈 Skill Progress (Monthly)</h3>
-      ${skillBars || "<p>No skill data yet.</p>"}
+      function getLearningXPOn(iso) {
+        let xp = 0;
+        monthEntries.forEach((e) => {
+          if (e.date === iso) {
+            xp += Number(e.xp || 0);
+          }
+        });
+        return xp;
+      }
 
-      <h2>✏️ Self Reflection (Fill Manually)</h2>
-      <p>• What worked well this month?<br><br>
-         • What made you stuck?<br><br>
-         • What will you try differently next month?</p>
+      function buildLearningHeatmapHTML() {
+        let html =
+          '<div style="display:grid;grid-template-columns:repeat(7,16px);gap:4px;margin:8px 0 4px 0;">';
 
-      <h2>📝 Manager Comments</h2>
-      <p>(Leave this section empty for manager)</p>
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dayStr = String(day).padStart(2, "0");
+          const iso = `${yearStr}-${monthStr}-${dayStr}`;
+          const xp = getLearningXPOn(iso);
+          let color = "#e5e7eb";
+          let title = iso + " – no learning";
+          if (xp > 0) {
+            const ratio = Math.min(1, xp / 5); // 5 XP target harian
+            const score = Math.round(ratio * 100);
+            title = iso + " – " + xp + " XP (" + score + "% of daily target)";
+            if (score < 40) color = "#fecaca";
+            else if (score < 80) color = "#fef9c3";
+            else color = "#bbf7d0";
+          }
+          html += `<div title="${title}" style="width:16px;height:16px;border-radius:4px;background:${color};"></div>`;
+        }
 
-    </body>
-    </html>
-  `;
+        html += "</div>";
+        html +=
+          '<div style="font-size:10px;color:#6b7280;margin-top:2px;">' +
+          '<span style="display:inline-flex;align-items:center;margin-right:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#e5e7eb;margin-right:4px;"></span>No data</span>' +
+          '<span style="display:inline-flex;align-items:center;margin-right:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#fecaca;margin-right:4px;"></span>0–39%</span>' +
+          '<span style="display:inline-flex;align-items:center;margin-right:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#fef9c3;margin-right:4px;"></span>40–79%</span>' +
+          '<span style="display:inline-flex;align-items:center;"><span style="width:10px;height:10px;border-radius:3px;background:#bbf7d0;margin-right:4px;"></span>80–100%</span>' +
+          "</div>";
+        return html;
+      }
 
-  const newWindow = window.open("", "_blank");
-  newWindow.document.write(reportHTML);
-  newWindow.document.close();
-}
+      function buildSkillBarsHTML() {
+        const skills = Object.keys(xpBySkill);
+        if (skills.length === 0) {
+          return '<p style="font-size:12px;color:#6b7280;">No learning data for this month.</p>';
+        }
+        let html = "";
+        skills
+          .sort((a, b) => xpBySkill[b] - xpBySkill[a])
+          .forEach((skill) => {
+            const xp = xpBySkill[skill];
+            const percent = Math.min(100, Math.round((xp / 30) * 100)); // 30 XP = full bar
+            html += `
+              <div style="margin-bottom:8px;">
+                <div style="display:flex;justify-content:space-between;font-size:12px;">
+                  <span>${skill}</span>
+                  <span>${xp} XP</span>
+                </div>
+                <div style="height:8px;background:#e5e7eb;border-radius:999px;margin-top:3px;overflow:hidden;">
+                  <div style="height:8px;width:${percent}%;background:linear-gradient(90deg,#60a5fa,#38bdf8);border-radius:999px;"></div>
+                </div>
+              </div>
+            `;
+          });
+        return html;
+      }
+
+      // --- Build report HTML ---
+      const reportHTML = `
+        <html>
+        <head>
+          <meta charset="UTF-8" />
+          <title>HeyHoLetsGo Monthly Report – ${monthLabel}</title>
+          <style>
+            body {
+              font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+              margin: 24px;
+              color: #111827;
+              background: #fdf6ec;
+            }
+            h1,h2,h3 {
+              margin: 0 0 6px 0;
+            }
+            .section {
+              margin-bottom: 18px;
+              padding: 12px 14px;
+              border-radius: 12px;
+              background: #ffffff;
+              box-shadow: 0 4px 12px rgba(15,23,42,0.06);
+            }
+            .section-title {
+              font-size: 18px;
+              font-weight: 800;
+              margin-bottom: 4px;
+            }
+            .section-sub {
+              font-size: 12px;
+              color: #6b7280;
+              margin-bottom: 8px;
+            }
+            .metric-row {
+              font-size: 12px;
+              line-height: 1.6;
+            }
+            .label {
+              font-weight: 600;
+            }
+            .small {
+              font-size: 11px;
+              color: #6b7280;
+            }
+            .textarea-placeholder {
+              min-height: 60px;
+              border-radius: 10px;
+              border: 1px dashed rgba(148,163,184,0.8);
+              padding: 6px 8px;
+              font-size: 11px;
+              color: #9ca3af;
+              margin-top: 4px;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>HeyHoLetsGo – Monthly Report</h1>
+          <p style="font-size:12px;margin:4px 0 14px 0;">
+            <span class="label">Name:</span> ${name}<br/>
+            <span class="label">Position:</span> ${position}<br/>
+            <span class="label">Period:</span> ${monthLabel}
+          </p>
+
+          <div class="section">
+            <div class="section-title">🧠 Productivity Summary</div>
+            <div class="section-sub">Ringkasan dari task & dopamine sparks selama 1 bulan.</div>
+            <div class="metric-row">
+              <div><span class="label">Avg Dopamine Sparks:</span> ${avgDopamine}%</div>
+              <div><span class="label">Total Task XP:</span> ${totalTaskXP}</div>
+              <div><span class="label">Total Tasks Completed:</span> ${totalTasksDone}</div>
+              <div><span class="label">Days Logged:</span> ${daysLogged} / ${daysInMonth}</div>
+            </div>
+            <h3 style="margin-top:10px;font-size:14px;">📅 Task Heatmap (Monthly)</h3>
+            ${buildTaskHeatmapHTML()}
+          </div>
+
+          <div class="section">
+            <div class="section-title">📚 Learning Summary</div>
+            <div class="section-sub">Learning & skill growth yang terekam bulan ini.</div>
+            <div class="metric-row">
+              <div><span class="label">Total Learning XP:</span> ${totalLearningXP}</div>
+              <div><span class="label">Days with Learning:</span> ${learningDaysCount} / ${daysInMonth}</div>
+            </div>
+            <h3 style="margin-top:10px;font-size:14px;">📅 Learning Heatmap (Monthly)</h3>
+            ${buildLearningHeatmapHTML()}
+            <h3 style="margin-top:10px;font-size:14px;">📈 Skill Progress (Monthly)</h3>
+            ${buildSkillBarsHTML()}
+          </div>
+
+          <div class="section">
+            <div class="section-title">✏️ Self Reflection (Fill Manually)</div>
+            <div class="section-sub small">
+              Gunakan bagian ini untuk bahan 1-on-1 dengan atasan atau review pribadi.
+            </div>
+            <div style="font-size:12px;">
+              • What worked well this month?<br/>
+              <div class="textarea-placeholder"></div>
+              • What made you stuck?<br/>
+              <div class="textarea-placeholder"></div>
+              • What will you try differently next month?<br/>
+              <div class="textarea-placeholder"></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">📝 Manager Comments</div>
+            <div class="section-sub small">
+              Diisi oleh manager saat sesi review bulanan.
+            </div>
+            <div class="textarea-placeholder"></div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      const win = window.open("", "_blank");
+      if (!win) {
+        alert("Popup ke-block. Aktifkan popup dulu untuk export.");
+        return;
+      }
+      win.document.open();
+      win.document.write(reportHTML);
+      win.document.close();
+      win.focus();
+    }
+
+    // ------------------- Init -------------------------------------
+    document.addEventListener("DOMContentLoaded", () => {
+      const today = new Date();
+      const options = {
+        weekday: "long",
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+      };
+      document.getElementById("today-label").textContent =
+        "Today · " + today.toLocaleDateString(undefined, options);
+
+      loadState();
+
+      // default effort pill
+      document
+        .querySelectorAll("#effort-pill-group .effort-pill")
+        .forEach((btn) => {
+          btn.addEventListener("click", () => {
+            document
+              .querySelectorAll("#effort-pill-group .effort-pill")
+              .forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+          });
+        });
+
+      document
+        .getElementById("task-form")
+        .addEventListener("submit", handleTaskFormSubmit);
+
+      document
+        .getElementById("effort-options")
+        .addEventListener("click", handleEffortClick);
+      document
+        .getElementById("modal-save-btn")
+        .addEventListener("click", handleSaveLearning);
+      document
+        .getElementById("modal-close-btn")
+        .addEventListener("click", closeLearningModal);
+      document
+        .getElementById("modal-cancel-btn")
+        .addEventListener("click", closeLearningModal);
+
+      document
+        .getElementById("day-modal-close-btn")
+        .addEventListener("click", () =>
+          document
+            .getElementById("day-modal-backdrop")
+            .classList.add("hidden")
+        );
+
+      document
+        .getElementById("learning-day-modal-close-btn")
+        .addEventListener("click", () =>
+          document
+            .getElementById("learning-day-modal-backdrop")
+            .classList.add("hidden")
+        );
+
+      document.querySelectorAll(".skill-card").forEach((card) => {
+        card.addEventListener("click", () => {
+          const skillId = card.dataset.skillId;
+          const skillName = card.dataset.skillName;
+          const skillType = card.dataset.skillType;
+          openLearningModal(skillId, skillName, skillType, null);
+        });
+      });
+
+      document
+        .getElementById("btn-export-report")
+        .addEventListener("click", handleExportReport);
+
+      renderTodaySummary();
+      renderTasksList();
+      renderHeatmap();
+
+      renderLearningStatsAndProgress();
+      renderLearningHistory();
+      renderLearningHeatmap();
+      setupNav();
+      setupHoHoDrag();
+
+      // default: tasks view active, hoho tasks visible
+      const hohoTasks = document.getElementById("hoho-floating");
+      const hohoLearning = document.getElementById("hoho-learning-floating");
+      if (hohoTasks) hohoTasks.style.display = "block";
+      if (hohoLearning) hohoLearning.style.display = "none";
+    });
+  </script>
+</body>
+</html>
