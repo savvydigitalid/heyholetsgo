@@ -34,9 +34,7 @@
       --accent: #ffb443;
       --accent-soft: #7c2d12;
     }
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: "Inter", sans-serif;
@@ -44,13 +42,14 @@
       color: var(--text);
       transition: background 0.25s ease, color 0.25s ease;
     }
+    .hidden { display: none !important; }
+
     .app-container {
       max-width: 1080px;
       margin: 0 auto;
       padding: 16px;
     }
 
-    /* Header */
     header {
       display: flex;
       justify-content: space-between;
@@ -69,7 +68,6 @@
       color: var(--text-light);
     }
 
-    /* Tabs */
     .tabs {
       display: flex;
       gap: 8px;
@@ -94,7 +92,6 @@
       box-shadow: 0 0 0 2px rgba(255,180,67,0.25);
     }
 
-    /* Cards */
     .card {
       background: var(--card);
       border-radius: 14px;
@@ -117,7 +114,6 @@
       color: var(--text-light);
     }
 
-    /* Layout grids */
     .grid-2 {
       display: grid;
       grid-template-columns: minmax(0, 2fr) minmax(0, 1.8fr);
@@ -135,12 +131,11 @@
     }
     .grid-4 {
       display: grid;
-      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+      grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr) minmax(0, 1.7fr) auto;
       gap: 10px;
       align-items: flex-end;
     }
 
-    /* Inputs & Buttons */
     label {
       font-size: 11px;
       display: block;
@@ -155,9 +150,8 @@
       color: var(--text);
       font-size: 13px;
     }
-    textarea {
-      resize: vertical;
-    }
+    textarea { resize: vertical; }
+
     button {
       border-radius: 10px;
       border: none;
@@ -169,16 +163,13 @@
       cursor: pointer;
       transition: 0.2s ease;
     }
-    button:hover {
-      filter: brightness(0.95);
-    }
+    button:hover { filter: brightness(0.95); }
     .btn-ghost {
       background: var(--bg-alt);
       color: var(--text);
       border: 1px solid var(--border);
     }
 
-    /* Task status pills */
     .status-pill {
       font-size: 11px;
       border-radius: 999px;
@@ -192,7 +183,6 @@
     .status-pill.active-blocked { background: #fca5a5; }
     .status-pill.active-none { background: #e5e7eb; }
 
-    /* Heatmap */
     .heatmap {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
@@ -216,7 +206,6 @@
       font-weight: 600;
     }
 
-    /* Ho-Ho floating */
     .hoho-float {
       position: fixed;
       bottom: 18px;
@@ -226,22 +215,16 @@
       cursor: pointer;
     }
 
-    /* Tab content */
     .tab-content.hidden { display: none; }
 
-    /* Monthly chart container (for PDF & UI) */
     .monthly-card {
       margin-top: 6px;
       padding-top: 10px;
       border-top: 1px dashed var(--border);
     }
 
-    /* Top 3 skills list */
-    #top3skills > div {
-      margin-bottom: 6px;
-    }
+    #top3skills > div { margin-bottom: 6px; }
 
-    /* Mobile responsive */
     @media (max-width: 768px) {
       header {
         flex-direction: column;
@@ -249,9 +232,7 @@
       }
       .grid-2,
       .grid-2-equal,
-      .grid-2-stack {
-        grid-template-columns: minmax(0, 1fr);
-      }
+      .grid-2-stack,
       .grid-4 {
         grid-template-columns: minmax(0, 1fr);
       }
@@ -261,11 +242,16 @@
         bottom: 12px;
       }
     }
+
+    @keyframes hohoBounce {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+      100% { transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
 <div id="fullReportArea" class="app-container">
-  <!-- Header -->
   <header>
     <div>
       <h1>HeyHoLetsGo</h1>
@@ -279,17 +265,15 @@
     </div>
   </header>
 
-  <!-- Tabs -->
   <div class="tabs">
     <button class="tab-btn active" data-tab="tasksTab">Tasks & Productivity</button>
     <button class="tab-btn" data-tab="learningTab">Learning & Skills</button>
     <button class="tab-btn" data-tab="settingsTab">Settings & Reports</button>
   </div>
 
-  <!-- ========= TAB: TASKS ========= -->
+  <!-- ===== TAB TASKS ===== -->
   <section id="tasksTab" class="tab-content">
     <div class="grid-2">
-      <!-- Dopamine card -->
       <div class="card">
         <div class="section-title">
           <span>Dopamine Sparks – Today</span>
@@ -317,12 +301,11 @@
               <span>Blocked</span><span id="tasksBlockedText" style="font-weight:600;color:#f97373;">0</span>
             </div>
             <div style="font-size:11px;color:var(--text-light);margin-top:4px;">
-              On Progress gives 20% XP, Done gives 100%. Reset daily.
+              Todo = 0 XP, Progress = 20% XP, Done = 100% XP. Reset daily.
             </div>
           </div>
         </div>
 
-        <!-- Monthly line chart small block -->
         <div class="monthly-card">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <span style="font-size:12px;font-weight:600;">28-Day Dopamine Trend</span>
@@ -334,7 +317,6 @@
         </div>
       </div>
 
-      <!-- Heatmap -->
       <div class="card">
         <div class="section-title">
           <span>28-Day Productivity Heatmap</span>
@@ -354,21 +336,20 @@
               <span style="width:11px;height:11px;border-radius:3px;background:#6ee7b7;"></span> 80–100%
             </span>
           </div>
-          <span style="font-size:10px;">Tap any day bubble for details.</span>
+          <span style="font-size:10px;">Tap bubble for daily detail.</span>
         </div>
       </div>
     </div>
 
-    <!-- Task input + list -->
     <div class="card">
       <div class="section-title">
         <span>Today’s Tasks</span>
-        <small>Start with 2–5 meaningful tasks. Status kosong → no XP.</small>
+        <small>Start with 2–5 meaningful tasks.</small>
       </div>
       <div class="grid-4" style="margin-bottom:10px;">
         <div>
           <label>Task Name</label>
-          <input id="taskNameInput" type="text" placeholder="e.g. Handle Cimory campaign 20 KOL" />
+          <input id="taskNameInput" type="text" placeholder="e.g. Handle Cimory 20 KOL campaign" />
         </div>
         <div>
           <label>Effort</label>
@@ -383,15 +364,13 @@
           <button id="addTaskBtn" type="button">+ Add Task</button>
         </div>
       </div>
-
       <div id="taskList" style="display:flex;flex-direction:column;gap:8px;font-size:13px;"></div>
     </div>
   </section>
 
-  <!-- ========= TAB: LEARNING ========= -->
+  <!-- ===== TAB LEARNING ===== -->
   <section id="learningTab" class="tab-content hidden">
     <div class="grid-2">
-      <!-- Learning chart -->
       <div class="card">
         <div class="section-title">
           <span>Learning Dopamine – Today</span>
@@ -416,13 +395,12 @@
               <span>6-Month Total XP</span><span id="learningXpSixMonths" style="font-weight:700;">0</span>
             </div>
             <div style="font-size:11px;color:var(--text-light);margin-top:4px;">
-              XP reset tiap 6 bulan, tapi history tetap kebaca.
+              XP direset tiap 6 bulan, history tetap kebaca.
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Learning heatmap -->
       <div class="card">
         <div class="section-title">
           <span>28-Day Learning Heatmap</span>
@@ -450,7 +428,6 @@
       </div>
     </div>
 
-    <!-- Learning log -->
     <div class="card">
       <div class="section-title">
         <span>Daily Learning Log</span>
@@ -501,7 +478,6 @@
       <div id="learningList" style="display:flex;flex-direction:column;gap:8px;font-size:13px;"></div>
     </div>
 
-    <!-- Skill Progress + Top 3 -->
     <div class="card">
       <div class="section-title">
         <span>Skill Progress (Last 6 Months)</span>
@@ -516,7 +492,7 @@
     </div>
   </section>
 
-  <!-- ========= TAB: SETTINGS ========= -->
+  <!-- ===== TAB SETTINGS ===== -->
   <section id="settingsTab" class="tab-content hidden">
     <div class="card">
       <div class="section-title">
@@ -558,15 +534,14 @@
   </section>
 </div>
 
-<!-- Ho-Ho floating (task & learning only) -->
 <img id="hohoTaskFloat" class="hoho-float hidden" src="hoho-happy.png" alt="Ho-Ho Task" />
 <img id="hohoLearningFloat" class="hoho-float hidden" src="hoho-book.png" alt="Ho-Ho Learning" />
 <script>
-const STORAGE_KEY = "hhlg_v135_state";
+const STORAGE_KEY = "hhlg_v136_state";
 
 let appState = {
-  tasks: {},      // { 'YYYY-MM-DD': [ {id,name,effort,status,createdAt} ] }
-  learning: {},   // { 'YYYY-MM-DD': [ {id,category,subskill,effort,reflection,createdAt,customLabel?} ] }
+  tasks: {},
+  learning: {},
   theme: "light",
   user: { name: "", position: "" }
 };
@@ -576,50 +551,47 @@ const DAILY_TASK_XP_TARGET = 60;
 const LEARNING_XP_PER_EFFORT = { 1: 5, 2: 10, 3: 20 };
 const SIX_MONTHS_IN_DAYS = 183;
 
-/* ============== Helpers ============== */
-function getTodayKey(){
+let dopamineChart, learningChart, monthlyChart;
+
+function getTodayKey() {
   const d = new Date();
   const offset = d.getTimezoneOffset();
-  const local = new Date(d.getTime() - offset*60000);
-  return local.toISOString().slice(0,10);
+  const local = new Date(d.getTime() - offset * 60000);
+  return local.toISOString().slice(0, 10);
 }
-function formatShortDate(dateStr){
+function formatShortDate(dateStr) {
   const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("en-GB",{day:"2-digit",month:"short"});
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
 }
-function loadState(){
+function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(!raw) return;
+    if (!raw) return;
     const parsed = JSON.parse(raw);
     appState.tasks = parsed.tasks || {};
     appState.learning = parsed.learning || {};
     appState.theme = parsed.theme || "light";
-    appState.user = parsed.user || { name:"", position:"" };
+    appState.user = parsed.user || { name: "", position: "" };
   } catch(e) { console.error(e); }
 }
-function saveState(){
+function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); }
   catch(e){ console.error(e); }
 }
 function generateId(){ return "id_"+Math.random().toString(36).slice(2,10); }
 function ensureArray(obj,key){ if(!obj[key]) obj[key]=[]; return obj[key]; }
 
-/* Carry over from yesterday: tasks status none/progress */
 function carryOverFromYesterday(){
   const todayKey = getTodayKey();
-  const d = new Date(todayKey + "T00:00:00");
+  const d = new Date(todayKey+"T00:00:00");
   d.setDate(d.getDate()-1);
   const yKey = d.toISOString().slice(0,10);
-  const yesterdayTasks = appState.tasks[yKey] || [];
-  if(yesterdayTasks.length === 0) return;
-
+  const yesterday = appState.tasks[yKey] || [];
+  if(!yesterday.length) return;
   const todayArr = ensureArray(appState.tasks, todayKey);
-  const existing = new Set(todayArr.map(t => t.name + "|" + t.effort));
-
-  yesterdayTasks.forEach(t=>{
-    if((t.status === "none" || t.status === "progress") &&
-       !existing.has(t.name+"|"+t.effort)){
+  const existing = new Set(todayArr.map(t=>t.name+"|"+t.effort));
+  yesterday.forEach(t=>{
+    if((t.status==="none" || t.status==="progress") && !existing.has(t.name+"|"+t.effort)){
       todayArr.push({
         id: generateId(),
         name: t.name,
@@ -632,7 +604,7 @@ function carryOverFromYesterday(){
   saveState();
 }
 
-/* ============== DOM ============== */
+/* DOM */
 const tabButtons = document.querySelectorAll(".tab-btn");
 const tasksTabEl = document.getElementById("tasksTab");
 const learningTabEl = document.getElementById("learningTab");
@@ -644,7 +616,6 @@ const hohoLearningFloat = document.getElementById("hohoLearningFloat");
 const themeToggleBtn = document.getElementById("themeToggle");
 const themeIconSpan = document.getElementById("themeIcon");
 
-/* Tasks */
 const taskNameInput = document.getElementById("taskNameInput");
 const taskEffortInput = document.getElementById("taskEffortInput");
 const addTaskBtn = document.getElementById("addTaskBtn");
@@ -658,7 +629,6 @@ const taskHeatmapEl = document.getElementById("taskHeatmap");
 const heatmapRangeLabel = document.getElementById("heatmapRangeLabel");
 const monthlyRangeLabel = document.getElementById("monthlyRangeLabel");
 
-/* Learning */
 const learningCategoryInput = document.getElementById("learningCategoryInput");
 const learningSubskillInput = document.getElementById("learningSubskillInput");
 const learningEffortInput = document.getElementById("learningEffortInput");
@@ -673,13 +643,11 @@ const learningHeatmapRangeLabel = document.getElementById("learningHeatmapRangeL
 const skillProgressWrapper = document.getElementById("skillProgressWrapper");
 const top3skillsEl = document.getElementById("top3skills");
 
-/* Settings */
 const userNameInput = document.getElementById("userNameInput");
 const userPositionInput = document.getElementById("userPositionInput");
-const reportMonthInput = document.getElementById("reportMonthInput");
 const exportPdfBtn = document.getElementById("exportPdfBtn");
 
-/* ============== THEME ============== */
+/* THEME */
 function applyTheme(theme){
   if(theme === "dark"){
     document.body.classList.add("dark");
@@ -692,28 +660,27 @@ function applyTheme(theme){
   }
 }
 themeToggleBtn.addEventListener("click", ()=>{
-  appState.theme = appState.theme === "dark" ? "light" : "light" === appState.theme ? "dark" : "dark"; // toggle simple
-  appState.theme = appState.theme === "dark" ? "dark" : "light";
+  appState.theme = appState.theme === "dark" ? "light" : "dark";
   applyTheme(appState.theme);
   saveState();
 });
 
-/* ============== TABS ============== */
+/* TABS */
 function showTab(tabId){
   [tasksTabEl, learningTabEl, settingsTabEl].forEach(el=>el.classList.add("hidden"));
-  if(tabId === "tasksTab") tasksTabEl.classList.remove("hidden");
-  if(tabId === "learningTab") learningTabEl.classList.remove("hidden");
-  if(tabId === "settingsTab") settingsTabEl.classList.remove("hidden");
+  if(tabId==="tasksTab") tasksTabEl.classList.remove("hidden");
+  if(tabId==="learningTab") learningTabEl.classList.remove("hidden");
+  if(tabId==="settingsTab") settingsTabEl.classList.remove("hidden");
 
   tabButtons.forEach(btn=>{
-    if(btn.dataset.tab === tabId) btn.classList.add("active");
+    if(btn.dataset.tab===tabId) btn.classList.add("active");
     else btn.classList.remove("active");
   });
 
-  if(tabId === "tasksTab"){
+  if(tabId==="tasksTab"){
     hohoTaskFloat.classList.remove("hidden");
     hohoLearningFloat.classList.add("hidden");
-  } else if(tabId === "learningTab"){
+  } else if(tabId==="learningTab"){
     hohoTaskFloat.classList.add("hidden");
     hohoLearningFloat.classList.remove("hidden");
   } else {
@@ -722,22 +689,22 @@ function showTab(tabId){
   }
 }
 tabButtons.forEach(btn=>{
-  btn.addEventListener("click",()=> showTab(btn.dataset.tab));
+  btn.addEventListener("click", ()=> showTab(btn.dataset.tab));
 });
 
-/* ============== TASKS ============== */
+/* TASKS */
 function computeTaskStatsForDate(dateKey){
   const arr = appState.tasks[dateKey] || [];
-  let xp = 0, done=0, prog=0, blocked=0;
+  let xp=0, done=0, prog=0, blocked=0;
   arr.forEach(t=>{
     const eff = TASK_XP_PER_EFFORT[t.effort] || 0;
-    if(t.status === "done") xp += eff;
-    else if(t.status === "progress") xp += Math.round(eff * 0.2); // 20%
-    if(t.status === "done") done++;
-    if(t.status === "progress") prog++;
-    if(t.status === "blocked") blocked++;
+    if(t.status==="done") xp += eff;
+    else if(t.status==="progress") xp += Math.round(eff*0.2);
+    if(t.status==="done") done++;
+    if(t.status==="progress") prog++;
+    if(t.status==="blocked") blocked++;
   });
-  const percent = Math.max(0, Math.min(100, Math.round((xp / DAILY_TASK_XP_TARGET) * 100)));
+  const percent = Math.max(0,Math.min(100,Math.round((xp/DAILY_TASK_XP_TARGET)*100)));
   return { xp, done, prog, blocked, percent };
 }
 
@@ -753,124 +720,124 @@ function renderTasksForToday(){
   dopaminePercentText.textContent = stats.percent + "%";
 
   taskListEl.innerHTML = "";
-  if(tasks.length === 0){
+  if(!tasks.length){
     const empty = document.createElement("div");
-    empty.style.fontSize = "12px";
-    empty.style.color = "var(--text-light)";
-    empty.textContent = "No tasks yet. Add 2–5 meaningful tasks.";
+    empty.style.fontSize="12px";
+    empty.style.color="var(--text-light)";
+    empty.textContent="No tasks yet. Add 2–5 meaningful tasks.";
     taskListEl.appendChild(empty);
-    return;
+  } else {
+    tasks.forEach(task=>{
+      const row = document.createElement("div");
+      row.style.display="grid";
+      row.style.gridTemplateColumns="minmax(0,2.4fr) minmax(0,1fr) minmax(0,1.8fr) auto";
+      row.style.gap="8px";
+      row.style.alignItems="center";
+      row.style.padding="7px 9px";
+      row.style.borderRadius="10px";
+      row.style.background="var(--bg-alt)";
+
+      const nameCell = document.createElement("div");
+      const nameSpan = document.createElement("span");
+      nameSpan.textContent = task.name;
+      nameSpan.style.fontWeight="600";
+      nameSpan.style.fontSize="13px";
+      nameSpan.style.cursor="pointer";
+      nameSpan.addEventListener("click", ()=>{
+        const n = prompt("Edit task name:", task.name);
+        if(n!==null && n.trim()!==""){
+          task.name = n.trim();
+          saveState();
+          renderTasksForToday();
+          renderTaskHeatmap();
+          renderDopamineRadial();
+          renderMonthlyDopamineChart();
+          updateHoHoMood();
+        }
+      });
+      nameCell.appendChild(nameSpan);
+
+      const effortCell = document.createElement("div");
+      effortCell.style.fontSize="12px";
+      let effTxt="Effort "+task.effort;
+      if(task.effort===1) effTxt+=" – Small";
+      if(task.effort===2) effTxt+=" – Medium";
+      if(task.effort===3) effTxt+=" – Large";
+      effortCell.textContent = effTxt;
+
+      const statusCell = document.createElement("div");
+      statusCell.style.display="flex";
+      statusCell.style.gap="4px";
+      const statuses = [
+        { value:"none", label:"Todo" },
+        { value:"progress", label:"Progress" },
+        { value:"done", label:"Done" },
+        { value:"blocked", label:"Blocked" },
+      ];
+      statuses.forEach(s=>{
+        const btn = document.createElement("button");
+        btn.type="button";
+        btn.textContent = s.label;
+        btn.className="status-pill";
+        if(task.status===s.value){
+          if(s.value==="none") btn.classList.add("active-none");
+          if(s.value==="progress") btn.classList.add("active-progress");
+          if(s.value==="done") btn.classList.add("active-done");
+          if(s.value==="blocked") btn.classList.add("active-blocked");
+        }
+        btn.addEventListener("click", ()=>{
+          task.status = s.value;
+          saveState();
+          renderTasksForToday();
+          renderTaskHeatmap();
+          renderDopamineRadial();
+          renderMonthlyDopamineChart();
+          updateHoHoMood();
+        });
+        statusCell.appendChild(btn);
+      });
+
+      const actionsCell = document.createElement("div");
+      actionsCell.style.textAlign="right";
+      const delBtn = document.createElement("button");
+      delBtn.type="button";
+      delBtn.textContent="✕";
+      delBtn.style.fontSize="11px";
+      delBtn.style.padding="4px 8px";
+      delBtn.style.borderRadius="999px";
+      delBtn.style.background="#f97373";
+      delBtn.addEventListener("click", ()=>{
+        if(confirm("Delete this task?")){
+          appState.tasks[key] = (appState.tasks[key]||[]).filter(t=>t.id!==task.id);
+          saveState();
+          renderTasksForToday();
+          renderTaskHeatmap();
+          renderDopamineRadial();
+          renderMonthlyDopamineChart();
+          updateHoHoMood();
+        }
+      });
+      actionsCell.appendChild(delBtn);
+
+      row.appendChild(nameCell);
+      row.appendChild(effortCell);
+      row.appendChild(statusCell);
+      row.appendChild(actionsCell);
+      taskListEl.appendChild(row);
+    });
   }
 
-  tasks.forEach(task=>{
-    const row = document.createElement("div");
-    row.style.display = "grid";
-    row.style.gridTemplateColumns = "minmax(0, 2.4fr) minmax(0, 1fr) minmax(0, 1.8fr) auto";
-    row.style.gap = "8px";
-    row.style.alignItems = "center";
-    row.style.padding = "7px 9px";
-    row.style.borderRadius = "10px";
-    row.style.background = "var(--bg-alt)";
-
-    // Name
-    const nameCell = document.createElement("div");
-    const nameSpan = document.createElement("span");
-    nameSpan.textContent = task.name;
-    nameSpan.style.fontWeight = "600";
-    nameSpan.style.fontSize = "13px";
-    nameSpan.style.cursor = "pointer";
-    nameSpan.addEventListener("click", ()=>{
-      const n = prompt("Edit task name:", task.name);
-      if(n !== null && n.trim() !== ""){
-        task.name = n.trim();
-        saveState();
-        renderTasksForToday();
-        renderTaskHeatmap();
-        updateHoHoMood();
-      }
-    });
-    nameCell.appendChild(nameSpan);
-
-    // Effort
-    const effortCell = document.createElement("div");
-    effortCell.style.fontSize = "12px";
-    let effTxt = "Effort " + task.effort;
-    if(task.effort === 1) effTxt += " – Small";
-    if(task.effort === 2) effTxt += " – Medium";
-    if(task.effort === 3) effTxt += " – Large";
-    effortCell.textContent = effTxt;
-
-    // Status buttons (None, Progress, Done, Blocked)
-    const statusCell = document.createElement("div");
-    statusCell.style.display = "flex";
-    statusCell.style.gap = "4px";
-    const statuses = [
-      { value: "none", label: "Todo" },
-      { value: "progress", label: "Progress" },
-      { value: "done", label: "Done" },
-      { value: "blocked", label: "Blocked" }
-    ];
-    statuses.forEach(s=>{
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.textContent = s.label;
-      btn.className = "status-pill";
-      if(task.status === s.value){
-        if(s.value === "none") btn.classList.add("active-none");
-        if(s.value === "progress") btn.classList.add("active-progress");
-        if(s.value === "done") btn.classList.add("active-done");
-        if(s.value === "blocked") btn.classList.add("active-blocked");
-      }
-      btn.addEventListener("click", ()=>{
-        task.status = s.value;
-        saveState();
-        renderTasksForToday();
-        renderTaskHeatmap();
-        renderMonthlyDopamineChart();
-        updateHoHoMood();
-      });
-      statusCell.appendChild(btn);
-    });
-
-    // Delete
-    const actionsCell = document.createElement("div");
-    actionsCell.style.textAlign = "right";
-    const delBtn = document.createElement("button");
-    delBtn.type = "button";
-    delBtn.textContent = "✕";
-    delBtn.style.fontSize = "11px";
-    delBtn.style.padding = "4px 8px";
-    delBtn.style.borderRadius = "999px";
-    delBtn.style.background = "#f97373";
-    delBtn.addEventListener("click", ()=>{
-      if(confirm("Delete this task?")){
-        appState.tasks[key] = (appState.tasks[key] || []).filter(t=>t.id !== task.id);
-        saveState();
-        renderTasksForToday();
-        renderTaskHeatmap();
-        renderMonthlyDopamineChart();
-        updateHoHoMood();
-      }
-    });
-    actionsCell.appendChild(delBtn);
-
-    row.appendChild(nameCell);
-    row.appendChild(effortCell);
-    row.appendChild(statusCell);
-    row.appendChild(actionsCell);
-    taskListEl.appendChild(row);
-  });
+  renderDopamineRadial();
+  renderMonthlyDopamineChart();
+  updateHoHoMood();
 }
 
 addTaskBtn.addEventListener("click", ()=>{
   const name = taskNameInput.value.trim();
   const effort = parseInt(taskEffortInput.value,10) || 1;
-  if(!name){
-    alert("Please enter a task name.");
-    return;
-  }
+  if(!name){ alert("Please enter a task name."); return; }
   const key = getTodayKey();
-  const arr = ensureArray(appState.tasks, key);
+  const arr = ensureArray(appState.tasks,key);
   arr.push({
     id: generateId(),
     name,
@@ -878,30 +845,28 @@ addTaskBtn.addEventListener("click", ()=>{
     status: "none",
     createdAt: new Date().toISOString()
   });
-  taskNameInput.value = "";
-  taskEffortInput.value = "1";
+  taskNameInput.value="";
+  taskEffortInput.value="1";
   saveState();
   renderTasksForToday();
   renderTaskHeatmap();
-  renderMonthlyDopamineChart();
-  updateHoHoMood();
 });
 
-/* ============== LEARNING ============== */
+/* LEARNING */
 function computeLearningStatsForDate(dateKey){
   const arr = appState.learning[dateKey] || [];
-  let xp = 0;
+  let xp=0;
   arr.forEach(e=> xp += LEARNING_XP_PER_EFFORT[e.effort] || 0);
-  const percent = Math.max(0, Math.min(100, Math.round((xp/40)*100)));
+  const percent = Math.max(0,Math.min(100,Math.round((xp/40)*100)));
   return { xp, entriesCount: arr.length, percent };
 }
 function computeLearningSixMonthXp(){
   const today = new Date(getTodayKey()+"T00:00:00");
-  let total = 0;
+  let total=0;
   Object.keys(appState.learning).forEach(k=>{
     const d = new Date(k+"T00:00:00");
-    const diff = (today - d)/(1000*60*60*24);
-    if(diff >= 0 && diff <= SIX_MONTHS_IN_DAYS){
+    const diff = (today-d)/(1000*60*60*24);
+    if(diff>=0 && diff<=SIX_MONTHS_IN_DAYS){
       total += computeLearningStatsForDate(k).xp;
     }
   });
@@ -938,126 +903,134 @@ function renderLearningForToday(){
   document.getElementById("learningPercentText").textContent = stats.percent + "%";
 
   learningListEl.innerHTML = "";
-  if(arr.length === 0){
-    const e = document.createElement("div");
-    e.style.fontSize = "12px";
-    e.style.color = "var(--text-light)";
-    e.textContent = "No learning yet. Log at least one insight today.";
+  if(!arr.length){
+    const e=document.createElement("div");
+    e.style.fontSize="12px";
+    e.style.color="var(--text-light)";
+    e.textContent="No learning yet. Log at least one insight today.";
     learningListEl.appendChild(e);
-    return;
+  } else {
+    arr.forEach(entry=>{
+      const row=document.createElement("div");
+      row.style.display="grid";
+      row.style.gridTemplateColumns="minmax(0,1.4fr) minmax(0,1.1fr) minmax(0,1fr) auto";
+      row.style.gap="8px";
+      row.style.alignItems="flex-start";
+      row.style.padding="7px 9px";
+      row.style.borderRadius="10px";
+      row.style.background="var(--bg-alt)";
+
+      const catCell=document.createElement("div");
+      const catSpan=document.createElement("span");
+      catSpan.textContent = entry.customLabel || categoryLabel(entry.category);
+      catSpan.style.fontWeight="600";
+      catSpan.style.fontSize="13px";
+      catSpan.style.cursor="pointer";
+      catSpan.addEventListener("click",()=>{
+        const newLabel = prompt("Edit category label (display only):", catSpan.textContent);
+        if(newLabel!==null && newLabel.trim()!==""){
+          entry.customLabel = newLabel.trim();
+          saveState();
+          renderLearningForToday();
+          renderLearningHeatmap();
+          renderSkillProgress();
+          renderTop3Skills();
+          renderLearningRadial();
+          updateHoHoMood();
+        }
+      });
+      catCell.appendChild(catSpan);
+
+      const subCell=document.createElement("div");
+      const subSpan=document.createElement("span");
+      subSpan.textContent = entry.subskill || "No subskill";
+      subSpan.style.fontSize="12px";
+      subSpan.style.cursor="pointer";
+      subSpan.addEventListener("click",()=>{
+        const upd = prompt("Edit subskill (or blank):", entry.subskill || "");
+        if(upd!==null){
+          entry.subskill = upd.trim();
+          saveState();
+          renderLearningForToday();
+          renderLearningHeatmap();
+          renderSkillProgress();
+          renderTop3Skills();
+          renderLearningRadial();
+          updateHoHoMood();
+        }
+      });
+      subCell.appendChild(subSpan);
+
+      const effortCell=document.createElement("div");
+      effortCell.style.fontSize="12px";
+      effortCell.textContent = entry.effort===1?"Small":entry.effort===2?"Medium":"Intensive";
+
+      const actionsCell=document.createElement("div");
+      actionsCell.style.textAlign="right";
+      actionsCell.style.display="flex";
+      actionsCell.style.flexDirection="column";
+      actionsCell.style.alignItems="flex-end";
+      actionsCell.style.gap="4px";
+
+      const refBtn=document.createElement("button");
+      refBtn.type="button";
+      refBtn.textContent="✎ Reflection";
+      refBtn.style.fontSize="11px";
+      refBtn.style.padding="4px 8px";
+      refBtn.style.borderRadius="999px";
+      refBtn.style.background="var(--bg)";
+      refBtn.style.color="var(--text)";
+      refBtn.addEventListener("click",()=>{
+        const upd = prompt("Edit reflection:", entry.reflection || "");
+        if(upd!==null){
+          entry.reflection = upd.trim();
+          saveState();
+          renderLearningForToday();
+        }
+      });
+
+      const delBtn=document.createElement("button");
+      delBtn.type="button";
+      delBtn.textContent="✕";
+      delBtn.style.fontSize="11px";
+      delBtn.style.padding="4px 8px";
+      delBtn.style.borderRadius="999px";
+      delBtn.style.background="#f97373";
+      delBtn.addEventListener("click",()=>{
+        if(confirm("Delete this learning entry?")){
+          appState.learning[key] = (appState.learning[key]||[]).filter(e=>e.id!==entry.id);
+          saveState();
+          renderLearningForToday();
+          renderLearningHeatmap();
+          renderSkillProgress();
+          renderTop3Skills();
+          renderLearningRadial();
+          updateHoHoMood();
+        }
+      });
+
+      actionsCell.appendChild(refBtn);
+      actionsCell.appendChild(delBtn);
+
+      row.appendChild(catCell);
+      row.appendChild(subCell);
+      row.appendChild(effortCell);
+      row.appendChild(actionsCell);
+      learningListEl.appendChild(row);
+    });
   }
 
-  arr.forEach(entry=>{
-    const row = document.createElement("div");
-    row.style.display = "grid";
-    row.style.gridTemplateColumns = "minmax(0,1.4fr) minmax(0,1.1fr) minmax(0,1fr) auto";
-    row.style.gap = "8px";
-    row.style.alignItems = "flex-start";
-    row.style.padding = "7px 9px";
-    row.style.borderRadius = "10px";
-    row.style.background = "var(--bg-alt)";
-
-    const catCell = document.createElement("div");
-    const catSpan = document.createElement("span");
-    catSpan.textContent = entry.customLabel || categoryLabel(entry.category);
-    catSpan.style.fontWeight = "600";
-    catSpan.style.fontSize = "13px";
-    catSpan.style.cursor = "pointer";
-    catSpan.addEventListener("click", ()=>{
-      const newLabel = prompt("Edit category label (display only):", catSpan.textContent);
-      if(newLabel !== null && newLabel.trim() !== ""){
-        entry.customLabel = newLabel.trim();
-        saveState();
-        renderLearningForToday();
-        renderLearningHeatmap();
-        renderSkillProgress();
-        renderTop3Skills();
-      }
-    });
-    catCell.appendChild(catSpan);
-
-    const subCell = document.createElement("div");
-    const subSpan = document.createElement("span");
-    subSpan.textContent = entry.subskill || "No subskill";
-    subSpan.style.fontSize = "12px";
-    subSpan.style.cursor = "pointer";
-    subSpan.addEventListener("click", ()=>{
-      const upd = prompt("Edit subskill (or blank):", entry.subskill || "");
-      if(upd !== null){
-        entry.subskill = upd.trim();
-        saveState();
-        renderLearningForToday();
-        renderLearningHeatmap();
-        renderSkillProgress();
-        renderTop3Skills();
-      }
-    });
-    subCell.appendChild(subSpan);
-
-    const effortCell = document.createElement("div");
-    effortCell.style.fontSize = "12px";
-    effortCell.textContent = entry.effort===1 ? "Small" : entry.effort===2 ? "Medium" : "Intensive";
-
-    const actionsCell = document.createElement("div");
-    actionsCell.style.textAlign = "right";
-    actionsCell.style.display = "flex";
-    actionsCell.style.flexDirection = "column";
-    actionsCell.style.alignItems = "flex-end";
-    actionsCell.style.gap = "4px";
-
-    const refBtn = document.createElement("button");
-    refBtn.type = "button";
-    refBtn.textContent = "✎ Reflection";
-    refBtn.style.fontSize = "11px";
-    refBtn.style.padding = "4px 8px";
-    refBtn.style.borderRadius = "999px";
-    refBtn.style.background = "var(--bg)";
-    refBtn.style.color = "var(--text)";
-    refBtn.addEventListener("click", ()=>{
-      const upd = prompt("Edit reflection:", entry.reflection || "");
-      if(upd !== null){
-        entry.reflection = upd.trim();
-        saveState();
-        renderLearningForToday();
-      }
-    });
-
-    const delBtn = document.createElement("button");
-    delBtn.type = "button";
-    delBtn.textContent = "✕";
-    delBtn.style.fontSize = "11px";
-    delBtn.style.padding = "4px 8px";
-    delBtn.style.borderRadius = "999px";
-    delBtn.style.background = "#f97373";
-    delBtn.addEventListener("click", ()=>{
-      if(confirm("Delete this learning entry?")){
-        appState.learning[key] = (appState.learning[key] || []).filter(e=>e.id !== entry.id);
-        saveState();
-        renderLearningForToday();
-        renderLearningHeatmap();
-        renderSkillProgress();
-        renderTop3Skills();
-      }
-    });
-
-    actionsCell.appendChild(refBtn);
-    actionsCell.appendChild(delBtn);
-
-    row.appendChild(catCell);
-    row.appendChild(subCell);
-    row.appendChild(effortCell);
-    row.appendChild(actionsCell);
-    learningListEl.appendChild(row);
-  });
+  renderLearningRadial();
+  updateHoHoMood();
 }
 
-addLearningBtn.addEventListener("click", ()=>{
+addLearningBtn.addEventListener("click",()=>{
   const category = learningCategoryInput.value;
   const subskill = learningSubskillInput.value.trim();
   const effort = parseInt(learningEffortInput.value,10) || 1;
   const reflection = learningReflectionInput.value.trim();
   const key = getTodayKey();
-  const arr = ensureArray(appState.learning, key);
+  const arr = ensureArray(appState.learning,key);
   arr.push({
     id: generateId(),
     category,
@@ -1067,148 +1040,148 @@ addLearningBtn.addEventListener("click", ()=>{
     createdAt: new Date().toISOString()
   });
   saveState();
-  learningSubskillInput.value = "";
-  learningReflectionInput.value = "";
-  learningEffortInput.value = "1";
+  learningSubskillInput.value="";
+  learningReflectionInput.value="";
+  learningEffortInput.value="1";
   renderLearningForToday();
   renderLearningHeatmap();
   renderSkillProgress();
   renderTop3Skills();
 });
 
-/* ============== HEATMAPS ============== */
+/* HEATMAPS */
 function renderTaskHeatmap(){
   const today = new Date(getTodayKey()+"T00:00:00");
-  const cells = [];
+  const cells=[];
   for(let i=27;i>=0;i--){
-    const d = new Date(today);
+    const d=new Date(today);
     d.setDate(d.getDate()-i);
     const key = d.toISOString().slice(0,10);
     const stats = computeTaskStatsForDate(key);
-    cells.push({ dateKey:key, percent:stats.percent });
+    cells.push({dateKey:key,percent:stats.percent});
   }
-  taskHeatmapEl.innerHTML = "";
+  taskHeatmapEl.innerHTML="";
   cells.forEach(info=>{
-    const cell = document.createElement("div");
-    cell.className = "heat-cell";
-    let bg = "#e5e7eb";
-    if(info.percent >= 80) bg = "#6ee7b7";
-    else if(info.percent >= 40) bg = "#fde68a";
-    else if(info.percent > 0) bg = "#fca5a5";
-    cell.style.background = bg;
-    cell.dataset.dateKey = info.dateKey;
-    const label = document.createElement("div");
-    label.className = "heat-cell-label";
-    label.style.color = "#111827";
-    label.textContent = new Date(info.dateKey+"T00:00:00").getDate();
+    const cell=document.createElement("div");
+    cell.className="heat-cell";
+    let bg="#e5e7eb";
+    if(info.percent>=80) bg="#6ee7b7";
+    else if(info.percent>=40) bg="#fde68a";
+    else if(info.percent>0) bg="#fca5a5";
+    cell.style.background=bg;
+    cell.dataset.dateKey=info.dateKey;
+    const label=document.createElement("div");
+    label.className="heat-cell-label";
+    label.style.color="#111827";
+    label.textContent=new Date(info.dateKey+"T00:00:00").getDate();
     cell.appendChild(label);
     taskHeatmapEl.appendChild(cell);
   });
-  const firstKey = cells[0]?.dateKey;
-  const lastKey = cells[cells.length-1]?.dateKey;
+  const firstKey=cells[0]?.dateKey;
+  const lastKey=cells[cells.length-1]?.dateKey;
   if(firstKey && lastKey){
-    heatmapRangeLabel.textContent = formatShortDate(firstKey) + " – " + formatShortDate(lastKey);
+    heatmapRangeLabel.textContent = formatShortDate(firstKey)+" – "+formatShortDate(lastKey);
     monthlyRangeLabel.textContent = heatmapRangeLabel.textContent;
   }
 }
 
 function renderLearningHeatmap(){
   const today = new Date(getTodayKey()+"T00:00:00");
-  const cells = [];
+  const cells=[];
   for(let i=27;i>=0;i--){
-    const d = new Date(today);
+    const d=new Date(today);
     d.setDate(d.getDate()-i);
-    const key = d.toISOString().slice(0,10);
-    const stats = computeLearningStatsForDate(key);
-    cells.push({ dateKey:key, xp:stats.xp });
+    const key=d.toISOString().slice(0,10);
+    const stats=computeLearningStatsForDate(key);
+    cells.push({dateKey:key,xp:stats.xp});
   }
-  learningHeatmapEl.innerHTML = "";
+  learningHeatmapEl.innerHTML="";
   cells.forEach(info=>{
-    const cell = document.createElement("div");
-    cell.className = "heat-cell";
-    let bg = "#e5e7eb";
-    if(info.xp > 0 && info.xp <= 10) bg = "#bfdbfe";
-    else if(info.xp <= 20) bg = "#60a5fa";
-    else if(info.xp > 20) bg = "#2563eb";
-    cell.style.background = bg;
-    cell.dataset.dateKey = info.dateKey;
-    const label = document.createElement("div");
-    label.className = "heat-cell-label";
-    label.style.color = "#f9fafb";
-    label.textContent = new Date(info.dateKey+"T00:00:00").getDate();
+    const cell=document.createElement("div");
+    cell.className="heat-cell";
+    let bg="#e5e7eb";
+    if(info.xp>0 && info.xp<=10) bg="#bfdbfe";
+    else if(info.xp<=20) bg="#60a5fa";
+    else if(info.xp>20) bg="#2563eb";
+    cell.style.background=bg;
+    cell.dataset.dateKey=info.dateKey;
+    const label=document.createElement("div");
+    label.className="heat-cell-label";
+    label.style.color="#f9fafb";
+    label.textContent=new Date(info.dateKey+"T00:00:00").getDate();
     cell.appendChild(label);
     learningHeatmapEl.appendChild(cell);
   });
-  const firstKey = cells[0]?.dateKey;
-  const lastKey = cells[cells.length-1]?.dateKey;
+  const firstKey=cells[0]?.dateKey;
+  const lastKey=cells[cells.length-1]?.dateKey;
   if(firstKey && lastKey){
-    learningHeatmapRangeLabel.textContent = formatShortDate(firstKey) + " – " + formatShortDate(lastKey);
+    learningHeatmapRangeLabel.textContent = formatShortDate(firstKey)+" – "+formatShortDate(lastKey);
   }
 }
 
-/* ============== SKILL PROGRESS & TOP 3 ============== */
+/* SKILLS */
 function computeSkillCategoryXpLastSixMonths(){
   const today = new Date(getTodayKey()+"T00:00:00");
-  const map = {};
+  const map={};
   Object.keys(appState.learning).forEach(k=>{
-    const d = new Date(k+"T00:00:00");
-    const diff = (today - d)/(1000*60*60*24);
-    if(diff >= 0 && diff <= SIX_MONTHS_IN_DAYS){
-      (appState.learning[k] || []).forEach(e=>{
-        const xp = LEARNING_XP_PER_EFFORT[e.effort] || 0;
-        if(!map[e.category]) map[e.category] = 0;
-        map[e.category] += xp;
+    const d=new Date(k+"T00:00:00");
+    const diff=(today-d)/(1000*60*60*24);
+    if(diff>=0 && diff<=SIX_MONTHS_IN_DAYS){
+      (appState.learning[k]||[]).forEach(e=>{
+        const xp=LEARNING_XP_PER_EFFORT[e.effort]||0;
+        if(!map[e.category]) map[e.category]=0;
+        map[e.category]+=xp;
       });
     }
   });
   return map;
 }
 function renderSkillProgress(){
-  const map = computeSkillCategoryXpLastSixMonths();
-  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]);
-  skillProgressWrapper.innerHTML = "";
-  if(entries.length === 0){
-    const e = document.createElement("div");
-    e.style.fontSize = "12px";
-    e.style.color = "var(--text-light)";
-    e.textContent = "No learning XP yet. Start logging to see growth.";
+  const map=computeSkillCategoryXpLastSixMonths();
+  const entries=Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  skillProgressWrapper.innerHTML="";
+  if(!entries.length){
+    const e=document.createElement("div");
+    e.style.fontSize="12px";
+    e.style.color="var(--text-light)";
+    e.textContent="No learning XP yet. Start logging to see growth.";
     skillProgressWrapper.appendChild(e);
     return;
   }
-  const maxXp = entries[0][1] || 1;
+  const maxXp=entries[0][1]||1;
   entries.forEach(([cat,xp])=>{
-    const card = document.createElement("div");
-    card.style.borderRadius = "12px";
-    card.style.padding = "8px 10px";
-    card.style.background = "var(--bg-alt)";
-    card.style.border = "1px solid var(--border)";
-    card.style.display = "flex";
-    card.style.flexDirection = "column";
-    card.style.gap = "4px";
+    const card=document.createElement("div");
+    card.style.borderRadius="12px";
+    card.style.padding="8px 10px";
+    card.style.background="var(--bg-alt)";
+    card.style.border="1px solid var(--border)";
+    card.style.display="flex";
+    card.style.flexDirection="column";
+    card.style.gap="4px";
 
-    const header = document.createElement("div");
-    header.style.display = "flex";
-    header.style.justifyContent = "space-between";
-    const label = document.createElement("div");
-    label.style.fontSize = "13px";
-    label.style.fontWeight = "600";
-    label.textContent = categoryLabel(cat);
-    const xpText = document.createElement("div");
-    xpText.style.fontSize = "11px";
-    xpText.style.color = "var(--text-light)";
-    xpText.textContent = xp + " XP";
+    const header=document.createElement("div");
+    header.style.display="flex";
+    header.style.justifyContent="space-between";
+    const label=document.createElement("div");
+    label.style.fontSize="13px";
+    label.style.fontWeight="600";
+    label.textContent=categoryLabel(cat);
+    const xpText=document.createElement("div");
+    xpText.style.fontSize="11px";
+    xpText.style.color="var(--text-light)";
+    xpText.textContent=xp+" XP";
     header.appendChild(label);
     header.appendChild(xpText);
 
-    const barOuter = document.createElement("div");
-    barOuter.style.height = "6px";
-    barOuter.style.borderRadius = "999px";
-    barOuter.style.background = "rgba(148,163,184,0.35)";
-    const barInner = document.createElement("div");
-    barInner.style.height = "100%";
-    barInner.style.borderRadius = "999px";
-    barInner.style.background = "linear-gradient(90deg,#ffb443,#ff7f50)";
-    barInner.style.width = Math.max(8,(xp/maxXp)*100)+"%";
+    const barOuter=document.createElement("div");
+    barOuter.style.height="6px";
+    barOuter.style.borderRadius="999px";
+    barOuter.style.background="rgba(148,163,184,0.35)";
+    const barInner=document.createElement("div");
+    barInner.style.height="100%";
+    barInner.style.borderRadius="999px";
+    barInner.style.background="linear-gradient(90deg,#ffb443,#ff7f50)";
+    barInner.style.width=Math.max(8,(xp/maxXp)*100)+"%";
     barOuter.appendChild(barInner);
 
     card.appendChild(header);
@@ -1218,24 +1191,24 @@ function renderSkillProgress(){
 }
 
 function computeTop3Skills(){
-  const map = computeSkillCategoryXpLastSixMonths();
+  const map=computeSkillCategoryXpLastSixMonths();
   return Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,3);
 }
 function renderTop3Skills(){
-  top3skillsEl.innerHTML = "";
-  const data = computeTop3Skills();
-  if(data.length === 0){
-    top3skillsEl.innerHTML = `<div style="font-size:12px;color:var(--text-light);">No skill gains yet.</div>`;
+  top3skillsEl.innerHTML="";
+  const data=computeTop3Skills();
+  if(!data.length){
+    top3skillsEl.innerHTML=`<div style="font-size:12px;color:var(--text-light);">No skill gains yet.</div>`;
     return;
   }
-  const maxXp = data[0][1] || 1;
+  const maxXp=data[0][1]||1;
   data.forEach(([cat,xp])=>{
-    const row = document.createElement("div");
-    row.style.display = "grid";
-    row.style.gridTemplateColumns = "1fr auto";
-    row.style.gap = "8px";
-    row.style.alignItems = "center";
-    row.innerHTML = `
+    const row=document.createElement("div");
+    row.style.display="grid";
+    row.style.gridTemplateColumns="1fr auto";
+    row.style.gap="8px";
+    row.style.alignItems="center";
+    row.innerHTML=`
       <div>
         <div style="font-size:12px;font-weight:600;">${categoryLabel(cat)}</div>
         <div style="height:5px;border-radius:999px;background:#e5e7eb;margin-top:4px;">
@@ -1253,21 +1226,19 @@ function renderTop3Skills(){
   });
 }
 
-/* ============== CHARTS ============== */
-let dopamineChart, learningChart, monthlyChart;
-
+/* CHARTS */
 function renderDopamineRadial(){
   const ctx = document.getElementById("dopamineChart").getContext("2d");
-  const todayStats = computeTaskStatsForDate(getTodayKey());
-  const percent = todayStats.percent;
+  const stats = computeTaskStatsForDate(getTodayKey());
+  const percent = stats.percent;
   if(dopamineChart) dopamineChart.destroy();
   dopamineChart = new Chart(ctx,{
     type:"doughnut",
     data:{
       datasets:[{
-        data:[percent, 100-percent],
+        data:[percent,100-percent],
         backgroundColor:[
-          percent >= 60 ? "#6ee7b7" : "#fca5a5",
+          percent>=60?"#6ee7b7":"#fca5a5",
           "rgba(148,163,184,0.25)"
         ],
         borderWidth:0,
@@ -1275,27 +1246,24 @@ function renderDopamineRadial(){
       }]
     },
     options:{
-      animation:{
-        duration:700,
-        easing:"easeOutBack"
-      },
-      plugins:{ tooltip:{enabled:false}, legend:{display:false} }
+      animation:{duration:700,easing:"easeOutBack"},
+      plugins:{tooltip:{enabled:false},legend:{display:false}}
     }
   });
 }
 
 function renderLearningRadial(){
   const ctx = document.getElementById("learningChart").getContext("2d");
-  const todayStats = computeLearningStatsForDate(getTodayKey());
-  const percent = todayStats.percent;
+  const stats = computeLearningStatsForDate(getTodayKey());
+  const percent = stats.percent;
   if(learningChart) learningChart.destroy();
   learningChart = new Chart(ctx,{
     type:"doughnut",
     data:{
       datasets:[{
-        data:[percent, 100-percent],
+        data:[percent,100-percent],
         backgroundColor:[
-          percent >= 60 ? "#60a5fa" : "#bfdbfe",
+          percent>=60?"#60a5fa":"#bfdbfe",
           "rgba(148,163,184,0.25)"
         ],
         borderWidth:0,
@@ -1303,19 +1271,19 @@ function renderLearningRadial(){
       }]
     },
     options:{
-      animation:{ duration:700, easing:"easeOutBack" },
-      plugins:{ tooltip:{enabled:false}, legend:{display:false} }
+      animation:{duration:700,easing:"easeOutBack"},
+      plugins:{tooltip:{enabled:false},legend:{display:false}}
     }
   });
 }
 
 function renderMonthlyDopamineChart(){
-  const ctx = document.getElementById("monthlyDopamineChart").getContext("2d");
-  const today = new Date(getTodayKey()+"T00:00:00");
-  const labels = [];
-  const values = [];
+  const ctx=document.getElementById("monthlyDopamineChart").getContext("2d");
+  const today=new Date(getTodayKey()+"T00:00:00");
+  const labels=[];
+  const values=[];
   for(let i=27;i>=0;i--){
-    const d = new Date(today);
+    const d=new Date(today);
     d.setDate(d.getDate()-i);
     labels.push(d.getDate());
     values.push(computeTaskStatsForDate(d.toISOString().slice(0,10)).percent);
@@ -1336,31 +1304,29 @@ function renderMonthlyDopamineChart(){
       }]
     },
     options:{
-      scales:{
-        y:{min:0,max:100,ticks:{stepSize:20}}
-      },
+      scales:{y:{min:0,max:100,ticks:{stepSize:20}}},
       plugins:{legend:{display:false}},
       animation:{duration:700,easing:"easeOutBack"}
     }
   });
 }
 
-/* ============== MODAL (DETAIL PER DAY) ============== */
+/* MODAL DETAIL */
 function ensureModal(){
   if(document.getElementById("detailModal")) return;
-  const modal = document.createElement("div");
-  modal.id = "detailModal";
-  modal.style.position = "fixed";
-  modal.style.top = 0;
-  modal.style.left = 0;
-  modal.style.width = "100%";
-  modal.style.height = "100%";
-  modal.style.background = "rgba(0,0,0,0.45)";
-  modal.style.display = "none";
-  modal.style.justifyContent = "center";
-  modal.style.alignItems = "center";
-  modal.style.zIndex = 9999;
-  modal.innerHTML = `
+  const modal=document.createElement("div");
+  modal.id="detailModal";
+  modal.style.position="fixed";
+  modal.style.top=0;
+  modal.style.left=0;
+  modal.style.width="100%";
+  modal.style.height="100%";
+  modal.style.background="rgba(0,0,0,0.45)";
+  modal.style.display="none";
+  modal.style.justifyContent="center";
+  modal.style.alignItems="center";
+  modal.style.zIndex=9999;
+  modal.innerHTML=`
     <div style="background:white;width:90%;max-width:420px;border-radius:16px;padding:18px;box-shadow:0 18px 45px rgba(15,23,42,0.2);animation:modalPop .35s ease-out;">
       <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
         <img id="modalHoHo" src="hoho-pointsmile.png" style="width:56px;">
@@ -1373,8 +1339,8 @@ function ensureModal(){
       <button id="closeModalBtn" style="width:100%;border-radius:10px;background:#ffb443;border:none;padding:8px 10px;font-weight:700;cursor:pointer;">Close</button>
     </div>
   `;
-  const style = document.createElement("style");
-  style.innerHTML = `
+  const style=document.createElement("style");
+  style.innerHTML=`
     @keyframes modalPop{
       0%{transform:scale(.7);opacity:0;}
       70%{transform:scale(1.03);opacity:1;}
@@ -1383,158 +1349,130 @@ function ensureModal(){
   `;
   document.head.appendChild(style);
   document.body.appendChild(modal);
-  document.getElementById("closeModalBtn").onclick = ()=> modal.style.display="none";
+  document.getElementById("closeModalBtn").onclick=()=> modal.style.display="none";
 }
 
 function openModal(dateKey, kind){
   ensureModal();
-  const modal = document.getElementById("detailModal");
-  modal.style.display = "flex";
+  const modal=document.getElementById("detailModal");
+  modal.style.display="flex";
   document.getElementById("modalDate").textContent = formatShortDate(dateKey);
 
   let percent;
   let html;
-  if(kind === "tasks"){
-    const stats = computeTaskStatsForDate(dateKey);
-    percent = stats.percent;
-    const tasks = appState.tasks[dateKey] || [];
+  if(kind==="tasks"){
+    const stats=computeTaskStatsForDate(dateKey);
+    percent=stats.percent;
+    const tasks=appState.tasks[dateKey]||[];
     html = tasks.length
-      ? "<ul style='padding-left:18px;margin:6px 0;'>" +
-        tasks.map(t=>`<li><b>${t.name}</b> — Effort ${t.effort} (${t.status})</li>`).join("") +
+      ? "<ul style='padding-left:18px;margin:6px 0;'>"+
+        tasks.map(t=>`<li><b>${t.name}</b> — Effort ${t.effort} (${t.status})</li>`).join("")+
         "</ul>"
       : "<i>No tasks logged.</i>";
     document.getElementById("modalPercent").textContent = `Task dopamine: ${percent}%`;
   } else {
-    const st = computeLearningStatsForDate(dateKey);
-    percent = st.percent;
-    const entries = appState.learning[dateKey] || [];
+    const st=computeLearningStatsForDate(dateKey);
+    percent=st.percent;
+    const entries=appState.learning[dateKey]||[];
     html = entries.length
-      ? "<ul style='padding-left:18px;margin:6px 0;'>" +
-        entries.map(e=>`<li><b>${categoryLabel(e.category)}</b> – ${e.subskill || "no subskill"} (${LEARNING_XP_PER_EFFORT[e.effort]||0} XP)</li>`).join("") +
+      ? "<ul style='padding-left:18px;margin:6px 0;'>"+
+        entries.map(e=>`<li><b>${categoryLabel(e.category)}</b> – ${e.subskill || "no subskill"} (${LEARNING_XP_PER_EFFORT[e.effort]||0} XP)</li>`).join("")+
         "</ul>"
       : "<i>No learning logged.</i>";
     document.getElementById("modalPercent").textContent = `Learning dopamine: ${percent}%`;
   }
   document.getElementById("modalTasks").innerHTML = html;
 
-  const ho = document.getElementById("modalHoHo");
-  if(percent >= 80) ho.src = "hoho-levelup.png";
-  else if(percent >= 40) ho.src = kind === "tasks" ? "hoho-pumped.png" : "hoho-book.png";
-  else if(percent > 0) ho.src = kind === "tasks" ? "hoho-sad.png" : "hoho-thinking.png";
-  else ho.src = "hoho-happy.png";
+  const ho=document.getElementById("modalHoHo");
+  if(percent>=80) ho.src="hoho-levelup.png";
+  else if(percent>=40) ho.src= kind==="tasks" ? "hoho-pumped.png" : "hoho-book.png";
+  else if(percent>0) ho.src= kind==="tasks" ? "hoho-sad.png" : "hoho-thinking.png";
+  else ho.src="hoho-happy.png";
 }
 
-/* Heatmap click listener */
 document.addEventListener("click", e=>{
-  const taskCell = e.target.closest("#taskHeatmap .heat-cell");
-  if(taskCell){
-    openModal(taskCell.dataset.dateKey, "tasks");
-  }
-  const learnCell = e.target.closest("#learningHeatmap .heat-cell");
-  if(learnCell){
-    openModal(learnCell.dataset.dateKey, "learning");
-  }
+  const taskCell=e.target.closest("#taskHeatmap .heat-cell");
+  if(taskCell) openModal(taskCell.dataset.dateKey,"tasks");
+  const learnCell=e.target.closest("#learningHeatmap .heat-cell");
+  if(learnCell) openModal(learnCell.dataset.dateKey,"learning");
 });
 
-/* ============== PROFILE ============== */
+/* PROFILE */
 function renderProfile(){
   userNameInput.value = appState.user.name || "";
   userPositionInput.value = appState.user.position || "";
 }
-userNameInput.addEventListener("change", ()=>{
+userNameInput.addEventListener("change",()=>{
   appState.user.name = userNameInput.value.trim();
   saveState();
 });
-userPositionInput.addEventListener("change", ()=>{
+userPositionInput.addEventListener("change",()=>{
   appState.user.position = userPositionInput.value.trim();
   saveState();
 });
 
-/* ============== PDF EXPORT ============== */
+/* PDF */
 async function exportPDF(){
   const { jsPDF } = window.jspdf;
   const wasDark = document.body.classList.contains("dark");
-  document.body.classList.remove("dark"); // force light
-
-  const pdf = new jsPDF({
-    orientation:"portrait",
-    unit:"pt",
-    format:"a4",
-    compress:true
-  });
+  document.body.classList.remove("dark");
 
   const reportArea = document.getElementById("fullReportArea");
-  const canvas = await html2canvas(reportArea,{
-    scale:1.2,
-    useCORS:true
-  });
-  const imgData = canvas.toDataURL("image/jpeg", 0.45);
+  const canvas = await html2canvas(reportArea,{ scale:1.2, useCORS:true });
+  const imgData = canvas.toDataURL("image/jpeg",0.45);
+
+  const pdf = new jsPDF({orientation:"portrait",unit:"pt",format:"a4",compress:true});
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
-
   let imgWidth = pageWidth;
   let imgHeight = canvas.height * imgWidth / canvas.width;
-  if(imgHeight > pageHeight){
-    const ratio = pageHeight / imgHeight;
-    imgHeight *= ratio;
-    imgWidth *= ratio;
+  if(imgHeight>pageHeight){
+    const ratio = pageHeight/imgHeight;
+    imgHeight*=ratio;
+    imgWidth*=ratio;
   }
-  pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
+  pdf.addImage(imgData,"JPEG",0,0,imgWidth,imgHeight);
   pdf.save("HeyHoLetsGo_Report.pdf");
 
   if(wasDark) document.body.classList.add("dark");
 }
 exportPdfBtn.addEventListener("click", exportPDF);
 
-/* ============== HO-HO MOOD & MICRO BOUNCE ============== */
+/* HO-HO MOOD & BOUNCE */
 function updateHoHoMood(){
-  const todayKey = getTodayKey();
-  const tStats = computeTaskStatsForDate(todayKey);
-  const lStats = computeLearningStatsForDate(todayKey);
+  const todayKey=getTodayKey();
+  const tStats=computeTaskStatsForDate(todayKey);
+  const lStats=computeLearningStatsForDate(todayKey);
 
-  if(tStats.percent >= 80) hohoTaskFloat.src = "hoho-levelup.png";
-  else if(tStats.percent >= 40) hohoTaskFloat.src = "hoho-pumped.png";
-  else if(tStats.percent > 0) hohoTaskFloat.src = "hoho-sad.png";
-  else hohoTaskFloat.src = "hoho-happy.png";
+  if(tStats.percent>=80) hohoTaskFloat.src="hoho-levelup.png";
+  else if(tStats.percent>=40) hohoTaskFloat.src="hoho-pumped.png";
+  else if(tStats.percent>0) hohoTaskFloat.src="hoho-sad.png";
+  else hohoTaskFloat.src="hoho-happy.png";
 
-  if(lStats.percent >= 80) hohoLearningFloat.src = "hoho-levelup.png";
-  else if(lStats.percent >= 40) hohoLearningFloat.src = "hoho-book.png";
-  else if(lStats.percent > 0) hohoLearningFloat.src = "hoho-thinking.png";
-  else hohoLearningFloat.src = "hoho-book.png";
+  if(lStats.percent>=80) hohoLearningFloat.src="hoho-levelup.png";
+  else if(lStats.percent>=40) hohoLearningFloat.src="hoho-book.png";
+  else if(lStats.percent>0) hohoLearningFloat.src="hoho-thinking.png";
+  else hohoLearningFloat.src="hoho-book.png";
 }
-
 function bounceOnce(el){
   if(!el) return;
-  el.style.animation = "none";
+  el.style.animation="none";
   void el.offsetWidth;
-  el.style.animation = "hohoBounce 0.6s cubic-bezier(0.34,1.56,0.64,1)";
+  el.style.animation="hohoBounce 0.6s cubic-bezier(0.34,1.56,0.64,1)";
 }
-
-/* Add bounce keyframes once */
-const bounceStyle = document.createElement("style");
-bounceStyle.innerHTML = `
-  @keyframes hohoBounce {
-    0%{transform:translateY(0);}
-    50%{transform:translateY(-6px);}
-    100%{transform:translateY(0);}
-  }
-`;
-document.head.appendChild(bounceStyle);
-
-hohoTaskFloat.addEventListener("click", ()=> bounceOnce(hohoTaskFloat));
-hohoLearningFloat.addEventListener("click", ()=> bounceOnce(hohoLearningFloat));
-
+hohoTaskFloat.addEventListener("click",()=>bounceOnce(hohoTaskFloat));
+hohoLearningFloat.addEventListener("click",()=>bounceOnce(hohoLearningFloat));
 function scheduleRandomBounce(){
-  const delay = 3500 + Math.random()*2500;
+  const delay=3500+Math.random()*2500;
   setTimeout(()=>{
     if(!hohoTaskFloat.classList.contains("hidden")) bounceOnce(hohoTaskFloat);
     if(!hohoLearningFloat.classList.contains("hidden")) bounceOnce(hohoLearningFloat);
     scheduleRandomBounce();
-  }, delay);
+  },delay);
 }
 
-/* ============== INIT ============== */
-document.addEventListener("DOMContentLoaded", ()=>{
+/* INIT */
+document.addEventListener("DOMContentLoaded",()=>{
   loadState();
   applyTheme(appState.theme || "light");
   carryOverFromYesterday();
@@ -1546,10 +1484,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
   renderSkillProgress();
   renderTop3Skills();
   renderProfile();
-  renderDopamineRadial();
-  renderLearningRadial();
-  renderMonthlyDopamineChart();
-  updateHoHoMood();
   scheduleRandomBounce();
 });
 </script>
