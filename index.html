@@ -251,6 +251,18 @@
   </style>
 </head>
 <body>
+  <!-- TOP LOGO BAR -->
+<div id="topBar" style="
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  box-sizing: border-box;
+">
+  <img src="savvy-logo.png" style="height: 42px; object-fit: contain;">
+  <img src="hoho-logo.png" style="height: 46px; object-fit: contain;">
+</div>
 <div id="fullReportArea" class="app-container">
   <header>
     <div>
@@ -609,6 +621,7 @@ const tabButtons = document.querySelectorAll(".tab-btn");
 const tasksTabEl = document.getElementById("tasksTab");
 const learningTabEl = document.getElementById("learningTab");
 const settingsTabEl = document.getElementById("settingsTab");
+  const topBarEl = document.getElementById("topBar");
 
 const hohoTaskFloat = document.getElementById("hohoTaskFloat");
 const hohoLearningFloat = document.getElementById("hohoLearningFloat");
@@ -677,6 +690,7 @@ function showTab(tabId){
     else btn.classList.remove("active");
   });
 
+  // Ho-Ho floating visibility
   if(tabId==="tasksTab"){
     hohoTaskFloat.classList.remove("hidden");
     hohoLearningFloat.classList.add("hidden");
@@ -686,6 +700,15 @@ function showTab(tabId){
   } else {
     hohoTaskFloat.classList.add("hidden");
     hohoLearningFloat.classList.add("hidden");
+  }
+
+  // Top logo bar: tampil di Tasks & Learning, hilang di Settings
+  if (topBarEl) {
+    if (tabId === "settingsTab") {
+      topBarEl.style.display = "none";
+    } else {
+      topBarEl.style.display = "flex";
+    }
   }
 }
 tabButtons.forEach(btn=>{
@@ -1412,7 +1435,7 @@ userPositionInput.addEventListener("change",()=>{
 });
 
 /* PDF */
-// GANTI fungsi exportPDF lama dengan ini
+// GANTI exportPDF lama dengan ini
 async function exportPDF() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({
@@ -1423,41 +1446,59 @@ async function exportPDF() {
   });
 
   const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
   const margin = 32;
-  let y = 40;
+  let y = 36;
+
+  // --- Load logos (kalau gagal, PDF tetep jalan tanpa logo) ---
+  const loadImg = (src) =>
+    new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null); // jangan reject biar tetep lanjut
+      img.src = src;
+    });
+
+  const [savvyImg, hohoImg] = await Promise.all([
+    loadImg("savvy-logo.png"),
+    loadImg("hoho-logo.png"),
+  ]);
 
   // --- 1. Tentukan bulan report ---
   const todayKey = getTodayKey();
   const today = new Date(todayKey + "T00:00:00");
-  let reportMonthStr = document.getElementById("reportMonthInput").value; // format: YYYY-MM
+  let reportMonthStr = document.getElementById("reportMonthInput").value; // YYYY-MM
+
   if (!reportMonthStr) {
-    // kalau kosong pakai bulan sekarang
-    reportMonthStr = todayKey.slice(0, 7); // "YYYY-MM"
+    reportMonthStr = todayKey.slice(0, 7);
   }
   const [reportYearStr, reportMonthIdxStr] = reportMonthStr.split("-");
   const reportYear = parseInt(reportYearStr, 10);
-  const reportMonthIdx = parseInt(reportMonthIdxStr, 10) - 1; // 0-based
+  const reportMonthIdx = parseInt(reportMonthIdxStr, 10) - 1;
 
-  // list semua hari dalam bulan yg dipilih
   const firstDate = new Date(reportYear, reportMonthIdx, 1);
   const nextMonth = new Date(reportYear, reportMonthIdx + 1, 1);
-  const daysInMonth = Math.round((nextMonth - firstDate) / (1000 * 60 * 60 * 24));
+  const daysInMonth = Math.round(
+    (nextMonth - firstDate) / (1000 * 60 * 60 * 24)
+  );
 
   const dayKeys = [];
   for (let d = 1; d <= daysInMonth; d++) {
     const dt = new Date(reportYear, reportMonthIdx, d);
-    const iso = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    const iso = new Date(
+      dt.getTime() - dt.getTimezoneOffset() * 60000
+    )
+      .toISOString()
+      .slice(0, 10);
     dayKeys.push(iso);
   }
 
-  // --- 2. Hitung summary data untuk bulan ini ---
+  // --- 2. Hitung summary data ---
 
-  // Task dopamine per hari (0–100%)
   const taskPercents = [];
   let totalTaskPercent = 0;
   let countTaskDays = 0;
   let totalTaskXp = 0;
+
   dayKeys.forEach((key) => {
     const stats = computeTaskStatsForDate(key);
     taskPercents.push(stats.percent);
@@ -1467,9 +1508,10 @@ async function exportPDF() {
     }
     totalTaskXp += stats.xp;
   });
-  const avgTaskPercent = countTaskDays ? Math.round(totalTaskPercent / countTaskDays) : 0;
+  const avgTaskPercent = countTaskDays
+    ? Math.round(totalTaskPercent / countTaskDays)
+    : 0;
 
-  // Learning XP per hari
   const learningXpPerDay = [];
   let totalLearningXp = 0;
   dayKeys.forEach((key) => {
@@ -1478,7 +1520,6 @@ async function exportPDF() {
     totalLearningXp += stats.xp;
   });
 
-  // Skill XP per kategori (untuk bulan ini)
   const skillMonthlyMap = {};
   dayKeys.forEach((key) => {
     const arr = appState.learning[key] || [];
@@ -1488,24 +1529,33 @@ async function exportPDF() {
       skillMonthlyMap[e.category] += xp;
     });
   });
-  const skillEntries = Object.entries(skillMonthlyMap).sort((a, b) => b[1] - a[1]);
+  const skillEntries = Object.entries(skillMonthlyMap).sort(
+    (a, b) => b[1] - a[1]
+  );
   const top3 = skillEntries.slice(0, 3);
 
-  // --- 3. Header Report ---
+  // --- 3. HEADER (logo + judul) ---
+
+  if (savvyImg) {
+    pdf.addImage(savvyImg, "PNG", margin, y, 70, 28);
+  }
+  if (hohoImg) {
+    pdf.addImage(hohoImg, "PNG", pageWidth - margin - 70, y, 70, 28);
+  }
+  y += 40;
 
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(16);
   pdf.text("HeyHoLetsGo – Monthly Report", margin, y);
   y += 22;
 
-  pdf.setFontSize(11);
   pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(11);
 
-  const monthLabel = new Date(reportYear, reportMonthIdx, 1).toLocaleDateString("en-GB", {
-    month: "long",
-    year: "numeric",
-  });
-
+  const monthLabel = new Date(reportYear, reportMonthIdx, 1).toLocaleDateString(
+    "en-GB",
+    { month: "long", year: "numeric" }
+  );
   const name = appState.user.name || "-";
   const pos = appState.user.position || "-";
 
@@ -1514,26 +1564,29 @@ async function exportPDF() {
   pdf.text(`Position: ${pos}`, margin, y);
   y += 14;
   pdf.text(`Month: ${monthLabel}`, margin, y);
-  y += 22;
+  y += 18;
 
-  // garis pemisah
   pdf.setDrawColor(220, 220, 220);
   pdf.line(margin, y, pageWidth - margin, y);
   y += 18;
 
-  // --- 4. Section: Tasks & Productivity ---
+  // --- 4. Tasks & Productivity ---
 
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(13);
   pdf.text("1. Tasks & Productivity", margin, y);
   y += 16;
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(11);
 
-  pdf.text(`Average dopamine (completed days): ${avgTaskPercent}%`, margin, y);
-  y += 14;
-  pdf.text(`Total task XP this month: ${totalTaskXp}`, margin, y);
+  pdf.setFont("helvetica", "normal");
+
+  // average dopamine dibikin lebih gede
+  pdf.setFontSize(13);
+  pdf.text(`Average dopamine: ${avgTaskPercent}%`, margin, y);
   y += 16;
+
+  pdf.setFontSize(11);
+  pdf.text(`Total task XP this month: ${totalTaskXp}`, margin, y);
+  y += 18;
 
   // Line chart dopamine
   const chartX = margin;
@@ -1541,17 +1594,19 @@ async function exportPDF() {
   const chartW = pageWidth - margin * 2;
   const chartH = 80;
 
-  // axis
   pdf.setDrawColor(210, 210, 210);
   pdf.rect(chartX, chartY, chartW, chartH);
 
   if (taskPercents.length > 1) {
     pdf.setDrawColor(255, 180, 67);
     let prevX = chartX;
-    let prevY = chartY + chartH - (taskPercents[0] / 100) * chartH;
+    let prevY =
+      chartY + chartH - (taskPercents[0] / 100) * chartH;
     for (let i = 1; i < taskPercents.length; i++) {
-      const x = chartX + (i / (taskPercents.length - 1)) * chartW;
-      const yLine = chartY + chartH - (taskPercents[i] / 100) * chartH;
+      const x =
+        chartX + (i / (taskPercents.length - 1)) * chartW;
+      const yLine =
+        chartY + chartH - (taskPercents[i] / 100) * chartH;
       pdf.line(prevX, prevY, x, yLine);
       prevX = x;
       prevY = yLine;
@@ -1562,17 +1617,18 @@ async function exportPDF() {
   pdf.setTextColor(100, 100, 100);
   pdf.text("Daily dopamine %", chartX, chartY - 4);
   pdf.setTextColor(0, 0, 0);
-  y = chartY + chartH + 16;
 
-  // Heatmap 1 bulan (max 7 kolom)
+  y = chartY + chartH + 20;
+
+  // Heatmap (dibikin lebih besar)
   pdf.setFontSize(11);
   pdf.text("Monthly dopamine heatmap:", margin, y);
   y += 10;
 
-  const cellSize = 9;
-  const cellGap = 2;
+  const cellSize = 14; // <-- lebih besar dari sebelumnya
+  const cellGap = 3;
   const cols = 7;
-  let startY = y;
+  const startY = y;
 
   dayKeys.forEach((key, idx) => {
     const row = Math.floor(idx / cols);
@@ -1583,43 +1639,43 @@ async function exportPDF() {
     const stats = computeTaskStatsForDate(key);
     const p = stats.percent;
 
-    let r = 230, g = 230, b = 230; // default
-    if (p >= 80) { r = 110; g = 231; b = 183; }       // green
-    else if (p >= 40) { r = 253; g = 230; b = 138; } // yellow
-    else if (p > 0) { r = 252; g = 165; b = 165; }   // red
+    let r = 230, g = 230, b = 230;
+    if (p >= 80) { r = 110; g = 231; b = 183; }
+    else if (p >= 40) { r = 253; g = 230; b = 138; }
+    else if (p > 0) { r = 252; g = 165; b = 165; }
 
     pdf.setFillColor(r, g, b);
     pdf.setDrawColor(220, 220, 220);
     pdf.rect(x, cy, cellSize, cellSize, "F");
 
-    // nomor tanggal kecil di atas  (opsional)
     const day = parseInt(key.slice(8, 10), 10);
-    pdf.setFontSize(6);
+    pdf.setFontSize(7);
     pdf.setTextColor(60, 60, 60);
-    pdf.text(String(day), x + cellSize / 2, cy + cellSize + 7, { align: "center" });
+    pdf.text(String(day), x + cellSize / 2, cy + cellSize + 8, {
+      align: "center",
+    });
     pdf.setTextColor(0, 0, 0);
   });
 
   const heatRows = Math.ceil(dayKeys.length / cols);
-  y = startY + heatRows * (cellSize + cellGap) + 20;
+  y = startY + heatRows * (cellSize + cellGap) + 22;
 
-  // --- 5. Section: Learning & Skills ---
+  // --- 5. Learning & Skills ---
 
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(13);
   pdf.text("2. Learning & Skills", margin, y);
   y += 16;
+
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(11);
-
   pdf.text(`Total learning XP this month: ${totalLearningXp}`, margin, y);
-  y += 14;
+  y += 16;
 
-  // Top 3 skills mini bar chart
   pdf.text("Top 3 highest skill gain:", margin, y);
   y += 10;
 
-  if (top3.length === 0) {
+  if (!top3.length) {
     pdf.setFontSize(10);
     pdf.setTextColor(120, 120, 120);
     pdf.text("No learning data for this month.", margin, y);
@@ -1647,7 +1703,6 @@ async function exportPDF() {
     });
   }
 
-  // Optional: kalau y kebanyakan, bisa lanjut ke halaman 2 nanti.
   pdf.save("HeyHoLetsGo_Report.pdf");
 }
 
