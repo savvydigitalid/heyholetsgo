@@ -976,44 +976,20 @@ async function syncWeeklyToGoogleSheet() {
       btn.textContent = "Syncing...";
     }
 
-    console.log("Sending payload to Google Sheet:", payload);
-
-    const res = await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+    // Kirim tanpa baca response (biar gak ke-block CORS)
+    await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      mode: "no-cors",                    // penting: jangan cek response
+      headers: {
+        "Content-Type": "text/plain"      // simple header, aman buat no-cors
+      },
       body: JSON.stringify(payload)
     });
 
-    const statusCode = res.status;
-    const rawText = await res.text();
-
-    console.log("Raw response from Google Apps Script:", rawText);
-
-    let data;
-    try {
-      data = JSON.parse(rawText);
-    } catch (e) {
-      alert(
-        "Response dari Google Apps Script bukan JSON.\n\n" +
-        "HTTP Status: " + statusCode + "\n" +
-        "Raw response (dipotong):\n" +
-        rawText.slice(0, 200)
-      );
-      return;
-    }
-
-    if (data.status === "ok") {
-      alert(`Sync berhasil! ${data.inserted || 0} baris ditambahkan.`);
-    } else {
-      alert(
-        "Sync gagal (Apps Script mengembalikan status error).\n\n" +
-        "Status: " + data.status + "\n" +
-        "Message: " + (data.message || "-")
-      );
-    }
+    alert("Permintaan sync sudah dikirim. Cek Google Sheet apakah barisnya sudah bertambah.");
   } catch (err) {
     console.error("Fetch error:", err);
-    alert("Terjadi error saat mengirim data ke Google Sheet.\n\nError: " + err.message);
+    alert("Masih gagal kirim ke Google Sheet.\n\nError: " + err.message);
   } finally {
     const btn = document.getElementById("syncWeeklyBtn");
     if (btn) {
@@ -1022,6 +998,7 @@ async function syncWeeklyToGoogleSheet() {
     }
   }
 }
+
 
 function categoryLabel(cat){
   const map = {
