@@ -545,11 +545,37 @@
     </div>
   </section>
 </div>
+<section id="settingsTab" class="tab-content hidden">
+  <div class="card">
+    <!-- Profile -->
+    ...
+  </div>
+
+  <div class="card">
+    <!-- Monthly Report -->
+    ...
+  </div>
+
+  <!-- NEW: Weekly Sync Card -->
+  <div class="card">
+    <div class="section-title">
+      <span>Weekly Sync to Google Sheet</span>
+      <small>Send last 7 days summary to central Sheet</small>
+    </div>
+    <p style="font-size:12px;color:var(--text-light);margin-top:0;margin-bottom:8px;">
+      Tombol ini akan mengirim ringkasan 7 hari terakhir (task & learning) ke Google Sheet pusat
+      yang bisa diakses manager/HR.
+    </p>
+    <button id="syncWeeklyBtn" type="button">Sync Weekly to Google Sheet</button>
+  </div>
+</section>
 
 <img id="hohoTaskFloat" class="hoho-float hidden" src="hoho-happy.png" alt="Ho-Ho Task" />
 <img id="hohoLearningFloat" class="hoho-float hidden" src="hoho-book.png" alt="Ho-Ho Learning" />
 <script>
 const STORAGE_KEY = "hhlg_v136_state";
+// GANTI ini dengan URL web app lo sendiri dari Apps Script
+const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwcnfGTem-TyH96XUV-3aZETQ0a7p94_7JJ5Ewkl2u25GNp9mYd9ILeXVjtv_Zm3m6fpQ/exec";
 
 let appState = {
   tasks: {},
@@ -895,6 +921,98 @@ function computeLearningSixMonthXp(){
   });
   return total;
 }
+  function buildWeeklyPayload() {
+  const todayKey = getTodayKey();
+  const today = new Date(todayKey + "T00:00:00");
+
+  // Ambil 7 hari ke belakang, termasuk hari ini
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const iso = d.toISOString().slice(0, 10);
+    days.push(iso);
+  }
+
+  const rows = days.map((dateKey) => {
+    const tStats = computeTaskStatsForDate(dateKey);
+    const lStats = computeLearningStatsForDate(dateKey);
+
+    return {
+      date: dateKey,
+      taskPercent: tStats.percent,
+      taskXp: tStats.xp,
+      taskDone: tStats.done,
+      taskProgress: tStats.prog,
+      taskBlocked: tStats.blocked,
+      learningXp: lStats.xp,
+      learningEntries: lStats.entriesCount
+    };
+  });
+
+  const weekLabel = `${formatShortDate(days[0])} – ${formatShortDate(days[days.length - 1])}`;
+
+  return {
+    userName: appState.user?.name || "",
+    position: appState.user?.position || "",
+    weekRange: weekLabel,
+    rows
+  };
+}
+async function syncWeeklyToGoogleSheet() {
+  if (!GOOGLE_SHEET_WEBHOOK_URL || GOOGLE_SHEET_WEBHOOK_URL.indexOf("script.google.com") === -1) {
+    alert("Google Sheet webhook URL belum di-set atau tidak valid.");
+    return;
+  }
+
+  const payload = buildWeeklyPayload();
+
+  if (!payload.userName || !payload.position) {
+    const ok = confirm("Name dan Position di Settings masih kosong. Tetap kirim data tanpa identitas?");
+    if (!ok) return;
+  }
+
+  const confirmSend = confirm(
+    `Kirim data 7 hari terakhir ke Google Sheet untuk:\n\n` +
+    `Name: ${payload.userName || "-"}\n` +
+    `Position: ${payload.position || "-"}\n` +
+    `Range: ${payload.weekRange}\n\nLanjutkan?`
+  );
+  if (!confirmSend) return;
+
+  try {
+    const btn = document.getElementById("syncWeeklyBtn");
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Syncing...";
+    }
+
+    const res = await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    console.log("Google Sheet response:", data);
+
+    if (data.status === "ok") {
+      alert(`Sync berhasil! ${data.inserted || 0} baris ditambahkan.`);
+    } else {
+      alert("Sync gagal. Cek console log atau Apps Script log.");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Terjadi error saat mengirim data ke Google Sheet.");
+  } finally {
+    const btn = document.getElementById("syncWeeklyBtn");
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Sync Weekly to Google Sheet";
+    }
+  }
+}
+
 function categoryLabel(cat){
   const map = {
     tools:"Tools & Workspace",
@@ -1755,7 +1873,14 @@ document.addEventListener("DOMContentLoaded",()=>{
   renderTop3Skills();
   renderProfile();
   scheduleRandomBounce();
+
+  // Hook tombol sync ke fungsi
+  const syncBtn = document.getElementById("syncWeeklyBtn");
+  if (syncBtn) {
+    syncBtn.addEventListener("click", syncWeeklyToGoogleSheet);
+  }
 });
+
 </script>
 </body>
 </html>
