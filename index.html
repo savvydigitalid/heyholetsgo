@@ -1551,15 +1551,30 @@ async function exportPDF() {
   });
 
   const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
   const margin = 32;
   let y = 36;
 
-  // --- Load logos (kalau gagal, PDF tetep jalan tanpa logo) ---
+  // Helper: cek space, kalau nggak cukup -> new page
+  function ensureSpace(extraHeight) {
+    if (y + extraHeight > pageHeight - margin) {
+      pdf.addPage();
+      y = margin;
+    }
+  }
+
+  // Helper: short date label (misal 2025-11-24 -> 24 Nov)
+  function shortLabel(key) {
+    const d = new Date(key + "T00:00:00");
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+  }
+
+  // ----- 1. Load logo Savvy & HoHo (kalau ada) -----
   const loadImg = (src) =>
-    new Promise((resolve, reject) => {
+    new Promise((resolve) => {
       const img = new Image();
       img.onload = () => resolve(img);
-      img.onerror = () => resolve(null); // jangan reject biar tetep lanjut
+      img.onerror = () => resolve(null);
       img.src = src;
     });
 
@@ -1568,14 +1583,15 @@ async function exportPDF() {
     loadImg("hoho-logo.png"),
   ]);
 
-  // --- 1. Tentukan bulan report ---
+  // ----- 2. Tentukan bulan report -----
   const todayKey = getTodayKey();
   const today = new Date(todayKey + "T00:00:00");
-  let reportMonthStr = document.getElementById("reportMonthInput").value; // YYYY-MM
 
+  let reportMonthStr = document.getElementById("reportMonthInput").value;
   if (!reportMonthStr) {
-    reportMonthStr = todayKey.slice(0, 7);
+    reportMonthStr = todayKey.slice(0, 7); // YYYY-MM
   }
+
   const [reportYearStr, reportMonthIdxStr] = reportMonthStr.split("-");
   const reportYear = parseInt(reportYearStr, 10);
   const reportMonthIdx = parseInt(reportMonthIdxStr, 10) - 1;
@@ -1589,16 +1605,13 @@ async function exportPDF() {
   const dayKeys = [];
   for (let d = 1; d <= daysInMonth; d++) {
     const dt = new Date(reportYear, reportMonthIdx, d);
-    const iso = new Date(
-      dt.getTime() - dt.getTimezoneOffset() * 60000
-    )
+    const iso = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000)
       .toISOString()
       .slice(0, 10);
     dayKeys.push(iso);
   }
 
-  // --- 2. Hitung summary data ---
-
+  // ----- 3. Hitung summary data -----
   const taskPercents = [];
   let totalTaskPercent = 0;
   let countTaskDays = 0;
@@ -1625,11 +1638,12 @@ async function exportPDF() {
     totalLearningXp += stats.xp;
   });
 
+  // Top 3 skill gain
   const skillMonthlyMap = {};
   dayKeys.forEach((key) => {
     const arr = appState.learning[key] || [];
     arr.forEach((e) => {
-      const xp = LEARNING_XP_PER_EFFORT[e.effort] || 0;
+      const xp = (window.LEARNING_XP_PER_EFFORT && window.LEARNING_XP_PER_EFFORT[e.effort]) || 0;
       if (!skillMonthlyMap[e.category]) skillMonthlyMap[e.category] = 0;
       skillMonthlyMap[e.category] += xp;
     });
@@ -1639,8 +1653,7 @@ async function exportPDF() {
   );
   const top3 = skillEntries.slice(0, 3);
 
-  // --- 3. HEADER (logo + judul) ---
-
+  // ----- 4. HEADER -----
   if (savvyImg) {
     pdf.addImage(savvyImg, "PNG", margin, y, 70, 28);
   }
@@ -1675,16 +1688,15 @@ async function exportPDF() {
   pdf.line(margin, y, pageWidth - margin, y);
   y += 18;
 
-  // --- 4. Tasks & Productivity ---
-
+  // ==========================
+  // 5. SECTION 1 – TASKS SUMMARY
+  // ==========================
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(13);
-  pdf.text("1. Tasks & Productivity", margin, y);
+  pdf.text("1. Tasks & Productivity Summary", margin, y);
   y += 16;
 
   pdf.setFont("helvetica", "normal");
-
-  // average dopamine dibikin lebih gede
   pdf.setFontSize(13);
   pdf.text(`Average dopamine: ${avgTaskPercent}%`, margin, y);
   y += 16;
@@ -1725,12 +1737,12 @@ async function exportPDF() {
 
   y = chartY + chartH + 20;
 
-  // Heatmap (dibikin lebih besar)
+  // Heatmap task
   pdf.setFontSize(11);
   pdf.text("Monthly dopamine heatmap:", margin, y);
   y += 10;
 
-  const cellSize = 14; // <-- lebih besar dari sebelumnya
+  const cellSize = 14;
   const cellGap = 3;
   const cols = 7;
   const startY = y;
@@ -1745,9 +1757,9 @@ async function exportPDF() {
     const p = stats.percent;
 
     let r = 230, g = 230, b = 230;
-    if (p >= 80) { r = 110; g = 231; b = 183; }
-    else if (p >= 40) { r = 253; g = 230; b = 138; }
-    else if (p > 0) { r = 252; g = 165; b = 165; }
+    if (p >= 80) { r = 110; g = 231; b = 183; }      // hijau
+    else if (p >= 40) { r = 253; g = 230; b = 138; } // kuning
+    else if (p > 0) { r = 252; g = 165; b = 165; }   // merah
 
     pdf.setFillColor(r, g, b);
     pdf.setDrawColor(220, 220, 220);
@@ -1765,11 +1777,12 @@ async function exportPDF() {
   const heatRows = Math.ceil(dayKeys.length / cols);
   y = startY + heatRows * (cellSize + cellGap) + 22;
 
-  // --- 5. Learning & Skills ---
-
+  // ==========================
+  // 6. SECTION 2 – LEARNING SUMMARY
+  // ==========================
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(13);
-  pdf.text("2. Learning & Skills", margin, y);
+  pdf.text("2. Learning & Skills Summary", margin, y);
   y += 16;
 
   pdf.setFont("helvetica", "normal");
@@ -1785,12 +1798,15 @@ async function exportPDF() {
     pdf.setTextColor(120, 120, 120);
     pdf.text("No learning data for this month.", margin, y);
     pdf.setTextColor(0, 0, 0);
+    y += 18;
   } else {
     const barMaxWidth = pageWidth - margin * 2 - 60;
     const maxXp = top3[0][1] || 1;
 
     top3.forEach(([cat, xp]) => {
-      const label = categoryLabel(cat);
+      const label = (typeof categoryLabel === "function")
+        ? categoryLabel(cat)
+        : cat;
       const width = (xp / maxXp) * barMaxWidth;
 
       pdf.setFontSize(10);
@@ -1808,8 +1824,150 @@ async function exportPDF() {
     });
   }
 
-  pdf.save("HeyHoLetsGo_Report.pdf");
+  ensureSpace(40);
+  pdf.setFontSize(11);
+  pdf.text("Learning activity heatmap (XP per day):", margin, y);
+  y += 10;
+
+  // Heatmap learning (warna berdasarkan XP harian)
+  const lCellSize = 10;
+  const lCellGap = 2;
+  const lCols = 14;
+  const lStartY = y;
+
+  dayKeys.forEach((key, idx) => {
+    const row = Math.floor(idx / lCols);
+    const col = idx % lCols;
+    const x = margin + col * (lCellSize + lCellGap);
+    const cy = lStartY + row * (lCellSize + lCellGap);
+
+    const stats = computeLearningStatsForDate(key);
+    const xp = stats.xp || 0;
+
+    let r = 230, g = 230, b = 230;
+    if (xp > 0 && xp < 20) { r = 219; g = 234; b = 254; }       // biru muda
+    else if (xp >= 20 && xp < 50) { r = 147; g = 197; b = 253; } // biru medium
+    else if (xp >= 50) { r = 59; g = 130; b = 246; }             // biru tua
+
+    pdf.setFillColor(r, g, b);
+    pdf.setDrawColor(220, 220, 220);
+    pdf.rect(x, cy, lCellSize, lCellSize, "F");
+  });
+
+  const lHeatRows = Math.ceil(dayKeys.length / lCols);
+  y = lStartY + lHeatRows * (lCellSize + lCellGap) + 24;
+
+  // =====================================================
+  // 7. SECTION 3 – TASK DETAILS (PER DAY)
+  // =====================================================
+  ensureSpace(40);
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(13);
+  pdf.text("3. Task Details (per day)", margin, y);
+  y += 20;
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(10);
+
+  dayKeys.forEach((key) => {
+    const tasks = (appState.tasks && appState.tasks[key]) || [];
+    if (!tasks.length) return;
+
+    ensureSpace(18);
+    const dateLabel = new Date(key + "T00:00:00").toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+    pdf.setFont("helvetica", "bold");
+    pdf.text(dateLabel, margin, y);
+    y += 12;
+
+    pdf.setFont("helvetica", "normal");
+    tasks.forEach((t) => {
+      ensureSpace(12);
+      const status = t.status || "-";
+      const effort = t.effort != null ? t.effort : "-";
+      const xp = t.xp != null ? t.xp : 0;
+      const name = t.name || t.title || "(no title)";
+
+      const line = `• [${status} | Effort ${effort} | ${xp} XP] ${name}`;
+      const wrapped = pdf.splitTextToSize(line, pageWidth - margin * 2 - 12);
+      pdf.text(wrapped, margin + 12, y);
+      y += wrapped.length * 11 + 2;
+    });
+
+    y += 4;
+  });
+
+  // =====================================================
+  // 8. SECTION 4 – LEARNING & REFLECTION DETAILS
+  // =====================================================
+  ensureSpace(40);
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(13);
+  pdf.text("4. Learning & Reflection Details", margin, y);
+  y += 20;
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(10);
+
+  dayKeys.forEach((key) => {
+    const entries = (appState.learning && appState.learning[key]) || [];
+    if (!entries.length) return;
+
+    ensureSpace(18);
+    const dateLabel = new Date(key + "T00:00:00").toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+    pdf.setFont("helvetica", "bold");
+    pdf.text(dateLabel, margin, y);
+    y += 12;
+
+    pdf.setFont("helvetica", "normal");
+
+    entries.forEach((entry) => {
+      ensureSpace(20);
+      const cat = entry.category || "-";
+      const sub = entry.subskill || entry.skill || "";
+      const eff = entry.effort || "-";
+      const xp =
+        (window.LEARNING_XP_PER_EFFORT && window.LEARNING_XP_PER_EFFORT[entry.effort]) ||
+        0;
+
+      const titleLine = `• [${cat}${sub ? " – " + sub : ""} | Effort ${eff} | ${xp} XP]`;
+      pdf.text(titleLine, margin + 12, y);
+      y += 12;
+
+      const parts = [];
+      if (entry.topic) parts.push(entry.topic);
+      if (entry.what) parts.push(entry.what);
+      if (entry.note) parts.push(entry.note);
+      if (entry.description) parts.push(entry.description);
+      if (entry.benefit) parts.push("Benefit: " + entry.benefit);
+      if (entry.reflection) parts.push("Reflection: " + entry.reflection);
+
+      const detailText = parts.join(" | ");
+      if (detailText) {
+        const wrapped = pdf.splitTextToSize(
+          detailText,
+          pageWidth - margin * 2 - 24
+        );
+        pdf.text(wrapped, margin + 18, y);
+        y += wrapped.length * 11 + 4;
+      } else {
+        y += 4;
+      }
+    });
+
+    y += 4;
+  });
+
+  // ----- 9. Save file -----
+  pdf.save("HeyHoLetsGo_Monthly_Report.pdf");
 }
+
 
 exportPdfBtn.addEventListener("click", exportPDF);
 
