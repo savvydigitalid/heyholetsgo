@@ -2033,7 +2033,8 @@ function scheduleRandomBounce(){
 document.addEventListener("DOMContentLoaded",()=>{
   loadState();
   applyTheme(appState.theme || "light");
-  carryOverFromYesterday();
+  // 🔥 HOTFIX: matiin auto carry-over dulu biar refresh gak bikin aneh
+  // carryOverFromYesterday();
   showTab("tasksTab");
   renderTasksForToday();
   renderTaskHeatmap();
@@ -2044,7 +2045,6 @@ document.addEventListener("DOMContentLoaded",()=>{
   renderProfile();
   scheduleRandomBounce();
 
-  // Hook tombol sync ke fungsi
   const syncBtn = document.getElementById("syncWeeklyBtn");
   if (syncBtn) {
     syncBtn.addEventListener("click", syncWeeklyToGoogleSheet);
