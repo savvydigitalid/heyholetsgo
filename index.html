@@ -609,60 +609,52 @@ function generateId(){ return "id_"+Math.random().toString(36).slice(2,10); }
 function ensureArray(obj,key){ if(!obj[key]) obj[key]=[]; return obj[key]; }
 
 function carryOverFromYesterday() {
-  const todayKey = getTodayKey();
+  const today = todayKey();
 
-  // Prevent carry-over running twice in one day
-  if (appState.lastCarryDate === todayKey) {
-    return;
+  // FIRST TIME OPEN TODAY → do carry-over
+  if (appState.lastOpenDate !== today) {
+
+    const yesterday = shiftDateKey(today, -1);
+    const yTasks = appState.tasks[yesterday] || [];
+    const todayList = appState.tasks[today] || [];
+
+    const carryList = [];
+
+    yTasks.forEach(t => {
+      if (
+        t.status === "none" ||
+        t.status === "" ||
+        t.status === "progress" ||
+        t.status === "blocked"
+      ) {
+        // Deduplicate: Cek apakah task dengan (name+effort+status) sudah ada hari ini
+        const dup = todayList.find(n =>
+          n.name === t.name &&
+          n.effort === t.effort &&
+          n.status === "none"
+        );
+
+        if (!dup) {
+          carryList.push({
+            id: generateId(),
+            name: t.name,
+            effort: t.effort,
+            status: "none", // ✨ Semua mapping jadi NONE
+            createdAt: new Date().toISOString()
+          });
+        }
+      }
+    });
+
+    // Insert carry tasks at the TOP
+    appState.tasks[today] = [...carryList, ...todayList];
+
+    // Mark that carry has been done for this date
+    appState.lastOpenDate = today;
+    saveState();
   }
-
-  // Compute yesterday using safe date shifting (no timezone bug)
-  const yesterdayKey = shiftDateKey(todayKey, -1);
-
-  const yesterdayTasks = appState.tasks[yesterdayKey] || [];
-  const carryList = [];
-
-  yesterdayTasks.forEach(t => {
-    // valid statuses that should be carried
-    if (
-      t.status === "" ||          // old pending
-      t.status === "none" ||      // new pending
-      t.status === "progress" ||  // FIXED: correct status
-      t.status === "blocked"      // carry blocked tasks too
-    ) {
-      carryList.push({
-        id: generateId(),
-        name: t.name,
-        effort: t.effort,
-        status: t.status === "" ? "none" : t.status,
-        createdAt: new Date().toISOString()
-        // XP dihitung ulang harian, tidak disimpan
-      });
-    }
-  });
-
-  // Ensure today entry exists
-  if (!Array.isArray(appState.tasks[todayKey])) {
-    appState.tasks[todayKey] = [];
-  }
-
-  // If no tasks today, replace with carry list
-  if (carryList.length > 0 && appState.tasks[todayKey].length === 0) {
-    appState.tasks[todayKey] = carryList;
-  }
-  // If user already added tasks today, prepend carry list
-  else if (carryList.length > 0) {
-    appState.tasks[todayKey] = [...carryList, ...appState.tasks[todayKey]];
-  }
-
-  // Mark carry done for today
-  appState.lastCarryDate = todayKey;
-
-  // FIXED: this function exists
-  saveState();
+  // Jika tanggal sama → JANGAN carry-over lagi
 }
-
-
 
 /* DOM */
 const tabButtons = document.querySelectorAll(".tab-btn");
