@@ -611,52 +611,57 @@ function ensureArray(obj,key){ if(!obj[key]) obj[key]=[]; return obj[key]; }
 function carryOverFromYesterday() {
   const todayKey = getTodayKey();
 
-  // Biar gak carry-over berkali-kali dalam 1 hari
+  // Prevent carry-over running twice in one day
   if (appState.lastCarryDate === todayKey) {
     return;
   }
 
-  // Hitung key kemarin berbasis string tanggal (aman dari timezone)
+  // Compute yesterday using safe date shifting (no timezone bug)
   const yesterdayKey = shiftDateKey(todayKey, -1);
 
   const yesterdayTasks = appState.tasks[yesterdayKey] || [];
   const carryList = [];
 
-  yesterdayTasks.forEach((t) => {
+  yesterdayTasks.forEach(t => {
+    // valid statuses that should be carried
     if (
-      t &&
-      (t.status === "" ||          // pending lama
-       t.status === "none" ||      // pending versi baru
-       t.status === "progress" ||  // on progress
-       t.status === "blocked")     // blocked
+      t.status === "" ||          // old pending
+      t.status === "none" ||      // new pending
+      t.status === "progress" ||  // FIXED: correct status
+      t.status === "blocked"      // carry blocked tasks too
     ) {
       carryList.push({
-        id: generateId(),                         // id baru
+        id: generateId(),
         name: t.name,
         effort: t.effort,
         status: t.status === "" ? "none" : t.status,
-        createdAt: new Date().toISOString()       // hari ini
+        createdAt: new Date().toISOString()
+        // XP dihitung ulang harian, tidak disimpan
       });
     }
   });
 
+  // Ensure today entry exists
   if (!Array.isArray(appState.tasks[todayKey])) {
     appState.tasks[todayKey] = [];
   }
 
-  // Kalau hari ini belum ada task sama sekali → isi dengan carry-over
+  // If no tasks today, replace with carry list
   if (carryList.length > 0 && appState.tasks[todayKey].length === 0) {
     appState.tasks[todayKey] = carryList;
   }
-  // Kalau hari ini SUDAH ada task (user udah input), carry-over dimasukin di depan
+  // If user already added tasks today, prepend carry list
   else if (carryList.length > 0) {
     appState.tasks[todayKey] = [...carryList, ...appState.tasks[todayKey]];
   }
 
-  // Tandain kalau hari ini udah pernah di-carry, biar reload berkali-kali gak nambah lagi
+  // Mark carry done for today
   appState.lastCarryDate = todayKey;
-  saveState(); // << penting: pake saveState, BUKAN saveAppState
+
+  // FIXED: this function exists
+  saveState();
 }
+
 
 
 /* DOM */
