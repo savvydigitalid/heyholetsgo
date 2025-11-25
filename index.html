@@ -608,27 +608,43 @@ function saveState() {
 function generateId(){ return "id_"+Math.random().toString(36).slice(2,10); }
 function ensureArray(obj,key){ if(!obj[key]) obj[key]=[]; return obj[key]; }
 
-function carryOverFromYesterday(){
-  const todayKey = getTodayKey();
-  const d = new Date(todayKey+"T00:00:00");
-  d.setDate(d.getDate()-1);
-  const yKey = d.toISOString().slice(0,10);
-  const yesterday = appState.tasks[yKey] || [];
-  if(!yesterday.length) return;
-  const todayArr = ensureArray(appState.tasks, todayKey);
-  const existing = new Set(todayArr.map(t=>t.name+"|"+t.effort));
-  yesterday.forEach(t=>{
-    if((t.status==="none" || t.status==="progress") && !existing.has(t.name+"|"+t.effort)){
-      todayArr.push({
-        id: generateId(),
+function carryOverFromYesterday() {
+  const today = getTodayKey();
+
+  // Kalo hari ini sudah ada task (misal user sudah input), kita tetap tambahkan carry-over di depan
+  if (!appState.tasks[today]) {
+    appState.tasks[today] = [];
+  }
+
+  // Ambil tanggal kemarin
+  const todayDate = new Date(today + "T00:00:00");
+  todayDate.setDate(todayDate.getDate() - 1);
+  const yesterday = todayDate.toISOString().slice(0, 10);
+
+  const yTasks = appState.tasks[yesterday] || [];
+  const carryList = [];
+
+  yTasks.forEach(t => {
+    // hanya yang boleh ikut carry:
+    // pending ("") | onprogress | blocked
+    if (
+      t.status === "" ||
+      t.status === "onprogress" ||
+      t.status === "blocked"
+    ) {
+      carryList.push({
         name: t.name,
         effort: t.effort,
-        status: "none",
-        createdAt: new Date().toISOString()
+        status: t.status,   // status ikut sesuai kemarin
+        xp: 0               // XP HARUS 0 di hari baru
       });
     }
   });
-  saveState();
+
+  // Masukkan carry list di depan task hari ini
+  appState.tasks[today] = [...carryList, ...appState.tasks[today]];
+
+  saveAppState();
 }
 
 /* DOM */
