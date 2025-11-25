@@ -611,48 +611,53 @@ function ensureArray(obj,key){ if(!obj[key]) obj[key]=[]; return obj[key]; }
 function carryOverFromYesterday() {
   const todayKey = getTodayKey();
 
-  // Kalau hari ini SUDAH punya task (misal lo udah input manual),
-  // jangan auto-carry lagi biar nggak dobel-dobel.
-  if (Array.isArray(appState.tasks[todayKey]) && appState.tasks[todayKey].length > 0) {
+  // Biar gak carry-over berkali-kali dalam 1 hari
+  if (appState.lastCarryDate === todayKey) {
     return;
   }
 
-  // Ambil tanggal kemarin
-  const todayDate = new Date(todayKey + "T00:00:00");
-  todayDate.setDate(todayDate.getDate() - 1);
-  const yesterdayKey = todayDate.toISOString().slice(0, 10);
+  // Hitung key kemarin berbasis string tanggal (aman dari timezone)
+  const yesterdayKey = shiftDateKey(todayKey, -1);
 
   const yesterdayTasks = appState.tasks[yesterdayKey] || [];
   const carryList = [];
 
-  yesterdayTasks.forEach(t => {
-    // Yang boleh ke-carry:
-    // - status kosong ("")
-    // - "none" (todo)
-    // - "progress"
-    // - "blocked"
+  yesterdayTasks.forEach((t) => {
     if (
-      t.status === "" ||
-      t.status === "none" ||
-      t.status === "progress" ||
-      t.status === "blocked"
+      t &&
+      (t.status === "" ||          // pending lama
+       t.status === "none" ||      // pending versi baru
+       t.status === "progress" ||  // on progress
+       t.status === "blocked")     // blocked
     ) {
       carryList.push({
-        id: generateId(),               // kasih id baru biar aman
+        id: generateId(),                         // id baru
         name: t.name,
         effort: t.effort,
         status: t.status === "" ? "none" : t.status,
-        createdAt: new Date().toISOString()
-        // XP gak disimpan di task; selalu dihitung harian dari status+effort
+        createdAt: new Date().toISOString()       // hari ini
       });
     }
   });
 
-  if (carryList.length > 0) {
-    appState.tasks[todayKey] = carryList;
-    saveState(); // <-- ini yang bener, bukan saveAppState()
+  if (!Array.isArray(appState.tasks[todayKey])) {
+    appState.tasks[todayKey] = [];
   }
+
+  // Kalau hari ini belum ada task sama sekali → isi dengan carry-over
+  if (carryList.length > 0 && appState.tasks[todayKey].length === 0) {
+    appState.tasks[todayKey] = carryList;
+  }
+  // Kalau hari ini SUDAH ada task (user udah input), carry-over dimasukin di depan
+  else if (carryList.length > 0) {
+    appState.tasks[todayKey] = [...carryList, ...appState.tasks[todayKey]];
+  }
+
+  // Tandain kalau hari ini udah pernah di-carry, biar reload berkali-kali gak nambah lagi
+  appState.lastCarryDate = todayKey;
+  saveState(); // << penting: pake saveState, BUKAN saveAppState
 }
+
 
 /* DOM */
 const tabButtons = document.querySelectorAll(".tab-btn");
