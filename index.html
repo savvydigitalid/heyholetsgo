@@ -566,11 +566,12 @@ const STORAGE_KEY = "hhlg_v136_state";
 // GANTI ini dengan URL web app lo sendiri dari Apps Script
 const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwcnfGTem-TyH96XUV-3aZETQ0a7p94_7JJ5Ewkl2u25GNp9mYd9ILeXVjtv_Zm3m6fpQ/exec";
 
-let appState = {
+llet appState = {
   tasks: {},
   learning: {},
   theme: "light",
-  user: { name: "", position: "" }
+  user: { name: "", position: "" },
+  lastOpenDate: null
 };
 
 const TASK_XP_PER_EFFORT = { 1: 10, 2: 20, 3: 30 };
@@ -586,10 +587,22 @@ function getTodayKey() {
   const local = new Date(d.getTime() - offset * 60000);
   return local.toISOString().slice(0, 10);
 }
+
+// 🔹 helper buat geser tanggal (kemarin, besok, dsb)
+function shiftDateKey(dateKey, deltaDays) {
+  const [y, m, d] = dateKey.split("-").map(n => parseInt(n, 10));
+  const dt = new Date(y, m - 1, d + deltaDays);
+  const yy = dt.getFullYear();
+  const mm = String(dt.getMonth() + 1).padStart(2, "0");
+  const dd = String(dt.getDate()).padStart(2, "0");
+  return `${yy}-${mm}-${dd}`;
+}
+
 function formatShortDate(dateStr) {
   const d = new Date(dateStr + "T00:00:00");
   return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
 }
+
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -599,6 +612,8 @@ function loadState() {
     appState.learning = parsed.learning || {};
     appState.theme = parsed.theme || "light";
     appState.user = parsed.user || { name: "", position: "" };
+    // 🔹 load tanggal terakhir app dibuka
+    appState.lastOpenDate = parsed.lastOpenDate || null;
   } catch(e) { console.error(e); }
 }
 function saveState() {
@@ -609,11 +624,9 @@ function generateId(){ return "id_"+Math.random().toString(36).slice(2,10); }
 function ensureArray(obj,key){ if(!obj[key]) obj[key]=[]; return obj[key]; }
 
 function carryOverFromYesterday() {
-  const today = todayKey();
-
+  const today = getTodayKey(); // 🔧 tadinya todayKey() (ga ada fungsinya)
   // FIRST TIME OPEN TODAY → do carry-over
   if (appState.lastOpenDate !== today) {
-
     const yesterday = shiftDateKey(today, -1);
     const yTasks = appState.tasks[yesterday] || [];
     const todayList = appState.tasks[today] || [];
@@ -627,7 +640,7 @@ function carryOverFromYesterday() {
         t.status === "progress" ||
         t.status === "blocked"
       ) {
-        // Deduplicate: Cek apakah task dengan (name+effort+status) sudah ada hari ini
+        // Deduplicate: Cek apakah task dengan (name+effort+status none) sudah ada hari ini
         const dup = todayList.find(n =>
           n.name === t.name &&
           n.effort === t.effort &&
@@ -639,21 +652,17 @@ function carryOverFromYesterday() {
             id: generateId(),
             name: t.name,
             effort: t.effort,
-            status: "none", // ✨ Semua mapping jadi NONE
+            status: "none", // ✨ reset semua jadi none di hari baru
             createdAt: new Date().toISOString()
           });
         }
       }
     });
 
-    // Insert carry tasks at the TOP
     appState.tasks[today] = [...carryList, ...todayList];
-
-    // Mark that carry has been done for this date
     appState.lastOpenDate = today;
     saveState();
   }
-  // Jika tanggal sama → JANGAN carry-over lagi
 }
 
 /* DOM */
