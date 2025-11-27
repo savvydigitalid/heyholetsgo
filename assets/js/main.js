@@ -1,14 +1,5 @@
-const STORAGE_KEY = "hhlg_v136_state";
 // GANTI ini dengan URL web app lo sendiri dari Apps Script
 const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwcnfGTem-TyH96XUV-3aZETQ0a7p94_7JJ5Ewkl2u25GNp9mYd9ILeXVjtv_Zm3m6fpQ/exec";
-
-let appState = {
-  tasks: {},
-  learning: {},
-  theme: "light",
-  user: { name: "", position: "" }
-};
-
 const TASK_XP_PER_EFFORT = { 1: 10, 2: 20, 3: 30 };
 const DAILY_TASK_XP_TARGET = 60;
 const LEARNING_XP_PER_EFFORT = { 1: 5, 2: 10, 3: 20 };
@@ -16,33 +7,10 @@ const SIX_MONTHS_IN_DAYS = 183;
 
 let dopamineChart, learningChart, monthlyChart;
 
-function getTodayKey() {
-  const d = new Date();
-  const offset = d.getTimezoneOffset();
-  const local = new Date(d.getTime() - offset * 60000);
-  return local.toISOString().slice(0, 10);
-}
 function formatShortDate(dateStr) {
   const d = new Date(dateStr + "T00:00:00");
   return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
 }
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const parsed = JSON.parse(raw);
-    appState.tasks = parsed.tasks || {};
-    appState.learning = parsed.learning || {};
-    appState.theme = parsed.theme || "light";
-    appState.user = parsed.user || { name: "", position: "" };
-  } catch(e) { console.error(e); }
-}
-function saveState() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); }
-  catch(e){ console.error(e); }
-}
-function generateId(){ return "id_"+Math.random().toString(36).slice(2,10); }
-function ensureArray(obj,key){ if(!obj[key]) obj[key]=[]; return obj[key]; }
 
 function carryOverFromYesterday() {
   const today = todayKey();
