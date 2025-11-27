@@ -1,4 +1,6 @@
-// GANTI ini dengan URL web app lo sendiri dari Apps Script
+// HeyHoLetsGo – V1.3.7 STABLE
+// Struktur: state.js terpisah, semua domain + UI di main.js
+// Dipakai tim per 01 Desember 2025
 const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwcnfGTem-TyH96XUV-3aZETQ0a7p94_7JJ5Ewkl2u25GNp9mYd9ILeXVjtv_Zm3m6fpQ/exec";
 const TASK_XP_PER_EFFORT = { 1: 10, 2: 20, 3: 30 };
 const DAILY_TASK_XP_TARGET = 60;
