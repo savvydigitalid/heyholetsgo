@@ -148,26 +148,47 @@
 <!-- 🔹 TAB 4DX DUMMY MULAI DI SINI -->
 <section id="tab-fourdx" class="tab-panel hidden">
   <div class="tab-header">
-    <h2>4DX Focus (Dummy)</h2>
-    <p class="tab-subtitle">
-      Di sini nanti lo bakal lihat WIG, Lag & Lead measures. Versi sekarang masih dummy.
-    </p>
+    <h2>4DX Focus</h2>
+    <p class="tab-subtitle">Setup WIG, Lag Measures, dan Lead Measures kamu.</p>
   </div>
 
-  <div class="card">
-    <h3>Coming soon 🚧</h3>
-    <p>
-      Tab 4DX lagi dikembangin. Versi ini cuma buat test layout & switching tab dulu.
-    </p>
-    <ul>
-      <li>WIG bakal muncul di bagian atas</li>
-      <li>Lead Measures + Daily emoji check-in</li>
-      <li>Lead Heatmap 28 hari</li>
-      <li>Weekly Review + summary buat report bulanan</li>
-    </ul>
+  <!-- WIG -->
+  <div class="card" style="margin-bottom:16px;">
+    <h3>🎯 WIG (Wildly Important Goal)</h3>
+    <input id="wigInput" type="text" placeholder="Masukkan WIG kamu..."
+      style="width:100%; padding:10px; margin-top:6px;">
   </div>
+
+  <!-- Lag Measures -->
+  <div class="card" style="margin-bottom:16px;">
+    <h3>📊 Lag Measures</h3>
+    <p class="info">Ini adalah hasil akhir yang ingin dicapai. Tidak dievaluasi harian.</p>
+
+    <div id="lagList"></div>
+
+    <button id="addLagBtn" class="btn-orange" style="margin-top:10px;">
+      + Tambah Lag Measure
+    </button>
+  </div>
+
+  <!-- Lead Measures -->
+  <div class="card" style="margin-bottom:16px;">
+    <h3>⚡ Lead Measures</h3>
+    <p class="info">Indikator harian yang bisa kamu kontrol langsung.</p>
+
+    <div id="leadList"></div>
+
+    <button id="addLeadBtn" class="btn-orange" style="margin-top:10px;">
+      + Tambah Lead Measure
+    </button>
+  </div>
+
+  <!-- Save button -->
+  <button id="save4dxBtn" class="btn-primary" style="margin-top:20px;">
+    Simpan 4DX
+  </button>
+
 </section>
-<!-- 🔹 TAB 4DX DUMMY SELESAI DI SINI -->
   <!-- ===== TAB LEARNING ===== -->
   <section id="learningTab" class="tab-content hidden">
     <div class="grid-2">
