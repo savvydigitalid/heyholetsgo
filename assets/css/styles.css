@@ -234,3 +234,29 @@
       100% { transform: translateY(0); }
     }
   
+.info {
+  font-size: 14px;
+  color: var(--text-light);
+  margin-bottom: 10px;
+}
+
+.measure-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.measure-item input {
+  flex: 1;
+  padding: 8px;
+  margin-right: 8px;
+}
+
+.measure-item button {
+  padding: 6px 10px;
+  background: #ef4444;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
