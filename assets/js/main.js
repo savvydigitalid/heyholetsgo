@@ -1527,6 +1527,8 @@ function render4DX() {
 
 // Tambah Lag baru (max 3)
 function addLagMeasure() {
+  updateFourdxStateFromInputs(); // simpan dulu isi WIG & lag yang ada
+
   if (fourdxState.lags.length >= 3) {
     alert("Maksimum 3 Lag Measures.");
     return;
@@ -1534,9 +1536,30 @@ function addLagMeasure() {
   fourdxState.lags.push("");
   render4DX();
 }
+}
+// Update fourdxState dari isi input di UI (tanpa save ke localStorage)
+function updateFourdxStateFromInputs() {
+  const wigInput = document.getElementById("wigInput");
+  const lagInputs = document.querySelectorAll('#lagList input[data-type="lag"]');
+  const leadInputs = document.querySelectorAll('#leadList input[data-type="lead"]');
+
+  if (wigInput) {
+    fourdxState.wig = wigInput.value;
+  }
+
+  if (lagInputs.length > 0) {
+    fourdxState.lags = Array.from(lagInputs).map((el) => el.value);
+  }
+
+  if (leadInputs.length > 0) {
+    fourdxState.leads = Array.from(leadInputs).map((el) => el.value);
+  }
+}
 
 // Tambah Lead baru (max 4)
 function addLeadMeasure() {
+  updateFourdxStateFromInputs(); // simpan dulu isi WIG & lead yang ada
+
   if (fourdxState.leads.length >= 4) {
     alert("Maksimum 4 Lead Measures.");
     return;
@@ -1547,6 +1570,8 @@ function addLeadMeasure() {
 
 // Hapus Lag / Lead
 function removeMeasure(type, index) {
+  updateFourdxStateFromInputs(); // simpan dulu isi saat ini
+
   if (type === "lag") {
     fourdxState.lags.splice(index, 1);
   } else if (type === "lead") {
