@@ -65,7 +65,6 @@ function carryOverFromYesterday() {
 /* DOM */
 const tabButtons = document.querySelectorAll(".tab-btn");
 const tasksTabEl = document.getElementById("tasksTab");
-const fourdxTabEl = document.getElementById("fourdxTab");
 const learningTabEl = document.getElementById("learningTab");
 const settingsTabEl = document.getElementById("settingsTab");
   const topBarEl = document.getElementById("topBar");
@@ -127,11 +126,8 @@ themeToggleBtn.addEventListener("click", ()=>{
 
 /* TABS */
 function showTab(tabId){
-    [tasksTabEl, fourdxTabEl, learningTabEl, settingsTabEl].forEach(el => {
-    if (el) el.classList.add("hidden");
-  });
+  [tasksTabEl, learningTabEl, settingsTabEl].forEach(el=>el.classList.add("hidden"));
   if(tabId==="tasksTab") tasksTabEl.classList.remove("hidden");
-  if (tabId === "fourdxTab"  && fourdxTabEl) fourdxTabEl.classList.remove("hidden");
   if(tabId==="learningTab") learningTabEl.classList.remove("hidden");
   if(tabId==="settingsTab") settingsTabEl.classList.remove("hidden");
 
@@ -161,11 +157,8 @@ function showTab(tabId){
     }
   }
 }
-tabButtons.forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const tabId = btn.dataset.tab; // contoh: "tasksTab" / "fourdxTab"
-    showTab(tabId);
-  });
+tabButtons.forEach(btn=>{
+  btn.addEventListener("click", ()=> showTab(btn.dataset.tab));
 });
 
 /* TASKS */
