@@ -1441,6 +1441,163 @@ function scheduleRandomBounce(){
     scheduleRandomBounce();
   },delay);
 }
+/* ================================
+   4DX STATE & RENDER
+================================ */
+
+const FOURDX_STORAGE_KEY = "fourdx_v1";
+
+let fourdxState = {
+  wig: "",
+  lags: [],   // array of strings
+  leads: []   // array of strings
+};
+
+// Load dari localStorage
+function loadFourdxState() {
+  try {
+    const raw = localStorage.getItem(FOURDX_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    fourdxState = {
+      wig: parsed.wig || "",
+      lags: Array.isArray(parsed.lags) ? parsed.lags : [],
+      leads: Array.isArray(parsed.leads) ? parsed.leads : []
+    };
+  } catch (e) {
+    console.error("Error load 4DX:", e);
+  }
+}
+
+// Save ke localStorage
+function saveFourdxState() {
+  try {
+    localStorage.setItem(FOURDX_STORAGE_KEY, JSON.stringify(fourdxState));
+  } catch (e) {
+    console.error("Error save 4DX:", e);
+  }
+}
+
+// Render isi WIG, Lag, Lead ke tab 4DX
+function render4DX() {
+  const wigInput = document.getElementById("wigInput");
+  const lagList = document.getElementById("lagList");
+  const leadList = document.getElementById("leadList");
+
+  if (!wigInput || !lagList || !leadList) return; // tab belum ada
+
+  wigInput.value = fourdxState.wig || "";
+
+  // Render Lag Measures
+  lagList.innerHTML = "";
+  if (fourdxState.lags.length === 0) {
+    lagList.textContent = "Belum ada Lag Measure.";
+  } else {
+    fourdxState.lags.forEach((text, index) => {
+      lagList.insertAdjacentHTML(
+        "beforeend",
+        `
+        <div class="measure-item">
+          <input type="text" value="${text.replace(/"/g, "&quot;")}" data-type="lag" data-index="${index}" />
+          <button type="button" class="measure-remove" data-type="lag" data-index="${index}">✕</button>
+        </div>
+        `
+      );
+    });
+  }
+
+  // Render Lead Measures
+  leadList.innerHTML = "";
+  if (fourdxState.leads.length === 0) {
+    leadList.textContent = "Belum ada Lead Measure.";
+  } else {
+    fourdxState.leads.forEach((text, index) => {
+      leadList.insertAdjacentHTML(
+        "beforeend",
+        `
+        <div class="measure-item">
+          <input type="text" value="${text.replace(/"/g, "&quot;")}" data-type="lead" data-index="${index}" />
+          <button type="button" class="measure-remove" data-type="lead" data-index="${index}">✕</button>
+        </div>
+        `
+      );
+    });
+  }
+}
+
+// Tambah Lag baru (max 3)
+function addLagMeasure() {
+  if (fourdxState.lags.length >= 3) {
+    alert("Maksimum 3 Lag Measures.");
+    return;
+  }
+  fourdxState.lags.push("");
+  render4DX();
+}
+
+// Tambah Lead baru (max 4)
+function addLeadMeasure() {
+  if (fourdxState.leads.length >= 4) {
+    alert("Maksimum 4 Lead Measures.");
+    return;
+  }
+  fourdxState.leads.push("");
+  render4DX();
+}
+
+// Hapus Lag / Lead
+function removeMeasure(type, index) {
+  if (type === "lag") {
+    fourdxState.lags.splice(index, 1);
+  } else if (type === "lead") {
+    fourdxState.leads.splice(index, 1);
+  }
+  render4DX();
+}
+
+// Simpan dari input ke state + localStorage
+function save4DXFromUI() {
+  const wigInput = document.getElementById("wigInput");
+  const lagInputs = document.querySelectorAll('#lagList input[data-type="lag"]');
+  const leadInputs = document.querySelectorAll('#leadList input[data-type="lead"]');
+
+  if (!wigInput) return;
+
+  fourdxState.wig = wigInput.value.trim();
+  fourdxState.lags = Array.from(lagInputs).map((el) => el.value.trim()).filter(Boolean);
+  fourdxState.leads = Array.from(leadInputs).map((el) => el.value.trim()).filter(Boolean);
+
+  saveFourdxState();
+  alert("4DX berhasil disimpan!");
+}
+
+// Inisialisasi event listener 4DX
+function init4DX() {
+  loadFourdxState();
+  render4DX();
+
+  const addLagBtn = document.getElementById("addLagBtn");
+  const addLeadBtn = document.getElementById("addLeadBtn");
+  const save4dxBtn = document.getElementById("save4dxBtn");
+  const fourdxTab = document.getElementById("fourdxTab");
+
+  if (addLagBtn) addLagBtn.addEventListener("click", addLagMeasure);
+  if (addLeadBtn) addLeadBtn.addEventListener("click", addLeadMeasure);
+  if (save4dxBtn) save4dxBtn.addEventListener("click", save4DXFromUI);
+
+  // Delegasi untuk tombol hapus (✕)
+  if (fourdxTab) {
+    fourdxTab.addEventListener("click", (e) => {
+      const target = e.target;
+      if (!target.classList.contains("measure-remove")) return;
+      const type = target.getAttribute("data-type");
+      const index = parseInt(target.getAttribute("data-index"), 10);
+      if (!Number.isNaN(index)) {
+        removeMeasure(type, index);
+      }
+    });
+  }
+}
 
 /* INIT */
 document.addEventListener("DOMContentLoaded",()=>{
@@ -1455,6 +1612,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   renderLearningHeatmap();
   renderSkillProgress();
   renderTop3Skills();
+  init4DX();
   renderProfile();
   scheduleRandomBounce();
 
