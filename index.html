@@ -35,7 +35,7 @@
       <p>Daily dopamine tracker for tasks & learning</p>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
-      < id="themeToggle" type="" class="btn-ghost" style="display:flex;align-items:center;gap:6px;">
+      <button id="themeToggle" type="button" class="btn-ghost" style="display:flex;align-items:center;gap:6px;">
         <span style="font-size:12px;">Light</span>
         <span id="themeIcon">🌞</span>
       </button>
@@ -44,7 +44,6 @@
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="tasksTab">Tasks & Productivity</button>
-      <button class="tab-btn" data-tab="fourdxTab">4DX</button>
     <button class="tab-btn" data-tab="learningTab">Learning & Skills</button>
     <button class="tab-btn" data-tab="settingsTab">Settings & Reports</button>
   </div>
@@ -145,40 +144,6 @@
       <div id="taskList" style="display:flex;flex-direction:column;gap:8px;font-size:13px;"></div>
     </div>
   </section>
-<section id="fourdxTab" class="tab-panel hidden">
-  <div class="tab-header">
-    <h2>4DX Focus</h2>
-    <p class="tab-subtitle">
-      Setup WIG, Lag Measures, dan Lead Measures kamu.
-    </p>
-  </div>
-
-  <div class="card" style="margin-bottom:16px;">
-    <h3>🎯 WIG (Wildly Important Goal)</h3>
-    <input
-      id="wigInput"
-      type="text"
-      placeholder="Masukkan WIG kamu..."
-      style="width:100%; padding:10px; margin-top:6px;"
-    />
-  </div>
-
-  <div class="card" style="margin-bottom:16px;">
-    <h3>📊 Lag Measures</h3>
-    <p class="info">
-      Ini adalah hasil akhir yang ingin dicapai. Tidak dievaluasi harian.
-    </p>
-    <div id="lagList">Belum ada Lag Measure.</div>
-  </div>
-
-  <div class="card" style="margin-bottom:16px;">
-    <h3>⚡ Lead Measures</h3>
-    <p class="info">
-      Indikator harian yang bisa kamu kontrol langsung.
-    </p>
-    <div id="leadList">Belum ada Lead Measure.</div>
-  </div>
-</section>
 
   <!-- ===== TAB LEARNING ===== -->
   <section id="learningTab" class="tab-content hidden">
