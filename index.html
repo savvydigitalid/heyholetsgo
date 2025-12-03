@@ -150,6 +150,7 @@
       <div id="taskList" style="display:flex;flex-direction:column;gap:8px;font-size:13px;"></div>
     </div>
   </section>
+    <!-- ===== TAB 4DX ===== -->
 <section id="fourdxTab" class="tab-content hidden">
   <div class="tab-header">
     <h2>4DX Focus</h2>
@@ -158,6 +159,7 @@
     </p>
   </div>
 
+  <!-- WIG -->
   <div class="card" style="margin-bottom:16px;">
     <h3>🎯 WIG (Wildly Important Goal)</h3>
     <input
@@ -168,21 +170,57 @@
     />
   </div>
 
+  <!-- Lag Measures -->
   <div class="card" style="margin-bottom:16px;">
     <h3>📊 Lag Measures</h3>
     <p class="info">
       Ini adalah hasil akhir yang ingin dicapai. Tidak dievaluasi harian.
     </p>
-    <div id="lagList">Belum ada Lag Measure.</div>
+
+    <!-- daftar lag -->
+    <div id="lagList"></div>
+
+    <!-- tombol tambah lag -->
+    <button
+      id="addLagBtn"
+      type="button"
+      class="btn-ghost"
+      style="margin-top:10px;"
+    >
+      + Tambah Lag Measure
+    </button>
   </div>
 
+  <!-- Lead Measures -->
   <div class="card" style="margin-bottom:16px;">
     <h3>⚡ Lead Measures</h3>
     <p class="info">
       Indikator harian yang bisa kamu kontrol langsung.
     </p>
-    <div id="leadList">Belum ada Lead Measure.</div>
+
+    <!-- daftar lead -->
+    <div id="leadList"></div>
+
+    <!-- tombol tambah lead -->
+    <button
+      id="addLeadBtn"
+      type="button"
+      class="btn-ghost"
+      style="margin-top:10px;"
+    >
+      + Tambah Lead Measure
+    </button>
   </div>
+
+  <!-- Save -->
+  <button
+    id="save4dxBtn"
+    type="button"
+    class="btn-primary"
+    style="margin-top:20px;"
+  >
+    Simpan 4DX
+  </button>
 </section>
 
   <!-- ===== TAB LEARNING ===== -->
