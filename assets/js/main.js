@@ -127,11 +127,11 @@ themeToggleBtn.addEventListener("click", ()=>{
 
 /* TABS */
 function showTab(tabId){
-  [tasksTabEl, fourdxTabEl, learningTabEl, settingsTabEl,].forEach(el=>{
+    [tasksTabEl, fourdxTabEl, learningTabEl, settingsTabEl].forEach(el => {
     if (el) el.classList.add("hidden");
   });
   if(tabId==="tasksTab") tasksTabEl.classList.remove("hidden");
-    if(tabId==="fourdxTab" && fourdxTabEl) fourdxTabEl.classList.remove("hidden");
+  if (tabId === "fourdxTab"  && fourdxTabEl) fourdxTabEl.classList.remove("hidden");
   if(tabId==="learningTab") learningTabEl.classList.remove("hidden");
   if(tabId==="settingsTab") settingsTabEl.classList.remove("hidden");
 
@@ -161,8 +161,11 @@ function showTab(tabId){
     }
   }
 }
-tabButtons.forEach(btn=>{
-  btn.addEventListener("click", ()=> showTab(btn.dataset.tab));
+tabButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const tabId = btn.dataset.tab; // contoh: "tasksTab" / "fourdxTab"
+    showTab(tabId);
+  });
 });
 
 /* TASKS */
@@ -1438,103 +1441,6 @@ function scheduleRandomBounce(){
     scheduleRandomBounce();
   },delay);
 }
-/* ================================
-   4DX STATE
-================================ */
-
-const default4DX = {
-  wig: "",
-  lags: [],
-  leads: []
-};
-
-// Load saat app mulai
-function load4DX() {
-  const saved = localStorage.getItem("fourdx");
-  return saved ? JSON.parse(saved) : { ...default4DX };
-}
-
-// Save manual
-function save4DX() {
-  localStorage.setItem("fourdx", JSON.stringify(app4DX));
-}
-
-let app4DX = load4DX();
-
-/* Render WIG, LAG, LEAD inputs */
-function render4DX() {
-  document.getElementById("wigInput").value = app4DX.wig || "";
-
-  const lagList = document.getElementById("lagList");
-  lagList.innerHTML = "";
-
-  app4DX.lags.forEach((text, index) => {
-    lagList.innerHTML += `
-      <div class="measure-item">
-        <input value="${text}" data-lag="${index}" />
-        <button onclick="removeLag(${index})">x</button>
-      </div>
-    `;
-  });
-
-  const leadList = document.getElementById("leadList");
-  leadList.innerHTML = "";
-
-  app4DX.leads.forEach((text, index) => {
-    leadList.innerHTML += `
-      <div class="measure-item">
-        <input value="${text}" data-lead="${index}" />
-        <button onclick="removeLead(${index})">x</button>
-      </div>
-    `;
-  });
-}
-
-/* Modify arrays */
-function addLag() {
-  if (app4DX.lags.length >= 3) return alert("Max 3 Lag Measures!");
-  app4DX.lags.push("");
-  render4DX();
-}
-
-function removeLag(idx) {
-  app4DX.lags.splice(idx, 1);
-  render4DX();
-}
-
-function addLead() {
-  if (app4DX.leads.length >= 4) return alert("Max 4 Lead Measures!");
-  app4DX.leads.push("");
-  render4DX();
-}
-
-function removeLead(idx) {
-  app4DX.leads.splice(idx, 1);
-  render4DX();
-}
-
-/* Save final */
-function save4DXState() {
-  app4DX.wig = document.getElementById("wigInput").value;
-
-  document.querySelectorAll("[data-lag]").forEach((el) => {
-    const index = el.dataset.lag;
-    app4DX.lags[index] = el.value;
-  });
-
-  document.querySelectorAll("[data-lead]").forEach((el) => {
-    const index = el.dataset.lead;
-    app4DX.leads[index] = el.value;
-  });
-
-  save4DX();
-  alert("4DX berhasil disimpan!");
-}
-
-/* INIT 4DX */
-document.getElementById("addLagBtn").onclick = addLag;
-document.getElementById("addLeadBtn").onclick = addLead;
-document.getElementById("save4dxBtn").onclick = save4DXState;
 
 /* INIT */
 document.addEventListener("DOMContentLoaded",()=>{
@@ -1549,7 +1455,6 @@ document.addEventListener("DOMContentLoaded",()=>{
   renderLearningHeatmap();
   renderSkillProgress();
   renderTop3Skills();
-  render4DX();
   renderProfile();
   scheduleRandomBounce();
 
