@@ -1523,6 +1523,161 @@ function updateFourdxStateFromInputs() {
   }
 }
 
+/* ---- Helper periode ---- */
+
+function getCurrentFourdxPeriod() {
+  const sel = document.getElementById("fourdxPeriodSelect");
+  if (!sel) return "last30";
+  return sel.value || "last30";
+}
+
+/* ---- Hitung summary bulanan per lead ---- */
+
+function computeFourdxMonthlyStats(periodKey) {
+  const leads = fourdxState.leads || [];
+  const stats = leads.map(name => ({
+    name: name || "",
+    red: 0,
+    yellow: 0,
+    green: 0,
+    total: 0
+  }));
+
+  if (!leads.length) {
+    return { stats, overall: { green: 0, total: 0 } };
+  }
+
+  const today = new Date();
+  let startDate, endDate;
+
+  if (periodKey === "month") {
+    // This month: dari tanggal 1 sampai hari ini
+    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  } else {
+    // Default: last 30 days (termasuk hari ini)
+    endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    startDate = new Date(endDate);
+    startDate.setDate(endDate.getDate() - 29);
+  }
+
+  // Normalisasi jam biar aman
+  startDate.setHours(0,0,0,0);
+  endDate.setHours(0,0,0,0);
+
+  let overallGreen = 0;
+  let overallTotal = 0;
+
+  Object.keys(fourdxDaily || {}).forEach(key => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return;
+    const [y,m,d] = key.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    dt.setHours(0,0,0,0);
+
+    if (dt < startDate || dt > endDate) return;
+
+    const dayStatuses = fourdxDaily[key] || [];
+    leads.forEach((_, idx) => {
+      const s = dayStatuses[idx];
+      if (s !== "red" && s !== "yellow" && s !== "green") return;
+      stats[idx].total += 1;
+      stats[idx][s] += 1;
+      overallTotal += 1;
+      if (s === "green") overallGreen += 1;
+    });
+  });
+
+  return {
+    stats,
+    overall: { green: overallGreen, total: overallTotal }
+  };
+}
+
+/* ---- Render Monthly Summary ---- */
+
+function renderFourdxMonthlySummary(periodKey) {
+  const overallEl = document.getElementById("fourdxMonthlyOverall");
+  const container = document.getElementById("fourdxMonthlySummary");
+  if (!overallEl || !container) return;
+
+  const leads = fourdxState.leads || [];
+  container.innerHTML = "";
+  overallEl.innerHTML = "";
+
+  if (!leads.length) {
+    overallEl.innerHTML = `
+      <div class="fourdx-summary-overall-emoji">🙂</div>
+      <div class="fourdx-summary-overall-text">
+        Set dulu Lead Measures untuk melihat progress bulanan.
+      </div>
+    `;
+    return;
+  }
+
+  const { stats, overall } = computeFourdxMonthlyStats(periodKey);
+  const ratio = overall.total > 0 ? overall.green / overall.total : 0;
+
+  let face = "🙂";
+  if (overall.total === 0) {
+    face = "😶";
+  } else if (ratio < 0.4) {
+    face = "😡";
+  } else if (ratio < 0.7) {
+    face = "😐";
+  } else {
+    face = "😄";
+  }
+
+  const ratioPercent = Math.round(ratio * 100);
+
+  overallEl.innerHTML = `
+    <div class="fourdx-summary-overall-emoji">${face}</div>
+    <div class="fourdx-summary-overall-text">
+      ${
+        overall.total === 0
+          ? "Belum ada data check-in untuk periode ini."
+          : `Overall green ratio: <strong>${ratioPercent}%</strong> di periode ini.`
+      }
+    </div>
+  `;
+
+  stats.forEach((s, idx) => {
+    if (!s.name) return;
+    const total = s.total;
+    const greenPct = total > 0 ? Math.round((s.green / total) * 100) : 0;
+
+    let wRed = 0, wYellow = 0, wGreen = 0;
+    if (total > 0) {
+      wRed = (s.red / total) * 100;
+      wYellow = (s.yellow / total) * 100;
+      wGreen = (s.green / total) * 100;
+    }
+
+    container.insertAdjacentHTML(
+      "beforeend",
+      `
+      <div class="fourdx-summary-row">
+        <div class="fourdx-summary-lead-name">
+          ${s.name}
+        </div>
+        <div class="fourdx-summary-bar">
+          <div class="fourdx-summary-seg-red" style="width:${wRed}%;"></div>
+          <div class="fourdx-summary-seg-yellow" style="width:${wYellow}%;"></div>
+          <div class="fourdx-summary-seg-green" style="width:${wGreen}%;"></div>
+        </div>
+        <div class="fourdx-summary-meta">
+          ${
+            total === 0
+              ? "Belum ada check-in untuk lead ini di periode ini."
+              : `Green ${s.green} hari · Yellow ${s.yellow} · Red ${s.red} — <strong>${greenPct}% green</strong>`
+          }
+        </div>
+      </div>
+      `
+    );
+  });
+}
+
 /* ---- Render utama tab 4DX ---- */
 
 function render4DX() {
@@ -1585,6 +1740,9 @@ function render4DX() {
 
   // Daily check-in untuk hari ini
   renderFourdxDailyToday();
+
+  // Monthly summary (pakai periode terpilih)
+  renderFourdxMonthlySummary(getCurrentFourdxPeriod());
 }
 
 /* ---- Render daily emoji (hari ini) ---- */
@@ -1713,7 +1871,7 @@ function save4DXFromUI() {
     .filter(Boolean);
 
   saveFourdxState();
-  render4DX(); // re-render supaya daily check ikut update
+  render4DX(); // re-render supaya daily & monthly ikut update
   alert("4DX berhasil disimpan!");
 }
 
@@ -1728,10 +1886,17 @@ function init4DX() {
   const addLeadBtn = document.getElementById("addLeadBtn");
   const save4dxBtn = document.getElementById("save4dxBtn");
   const fourdxTab = document.getElementById("fourdxTab");
+  const periodSelect = document.getElementById("fourdxPeriodSelect");
 
   if (addLagBtn) addLagBtn.addEventListener("click", addLagMeasure);
   if (addLeadBtn) addLeadBtn.addEventListener("click", addLeadMeasure);
   if (save4dxBtn) save4dxBtn.addEventListener("click", save4DXFromUI);
+
+  if (periodSelect) {
+    periodSelect.addEventListener("change", () => {
+      renderFourdxMonthlySummary(getCurrentFourdxPeriod());
+    });
+  }
 
   // Delegasi click di dalam tab 4DX
   if (fourdxTab) {
