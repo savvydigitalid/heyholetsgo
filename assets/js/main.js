@@ -1530,6 +1530,82 @@ function render4DX() {
   if (!wigInput || !lagList || !leadList) return; // tab belum ada
 
   wigInput.value = fourdxState.wig || "";
+// Render daily check-in untuk hari ini
+function renderFourdxDailyToday() {
+  const container = document.getElementById("leadDailyToday");
+  if (!container) return;
+
+  const leads = fourdxState.leads || [];
+  container.innerHTML = "";
+
+  if (!leads.length) {
+    container.textContent = "Buat Lead Measures dulu untuk mulai check-in harian.";
+    return;
+  // Setelah lag & lead dirender, render juga daily check-in
+  renderFourdxDailyToday();
+}
+  }
+function handleLeadEmojiClick(e) {
+  const target = e.target;
+  if (!target.classList.contains("lead-check-emoji")) return;
+
+  const rowEl = target.closest(".lead-check-row");
+  if (!rowEl) return;
+
+  const leadIndex = parseInt(rowEl.getAttribute("data-lead-index"), 10);
+  if (Number.isNaN(leadIndex)) return;
+
+  const status = target.getAttribute("data-status");
+  if (!status) return;
+
+  const todayKey = typeof getTodayKey === "function"
+    ? getTodayKey()
+    : new Date().toISOString().slice(0, 10);
+
+  const todayStatus = fourdxDaily[todayKey] || [];
+  todayStatus[leadIndex] = status;
+  fourdxDaily[todayKey] = todayStatus;
+  saveFourdxDaily();
+
+  // update UI: clear selected di row ini, lalu select yang baru
+  const allInRow = rowEl.querySelectorAll(".lead-check-emoji");
+  allInRow.forEach((el) => {
+    el.classList.remove("selected", "red", "yellow", "green");
+  });
+
+  if (status === "red") {
+    target.classList.add("selected", "red");
+  } else if (status === "yellow") {
+    target.classList.add("selected", "yellow");
+  } else if (status === "green") {
+    target.classList.add("selected", "green");
+  }
+}
+
+  const todayKey = typeof getTodayKey === "function"
+    ? getTodayKey()
+    : new Date().toISOString().slice(0, 10);
+
+  const todayStatus = fourdxDaily[todayKey] || [];
+
+  leads.forEach((leadName, index) => {
+    const status = todayStatus[index] || null;
+
+    container.insertAdjacentHTML(
+      "beforeend",
+      `
+      <div class="lead-check-row" data-lead-index="${index}">
+        <div class="lead-check-name">${leadName || `Lead ${index + 1}`}</div>
+        <div class="lead-check-emojis">
+          <div class="lead-check-emoji ${status === "red" ? "selected red" : ""}" data-status="red">😡</div>
+          <div class="lead-check-emoji ${status === "yellow" ? "selected yellow" : ""}" data-status="yellow">😐</div>
+          <div class="lead-check-emoji ${status === "green" ? "selected green" : ""}" data-status="green">😄</div>
+        </div>
+      </div>
+      `
+    );
+  });
+}
 
   // Render Lag Measures
   lagList.innerHTML = "";
@@ -1626,6 +1702,7 @@ function save4DXFromUI() {
 // Inisialisasi event listener 4DX
 function init4DX() {
   loadFourdxState();
+  loadFourdxDaily();
   render4DX();
 
   const addLagBtn = document.getElementById("addLagBtn");
@@ -1641,11 +1718,18 @@ function init4DX() {
   if (fourdxTab) {
     fourdxTab.addEventListener("click", (e) => {
       const target = e.target;
-      if (!target.classList.contains("measure-remove")) return;
-      const type = target.getAttribute("data-type");
-      const index = parseInt(target.getAttribute("data-index"), 10);
-      if (!Number.isNaN(index)) {
-        removeMeasure(type, index);
+      if (target.classList.contains("measure-remove")) {
+        const type = target.getAttribute("data-type");
+        const index = parseInt(target.getAttribute("data-index"), 10);
+        if (!Number.isNaN(index)) {
+          removeMeasure(type, index);
+        }
+        return;
+      }
+
+      // Klik emoji daily check-in
+      if (target.classList.contains("lead-check-emoji")) {
+        handleLeadEmojiClick(e);
       }
     });
   }
