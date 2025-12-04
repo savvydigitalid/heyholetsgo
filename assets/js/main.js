@@ -1446,17 +1446,21 @@ function scheduleRandomBounce(){
 ================================ */
 
 const FOURDX_STORAGE_KEY = "fourdx_v1";
+const FOURDX_DAILY_KEY = "fourdx_daily_v1";
 
+// Struktur utama 4DX
 let fourdxState = {
   wig: "",
-  lags: [],   // array of strings
-  leads: []   // array of strings
+  lags: [],   // array string
+  leads: []   // array string
 };
-const FOURDX_DAILY_KEY = "fourdx_daily_v1";
-// Struktur: { "YYYY-MM-DD": ["green","yellow","red", ...] }
+
+// Struktur check-in harian:
+// { "YYYY-MM-DD": ["green","yellow","red", ...] }
 let fourdxDaily = {};
 
-// Load dari localStorage
+/* ---- Load / Save ke localStorage ---- */
+
 function loadFourdxState() {
   try {
     const raw = localStorage.getItem(FOURDX_STORAGE_KEY);
@@ -1472,7 +1476,6 @@ function loadFourdxState() {
   }
 }
 
-// Save ke localStorage
 function saveFourdxState() {
   try {
     localStorage.setItem(FOURDX_STORAGE_KEY, JSON.stringify(fourdxState));
@@ -1480,6 +1483,7 @@ function saveFourdxState() {
     console.error("Error save 4DX:", e);
   }
 }
+
 function loadFourdxDaily() {
   try {
     const raw = localStorage.getItem(FOURDX_DAILY_KEY);
@@ -1501,7 +1505,8 @@ function saveFourdxDaily() {
   }
 }
 
-// Update fourdxState dari isi input di UI (tanpa save ke localStorage)
+/* ---- Helper: ambil isi input tanpa langsung save ---- */
+
 function updateFourdxStateFromInputs() {
   const wigInput = document.getElementById("wigInput");
   const lagInputs = document.querySelectorAll('#lagList input[data-type="lag"]');
@@ -1510,27 +1515,80 @@ function updateFourdxStateFromInputs() {
   if (wigInput) {
     fourdxState.wig = wigInput.value;
   }
-
-  // hanya update kalau memang ada input-nya
   if (lagInputs.length > 0) {
-    fourdxState.lags = Array.from(lagInputs).map((el) => el.value);
+    fourdxState.lags = Array.from(lagInputs).map(el => el.value);
   }
-
   if (leadInputs.length > 0) {
-    fourdxState.leads = Array.from(leadInputs).map((el) => el.value);
+    fourdxState.leads = Array.from(leadInputs).map(el => el.value);
   }
 }
 
-// Render isi WIG, Lag, Lead ke tab 4DX
+/* ---- Render utama tab 4DX ---- */
+
 function render4DX() {
   const wigInput = document.getElementById("wigInput");
   const lagList = document.getElementById("lagList");
   const leadList = document.getElementById("leadList");
 
-  if (!wigInput || !lagList || !leadList) return; // tab belum ada
+  if (!wigInput || !lagList || !leadList) return; // tab belum kebentuk
 
+  // WIG
   wigInput.value = fourdxState.wig || "";
-// Render daily check-in untuk hari ini
+
+  // Lag Measures
+  lagList.innerHTML = "";
+  if (!fourdxState.lags.length) {
+    lagList.textContent = "Belum ada Lag Measure.";
+  } else {
+    fourdxState.lags.forEach((text, index) => {
+      lagList.insertAdjacentHTML(
+        "beforeend",
+        `
+        <div class="measure-item">
+          <input type="text"
+                 value="${text.replace(/"/g, "&quot;")}"
+                 data-type="lag"
+                 data-index="${index}" />
+          <button type="button"
+                  class="measure-remove"
+                  data-type="lag"
+                  data-index="${index}">✕</button>
+        </div>
+        `
+      );
+    });
+  }
+
+  // Lead Measures
+  leadList.innerHTML = "";
+  if (!fourdxState.leads.length) {
+    leadList.textContent = "Belum ada Lead Measure.";
+  } else {
+    fourdxState.leads.forEach((text, index) => {
+      leadList.insertAdjacentHTML(
+        "beforeend",
+        `
+        <div class="measure-item">
+          <input type="text"
+                 value="${text.replace(/"/g, "&quot;")}"
+                 data-type="lead"
+                 data-index="${index}" />
+          <button type="button"
+                  class="measure-remove"
+                  data-type="lead"
+                  data-index="${index}">✕</button>
+        </div>
+        `
+      );
+    });
+  }
+
+  // Daily check-in untuk hari ini
+  renderFourdxDailyToday();
+}
+
+/* ---- Render daily emoji (hari ini) ---- */
+
 function renderFourdxDailyToday() {
   const container = document.getElementById("leadDailyToday");
   if (!container) return;
@@ -1541,46 +1599,7 @@ function renderFourdxDailyToday() {
   if (!leads.length) {
     container.textContent = "Buat Lead Measures dulu untuk mulai check-in harian.";
     return;
-  // Setelah lag & lead dirender, render juga daily check-in
-  renderFourdxDailyToday();
-}
   }
-function handleLeadEmojiClick(e) {
-  const target = e.target;
-  if (!target.classList.contains("lead-check-emoji")) return;
-
-  const rowEl = target.closest(".lead-check-row");
-  if (!rowEl) return;
-
-  const leadIndex = parseInt(rowEl.getAttribute("data-lead-index"), 10);
-  if (Number.isNaN(leadIndex)) return;
-
-  const status = target.getAttribute("data-status");
-  if (!status) return;
-
-  const todayKey = typeof getTodayKey === "function"
-    ? getTodayKey()
-    : new Date().toISOString().slice(0, 10);
-
-  const todayStatus = fourdxDaily[todayKey] || [];
-  todayStatus[leadIndex] = status;
-  fourdxDaily[todayKey] = todayStatus;
-  saveFourdxDaily();
-
-  // update UI: clear selected di row ini, lalu select yang baru
-  const allInRow = rowEl.querySelectorAll(".lead-check-emoji");
-  allInRow.forEach((el) => {
-    el.classList.remove("selected", "red", "yellow", "green");
-  });
-
-  if (status === "red") {
-    target.classList.add("selected", "red");
-  } else if (status === "yellow") {
-    target.classList.add("selected", "yellow");
-  } else if (status === "green") {
-    target.classList.add("selected", "green");
-  }
-}
 
   const todayKey = typeof getTodayKey === "function"
     ? getTodayKey()
@@ -1607,48 +1626,47 @@ function handleLeadEmojiClick(e) {
   });
 }
 
-  // Render Lag Measures
-  lagList.innerHTML = "";
-  if (fourdxState.lags.length === 0) {
-    lagList.textContent = "Belum ada Lag Measure.";
-  } else {
-    fourdxState.lags.forEach((text, index) => {
-      lagList.insertAdjacentHTML(
-        "beforeend",
-        `
-        <div class="measure-item">
-          <input type="text" value="${text.replace(/"/g, "&quot;")}" data-type="lag" data-index="${index}" />
-          <button type="button" class="measure-remove" data-type="lag" data-index="${index}">✕</button>
-        </div>
-        `
-      );
-    });
-  }
+/* ---- Klik emoji: set status harian ---- */
 
-  // Render Lead Measures
-  leadList.innerHTML = "";
-  if (fourdxState.leads.length === 0) {
-    leadList.textContent = "Belum ada Lead Measure.";
-  } else {
-    fourdxState.leads.forEach((text, index) => {
-      leadList.insertAdjacentHTML(
-        "beforeend",
-        `
-        <div class="measure-item">
-          <input type="text" value="${text.replace(/"/g, "&quot;")}" data-type="lead" data-index="${index}" />
-          <button type="button" class="measure-remove" data-type="lead" data-index="${index}">✕</button>
-        </div>
-        `
-      );
-    });
+function handleLeadEmojiClick(target) {
+  const rowEl = target.closest(".lead-check-row");
+  if (!rowEl) return;
+
+  const leadIndex = parseInt(rowEl.getAttribute("data-lead-index"), 10);
+  if (Number.isNaN(leadIndex)) return;
+
+  const status = target.getAttribute("data-status");
+  if (!status) return;
+
+  const todayKey = typeof getTodayKey === "function"
+    ? getTodayKey()
+    : new Date().toISOString().slice(0, 10);
+
+  const todayStatus = fourdxDaily[todayKey] || [];
+  todayStatus[leadIndex] = status;
+  fourdxDaily[todayKey] = todayStatus;
+  saveFourdxDaily();
+
+  // Bersihin highlight semua emoji di row ini
+  const allInRow = rowEl.querySelectorAll(".lead-check-emoji");
+  allInRow.forEach(el => {
+    el.classList.remove("selected", "red", "yellow", "green");
+  });
+
+  // Tambahin class ke yang dipilih
+  if (status === "red") {
+    target.classList.add("selected", "red");
+  } else if (status === "yellow") {
+    target.classList.add("selected", "yellow");
+  } else if (status === "green") {
+    target.classList.add("selected", "green");
   }
 }
 
-// Tambah Lag baru (max 3)
-function addLagMeasure() {
-  // simpan dulu isi input sebelum di-render ulang
-  updateFourdxStateFromInputs();
+/* ---- Tambah / Hapus Lag & Lead ---- */
 
+function addLagMeasure() {
+  updateFourdxStateFromInputs();
   if (fourdxState.lags.length >= 3) {
     alert("Maksimum 3 Lag Measures.");
     return;
@@ -1657,11 +1675,8 @@ function addLagMeasure() {
   render4DX();
 }
 
-// Tambah Lead baru (max 4)
 function addLeadMeasure() {
-  // simpan dulu isi input sebelum di-render ulang
   updateFourdxStateFromInputs();
-
   if (fourdxState.leads.length >= 4) {
     alert("Maksimum 4 Lead Measures.");
     return;
@@ -1670,11 +1685,8 @@ function addLeadMeasure() {
   render4DX();
 }
 
-// Hapus Lag / Lead
 function removeMeasure(type, index) {
-  // simpan dulu isi input sebelum di-render ulang
   updateFourdxStateFromInputs();
-
   if (type === "lag") {
     fourdxState.lags.splice(index, 1);
   } else if (type === "lead") {
@@ -1683,7 +1695,8 @@ function removeMeasure(type, index) {
   render4DX();
 }
 
-// Simpan dari input ke state + localStorage
+/* ---- Simpan (WIG + Lag + Lead) ---- */
+
 function save4DXFromUI() {
   const wigInput = document.getElementById("wigInput");
   const lagInputs = document.querySelectorAll('#lagList input[data-type="lag"]');
@@ -1692,14 +1705,20 @@ function save4DXFromUI() {
   if (!wigInput) return;
 
   fourdxState.wig = wigInput.value.trim();
-  fourdxState.lags = Array.from(lagInputs).map((el) => el.value.trim()).filter(Boolean);
-  fourdxState.leads = Array.from(leadInputs).map((el) => el.value.trim()).filter(Boolean);
+  fourdxState.lags = Array.from(lagInputs)
+    .map(el => el.value.trim())
+    .filter(Boolean);
+  fourdxState.leads = Array.from(leadInputs)
+    .map(el => el.value.trim())
+    .filter(Boolean);
 
   saveFourdxState();
+  render4DX(); // re-render supaya daily check ikut update
   alert("4DX berhasil disimpan!");
 }
 
-// Inisialisasi event listener 4DX
+/* ---- Init 4DX ---- */
+
 function init4DX() {
   loadFourdxState();
   loadFourdxDaily();
@@ -1714,10 +1733,12 @@ function init4DX() {
   if (addLeadBtn) addLeadBtn.addEventListener("click", addLeadMeasure);
   if (save4dxBtn) save4dxBtn.addEventListener("click", save4DXFromUI);
 
-  // Delegasi untuk tombol hapus (✕)
+  // Delegasi click di dalam tab 4DX
   if (fourdxTab) {
     fourdxTab.addEventListener("click", (e) => {
       const target = e.target;
+
+      // Tombol hapus Lag / Lead
       if (target.classList.contains("measure-remove")) {
         const type = target.getAttribute("data-type");
         const index = parseInt(target.getAttribute("data-index"), 10);
@@ -1727,14 +1748,13 @@ function init4DX() {
         return;
       }
 
-      // Klik emoji daily check-in
+      // Emoji check-in
       if (target.classList.contains("lead-check-emoji")) {
-        handleLeadEmojiClick(e);
+        handleLeadEmojiClick(target);
       }
     });
   }
 }
-
 
 /* INIT */
 document.addEventListener("DOMContentLoaded",()=>{
