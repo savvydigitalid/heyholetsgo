@@ -1452,6 +1452,9 @@ let fourdxState = {
   lags: [],   // array of strings
   leads: []   // array of strings
 };
+const FOURDX_DAILY_KEY = "fourdx_daily_v1";
+// Struktur: { "YYYY-MM-DD": ["green","yellow","red", ...] }
+let fourdxDaily = {};
 
 // Load dari localStorage
 function loadFourdxState() {
@@ -1475,6 +1478,26 @@ function saveFourdxState() {
     localStorage.setItem(FOURDX_STORAGE_KEY, JSON.stringify(fourdxState));
   } catch (e) {
     console.error("Error save 4DX:", e);
+  }
+}
+function loadFourdxDaily() {
+  try {
+    const raw = localStorage.getItem(FOURDX_DAILY_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") {
+      fourdxDaily = parsed;
+    }
+  } catch (e) {
+    console.error("Error load 4DX daily:", e);
+  }
+}
+
+function saveFourdxDaily() {
+  try {
+    localStorage.setItem(FOURDX_DAILY_KEY, JSON.stringify(fourdxDaily));
+  } catch (e) {
+    console.error("Error save 4DX daily:", e);
   }
 }
 
