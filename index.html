@@ -320,7 +320,15 @@
         Tombol ini akan mengirim ringkasan 7 hari terakhir (task & learning) ke Google Sheet pusat
         yang bisa diakses manager/HR.
       </p>
-      <button id="syncWeeklyBtn" type="button">Sync Weekly to Google Sheet</button>
+     <button
+  id="syncWeeklyBtn"
+  type="button"
+  onclick="syncWeeklyToGoogleSheet()"
+>
+  Sync Weekly to Google Sheet
+</button>
+<span id="syncWeeklyStatus" class="sync-status"></span>
+
     </div>
   </section>
 
