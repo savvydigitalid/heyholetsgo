@@ -426,4 +426,11 @@
   color: var(--text);
   font-size: 12px;
 }
+.fourdx-coach-text {
+  background: var(--bg-alt);
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.35;
+}
 
