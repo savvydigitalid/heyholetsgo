@@ -1452,7 +1452,111 @@ document.addEventListener("DOMContentLoaded",()=>{
   scheduleRandomBounce();
 
   const syncBtn = document.getElementById("syncWeeklyBtn");
-  if (syncBtn) {
-    syncBtn.addEventListener("click", syncWeeklyToGoogleSheet);
+  // --- Helper: ambil 7 hari terakhir yang punya data ---
+function collectLast7DaysRows() {
+  const rows = [];
+  const today = new Date();
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const key = d.toISOString().slice(0, 10); // YYYY-MM-DD
+
+    // Cek apakah di hari ini ada data di state
+    const dayState = appState.days && appState.days[key];
+    if (!dayState) continue;
+
+    // Pakai helper yang sudah ada di app:
+    const taskStats = computeTaskStatsForDate(key);
+    const learningStats = computeLearningStatsForDate(key);
+
+    rows.push({
+      date: key,
+      taskPercent: taskStats?.percent || 0,
+      taskXp: taskStats?.totalXp || 0,
+      taskDone: taskStats?.done || 0,
+      taskProgress: taskStats?.progress || 0,
+      taskBlocked: taskStats?.blocked || 0,
+      learningXp: learningStats?.totalXp || 0,
+      learningEntries: learningStats?.entries || 0,
+    });
   }
-});
+
+  // Biar urut dari tanggal paling lama → terbaru
+  rows.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+
+  return rows;
+}
+
+// --- Event listener tombol Sync Weekly ---
+function setupWeeklySync() {
+  const syncBtn = document.getElementById("syncWeeklyBtn");
+  const statusEl = document.getElementById("syncWeeklyStatus");
+
+  if (!syncBtn || !statusEl) return;
+
+  syncBtn.addEventListener("click", async () => {
+    if (!SHEET_SYNC_URL) {
+      alert("URL Google Sheet belum diset di kode (SHEET_SYNC_URL).");
+      return;
+    }
+
+    // Biar user tau lagi ngirim
+    syncBtn.disabled = true;
+    statusEl.textContent = "Mengirim data ke Google Sheet...";
+    statusEl.style.color = "#6b7280";
+
+    try {
+      const rows = collectLast7DaysRows();
+      if (!rows.length) {
+        statusEl.textContent = "Tidak ada data 7 hari terakhir untuk dikirim.";
+        syncBtn.disabled = false;
+        return;
+      }
+
+      const profile = appState.profile || {};
+      const userName = profile.name || "";
+      const position = profile.position || "";
+
+      const weekRange = `${rows[0].date} – ${rows[rows.length - 1].date}`;
+
+      const res = await fetch(SHEET_SYNC_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userName,
+          position,
+          weekRange,
+          rows,
+        }),
+      });
+
+      let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        console.error("Gagal parse JSON dari Apps Script:", e);
+        statusEl.textContent = "Error: response dari Google Sheet tidak valid.";
+        statusEl.style.color = "#b91c1c";
+        syncBtn.disabled = false;
+        return;
+      }
+
+      if (data.status === "ok") {
+        statusEl.textContent = `Berhasil kirim ${data.inserted || rows.length} baris ke Google Sheet.`;
+        statusEl.style.color = "#16a34a";
+      } else {
+        console.error("Apps Script error:", data);
+        statusEl.textContent = "Terjadi error saat mengirim data ke Google Sheet.";
+        statusEl.style.color = "#b91c1c";
+      }
+    } catch (err) {
+      console.error("Fetch error:", err);
+      statusEl.textContent = "Terjadi error saat mengirim data ke Google Sheet.";
+      statusEl.style.color = "#b91c1c";
+    } finally {
+      syncBtn.disabled = false;
+    }
+  });
+}
+
