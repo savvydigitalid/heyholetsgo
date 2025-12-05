@@ -1641,7 +1641,8 @@ function renderFourdxMonthlySummary(periodKey) {
     </div>
   `;
 
-  stats.forEach((s, idx) => {
+  // Render per-lead rows
+  stats.forEach((s) => {
     if (!s.name) return;
     const total = s.total;
     const greenPct = total > 0 ? Math.round((s.green / total) * 100) : 0;
@@ -1653,6 +1654,9 @@ function renderFourdxMonthlySummary(periodKey) {
       wGreen = (s.green / total) * 100;
     }
 
+    const glowClass =
+      total > 0 && greenPct >= 70 ? " glow-green" : "";
+
     container.insertAdjacentHTML(
       "beforeend",
       `
@@ -1660,10 +1664,10 @@ function renderFourdxMonthlySummary(periodKey) {
         <div class="fourdx-summary-lead-name">
           ${s.name}
         </div>
-        <div class="fourdx-summary-bar">
-          <div class="fourdx-summary-seg-red" style="width:${wRed}%;"></div>
-          <div class="fourdx-summary-seg-yellow" style="width:${wYellow}%;"></div>
-          <div class="fourdx-summary-seg-green" style="width:${wGreen}%;"></div>
+        <div class="fourdx-summary-bar${glowClass}">
+          <div class="fourdx-summary-seg-red" data-target-width="${wRed}"></div>
+          <div class="fourdx-summary-seg-yellow" data-target-width="${wYellow}"></div>
+          <div class="fourdx-summary-seg-green" data-target-width="${wGreen}"></div>
         </div>
         <div class="fourdx-summary-meta">
           ${
@@ -1676,7 +1680,29 @@ function renderFourdxMonthlySummary(periodKey) {
       `
     );
   });
+
+  // 🔋 Animasi "charge up" dari 0 → target width
+  const bars = container.querySelectorAll(".fourdx-summary-bar");
+  bars.forEach((bar) => {
+    const segs = bar.querySelectorAll("[data-target-width]");
+
+    // Set awal 0%
+    segs.forEach((seg) => {
+      seg.style.width = "0%";
+    });
+
+    // Next frame → isi ke target (biar transition kepicu)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        segs.forEach((seg) => {
+          const target = parseFloat(seg.getAttribute("data-target-width") || "0");
+          seg.style.width = `${target}%`;
+        });
+      });
+    });
+  });
 }
+
 
 /* ---- Render utama tab 4DX ---- */
 
