@@ -1595,6 +1595,8 @@ function computeFourdxMonthlyStats(periodKey) {
 
 /* ---- Render Monthly Summary ---- */
 
+/* ---- Render Monthly Summary ---- */
+
 function renderFourdxMonthlySummary(periodKey) {
   const overallEl = document.getElementById("fourdxMonthlyOverall");
   const container = document.getElementById("fourdxMonthlySummary");
@@ -1611,6 +1613,11 @@ function renderFourdxMonthlySummary(periodKey) {
         Set dulu Lead Measures untuk melihat progress bulanan.
       </div>
     `;
+    const coachEl = document.getElementById("fourdxCoachText");
+    if (coachEl) {
+      coachEl.textContent =
+        "Ho-Ho: Belum ada Lead Measure. Set dulu 1–4 lead utama sebelum mulai check-in harian.";
+    }
     return;
   }
 
@@ -1630,6 +1637,7 @@ function renderFourdxMonthlySummary(periodKey) {
 
   const ratioPercent = Math.round(ratio * 100);
 
+  // Overall summary (emoji + text)
   overallEl.innerHTML = `
     <div class="fourdx-summary-overall-emoji">${face}</div>
     <div class="fourdx-summary-overall-text">
@@ -1640,103 +1648,109 @@ function renderFourdxMonthlySummary(periodKey) {
       }
     </div>
   `;
-// --- HO-HO COACHING TEXT ---
-const coachEl = document.getElementById("fourdxCoachText");
-if (coachEl) {
-  if (overall.total === 0) {
-    coachEl.textContent = "Ho-Ho: Belum ada data untuk analisis, coba mulai check-in harian dulu ya!";
-  } else if (ratio < 0.4) {
-    coachEl.textContent =
-      "Ho-Ho: Banyak hari merah nih. Pilih 1 lead paling penting dan fokus push itu minggu depan! 🔥";
-  } else if (ratio < 0.7) {
-    coachEl.textContent =
-      "Ho-Ho: Lumayan! Masih banyak kuning. Coba tentuin 1 hari khusus buat 'push day'. ⚡";
-  } else {
-    coachEl.textContent =
-      "Ho-Ho: Gokil! Disiplin lo lagi keren 😄🔥 Pertahankan streak bulan ini!";
-  }
-}
 
-  // Render per-lead rows
-  stats.forEach((s) => {
+  // --- HO-HO COACHING TEXT ---
+  const coachEl = document.getElementById("fourdxCoachText");
+  if (coachEl) {
+    if (overall.total === 0) {
+      coachEl.textContent =
+        "Ho-Ho: Belum ada data untuk analisis, coba mulai check-in harian dulu ya!";
+    } else if (ratio < 0.4) {
+      coachEl.textContent =
+        "Ho-Ho: Banyak hari merah nih. Pilih 1 lead paling penting dan fokus push itu minggu depan! 🔥";
+    } else if (ratio < 0.7) {
+      coachEl.textContent =
+        "Ho-Ho: Lumayan! Masih banyak kuning. Coba tentuin 1 hari khusus buat 'push day'. ⚡";
+    } else {
+      coachEl.textContent =
+        "Ho-Ho: Gokil! Disiplin lo lagi keren 😄🔥 Pertahankan streak bulan ini!";
+    }
+  }
+
+  // Reset container sebelum render rows
+  container.innerHTML = "";
+
+  // Render per-lead rows + streak + badge
+  stats.forEach((s, index) => {
     if (!s.name) return;
+
     const total = s.total;
     const greenPct = total > 0 ? Math.round((s.green / total) * 100) : 0;
 
-    let wRed = 0, wYellow = 0, wGreen = 0;
+    let wRed = 0,
+      wYellow = 0,
+      wGreen = 0;
     if (total > 0) {
       wRed = (s.red / total) * 100;
       wYellow = (s.yellow / total) * 100;
       wGreen = (s.green / total) * 100;
     }
 
-    const glowClass =
-      total > 0 && greenPct >= 70 ? " glow-green" : "";
+    const glowClass = total > 0 && greenPct >= 70 ? " glow-green" : "";
 
-// --- Hitung streak untuk lead ini ---
-let streak = 0;
-const today = new Date();
-const leadsCount = fourdxState.leads.length;
+    // --- Hitung streak green ke belakang (max 60 hari) ---
+    let streak = 0;
+    const today = new Date();
 
-for (let i = 0; i < 60; i++) { 
-  const dt = new Date(today);
-  dt.setDate(today.getDate() - i);
-  const key = dt.toISOString().slice(0, 10);
+    for (let i = 0; i < 60; i++) {
+      const dt = new Date(today);
+      dt.setDate(today.getDate() - i);
+      const key = dt.toISOString().slice(0, 10);
 
-  const daily = fourdxDaily[key];
-  if (!daily || !daily[index]) break;
-  if (daily[index] !== "green") break;
+      const daily = fourdxDaily[key];
+      if (!daily || !daily[index]) break;
+      if (daily[index] !== "green") break;
 
-  streak++;
-}
+      streak++;
+    }
 
-// Badge untuk konsistensi
-let badge = "";
-if (greenPct >= 80) badge = "🔥 Excellent discipline";
-else if (greenPct >= 60) badge = "⚡ Solid consistency";
-else if (greenPct >= 40) badge = "🙂 Oke, masih bisa naik";
-else badge = "😟 Needs focus";
+    // Badge konsistensi
+    let badge = "";
+    if (greenPct >= 80) badge = "🔥 Excellent discipline";
+    else if (greenPct >= 60) badge = "⚡ Solid consistency";
+    else if (greenPct >= 40) badge = "🙂 Oke, masih bisa naik";
+    else badge = "😟 Needs focus";
 
-container.insertAdjacentHTML(
-  "beforeend",
-  `
-  <div class="fourdx-summary-row">
-    <div class="fourdx-summary-lead-name">${s.name}</div>
+    container.insertAdjacentHTML(
+      "beforeend",
+      `
+      <div class="fourdx-summary-row">
+        <div class="fourdx-summary-lead-name">${s.name}</div>
 
-    <div class="fourdx-summary-bar${glowClass}">
-      <div class="fourdx-summary-seg-red" data-target-width="${wRed}"></div>
-      <div class="fourdx-summary-seg-yellow" data-target-width="${wYellow}"></div>
-      <div class="fourdx-summary-seg-green" data-target-width="${wGreen}"></div>
-    </div>
+        <div class="fourdx-summary-bar${glowClass}">
+          <div class="fourdx-summary-seg-red" data-target-width="${wRed}"></div>
+          <div class="fourdx-summary-seg-yellow" data-target-width="${wYellow}"></div>
+          <div class="fourdx-summary-seg-green" data-target-width="${wGreen}"></div>
+        </div>
 
-    <div class="fourdx-summary-meta">
-      ${
-        total === 0
-          ? "Belum ada check-in."
-          : `Green ${s.green} hari · Yellow ${s.yellow} · Red ${s.red} — <strong>${greenPct}% green</strong>`
-      }
-    </div>
+        <div class="fourdx-summary-meta">
+          ${
+            total === 0
+              ? "Belum ada check-in."
+              : `Green ${s.green} hari · Yellow ${s.yellow} · Red ${s.red} — <strong>${greenPct}% green</strong>`
+          }
+        </div>
 
-    <div class="fourdx-summary-meta" style="margin-top:4px;">
-      🔥 Streak: <strong>${streak} hari</strong><br>
-      🎯 ${badge}
-    </div>
-  </div>
-  `
-);
+        <div class="fourdx-summary-meta" style="margin-top:4px;">
+          🔥 Streak: <strong>${streak} hari</strong><br>
+          🎯 ${badge}
+        </div>
+      </div>
+      `
+    );
+  });
 
-
-  // 🔋 Animasi "charge up" dari 0 → target width
+  // 🔋 Animasi "charge up" bar hijau/kuning/merah
   const bars = container.querySelectorAll(".fourdx-summary-bar");
   bars.forEach((bar) => {
     const segs = bar.querySelectorAll("[data-target-width]");
 
-    // Set awal 0%
+    // Set awal ke 0%
     segs.forEach((seg) => {
       seg.style.width = "0%";
     });
 
-    // Next frame → isi ke target (biar transition kepicu)
+    // Next frame → isi ke target biar transition kepicu
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         segs.forEach((seg) => {
@@ -1747,7 +1761,6 @@ container.insertAdjacentHTML(
     });
   });
 }
-
 
 /* ---- Render utama tab 4DX ---- */
 
