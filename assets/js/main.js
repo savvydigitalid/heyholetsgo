@@ -1451,36 +1451,6 @@ document.addEventListener("DOMContentLoaded",()=>{
   renderProfile();
   scheduleRandomBounce();
 
-  const syncBtn = document.getElementById("syncWeeklyBtn");
-  // --- Helper: ambil 7 hari terakhir yang punya data ---
-function collectLast7DaysRows() {
-  const rows = [];
-  const today = new Date();
-
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    const key = d.toISOString().slice(0, 10); // YYYY-MM-DD
-
-    // Cek apakah di hari ini ada data di state
-    const dayState = appState.days && appState.days[key];
-    if (!dayState) continue;
-
-    // Pakai helper yang sudah ada di app:
-    const taskStats = computeTaskStatsForDate(key);
-    const learningStats = computeLearningStatsForDate(key);
-
-    rows.push({
-      date: key,
-      taskPercent: taskStats?.percent || 0,
-      taskXp: taskStats?.totalXp || 0,
-      taskDone: taskStats?.done || 0,
-      taskProgress: taskStats?.progress || 0,
-      taskBlocked: taskStats?.blocked || 0,
-      learningXp: learningStats?.totalXp || 0,
-      learningEntries: learningStats?.entries || 0,
-    });
-  }
 
   // Biar urut dari tanggal paling lama → terbaru
   rows.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
