@@ -1403,130 +1403,83 @@ async function exportPDF() {
 exportPdfBtn.addEventListener("click", exportPDF);
 
 /* HO-HO MOOD & BOUNCE */
-function updateHoHoMood(){
-  const todayKey=getTodayKey();
-  const tStats=computeTaskStatsForDate(todayKey);
-  const lStats=computeLearningStatsForDate(todayKey);
+function updateHoHoMood() {
+  const todayKey = getTodayKey();
+  const tStats = computeTaskStatsForDate(todayKey);
+  const lStats = computeLearningStatsForDate(todayKey);
 
-  if(tStats.percent>=80) hohoTaskFloat.src="hoho-levelup.png";
-  else if(tStats.percent>=40) hohoTaskFloat.src="hoho-pumped.png";
-  else if(tStats.percent>0) hohoTaskFloat.src="hoho-sad.png";
-  else hohoTaskFloat.src="hoho-happy.png";
+  // Ho-Ho di tab Tasks
+  if (tStats.percent >= 80) hohoTaskFloat.src = "hoho-levelup.png";
+  else if (tStats.percent >= 40) hohoTaskFloat.src = "hoho-pumped.png";
+  else if (tStats.percent > 0) hohoTaskFloat.src = "hoho-sad.png";
+  else hohoTaskFloat.src = "hoho-happy.png";
 
-  if(lStats.percent>=80) hohoLearningFloat.src="hoho-levelup.png";
-  else if(lStats.percent>=40) hohoLearningFloat.src="hoho-book.png";
-  else if(lStats.percent>0) hohoLearningFloat.src="hoho-thinking.png";
-  else hohoLearningFloat.src="hoho-book.png";
+  // Ho-Ho di tab Learning
+  if (lStats.percent >= 80) hohoLearningFloat.src = "hoho-levelup.png";
+  else if (lStats.percent >= 40) hohoLearningFloat.src = "hoho-book.png";
+  else if (lStats.percent > 0) hohoLearningFloat.src = "hoho-thinking.png";
+  else hohoLearningFloat.src = "hoho-book.png";
 }
-function bounceOnce(el){
-  if(!el) return;
-  el.style.animation="none";
-  void el.offsetWidth;
-  el.style.animation="hohoBounce 0.6s cubic-bezier(0.34,1.56,0.64,1)";
+
+function bounceOnce(el) {
+  if (!el) return;
+  el.style.animation = "none";
+  void el.offsetWidth; // force reflow
+  el.style.animation = "hohoBounce 0.6s cubic-bezier(0.34,1.56,0.64,1)";
 }
-hohoTaskFloat.addEventListener("click",()=>bounceOnce(hohoTaskFloat));
-hohoLearningFloat.addEventListener("click",()=>bounceOnce(hohoLearningFloat));
-function scheduleRandomBounce(){
-  const delay=3500+Math.random()*2500;
-  setTimeout(()=>{
-    if(!hohoTaskFloat.classList.contains("hidden")) bounceOnce(hohoTaskFloat);
-    if(!hohoLearningFloat.classList.contains("hidden")) bounceOnce(hohoLearningFloat);
+
+hohoTaskFloat.addEventListener("click", () => bounceOnce(hohoTaskFloat));
+hohoLearningFloat.addEventListener("click", () => bounceOnce(hohoLearningFloat));
+
+function scheduleRandomBounce() {
+  const delay = 3500 + Math.random() * 2500;
+  setTimeout(() => {
+    if (!hohoTaskFloat.classList.contains("hidden")) {
+      bounceOnce(hohoTaskFloat);
+    }
+    if (!hohoLearningFloat.classList.contains("hidden")) {
+      bounceOnce(hohoLearningFloat);
+    }
     scheduleRandomBounce();
-  },delay);
+  }, delay);
 }
 
 /* INIT */
-document.addEventListener("DOMContentLoaded",()=>{
+document.addEventListener("DOMContentLoaded", () => {
+  // Load state awal
   loadState();
+
+  // Theme
   applyTheme(appState.theme || "light");
-  // 🔥 HOTFIX: matiin auto carry-over dulu biar refresh gak bikin aneh
-  // carryOverFromYesterday();
+
+  // Default buka tab Tasks
   showTab("tasksTab");
+
+  // Render Tasks & Learning hari ini
   renderTasksForToday();
   renderTaskHeatmap();
   renderLearningForToday();
   renderLearningHeatmap();
+
+  // Skill progress & top 3
   renderSkillProgress();
   renderTop3Skills();
+
+  // Profile
   renderProfile();
+
+  // Ho-Ho idle bounce
   scheduleRandomBounce();
 
-
-  // Biar urut dari tanggal paling lama → terbaru
-  rows.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
-
-  return rows;
-}
-
-// --- Event listener tombol Sync Weekly ---
-function setupWeeklySync() {
+  // 🔗 Hubungkan tombol Sync Weekly → fungsi syncWeeklyToGoogleSheet()
   const syncBtn = document.getElementById("syncWeeklyBtn");
-  const statusEl = document.getElementById("syncWeeklyStatus");
+  if (syncBtn) {
+    syncBtn.addEventListener("click", () => {
+      // Hindari double-klik terlalu cepat
+      if (syncBtn.disabled) return;
+      syncWeeklyToGoogleSheet();
+    });
+  }
+});
 
-  if (!syncBtn || !statusEl) return;
-
-  syncBtn.addEventListener("click", async () => {
-    if (!SHEET_SYNC_URL) {
-      alert("URL Google Sheet belum diset di kode (SHEET_SYNC_URL).");
-      return;
-    }
-
-    // Biar user tau lagi ngirim
-    syncBtn.disabled = true;
-    statusEl.textContent = "Mengirim data ke Google Sheet...";
-    statusEl.style.color = "#6b7280";
-
-    try {
-      const rows = collectLast7DaysRows();
-      if (!rows.length) {
-        statusEl.textContent = "Tidak ada data 7 hari terakhir untuk dikirim.";
-        syncBtn.disabled = false;
-        return;
-      }
-
-      const profile = appState.profile || {};
-      const userName = profile.name || "";
-      const position = profile.position || "";
-
-      const weekRange = `${rows[0].date} – ${rows[rows.length - 1].date}`;
-
-      const res = await fetch(SHEET_SYNC_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userName,
-          position,
-          weekRange,
-          rows,
-        }),
-      });
-
-      let data;
-      try {
-        data = await res.json();
-      } catch (e) {
-        console.error("Gagal parse JSON dari Apps Script:", e);
-        statusEl.textContent = "Error: response dari Google Sheet tidak valid.";
-        statusEl.style.color = "#b91c1c";
-        syncBtn.disabled = false;
-        return;
-      }
-
-      if (data.status === "ok") {
-        statusEl.textContent = `Berhasil kirim ${data.inserted || rows.length} baris ke Google Sheet.`;
-        statusEl.style.color = "#16a34a";
-      } else {
-        console.error("Apps Script error:", data);
-        statusEl.textContent = "Terjadi error saat mengirim data ke Google Sheet.";
-        statusEl.style.color = "#b91c1c";
-      }
-    } catch (err) {
-      console.error("Fetch error:", err);
-      statusEl.textContent = "Terjadi error saat mengirim data ke Google Sheet.";
-      statusEl.style.color = "#b91c1c";
-    } finally {
-      syncBtn.disabled = false;
-    }
-  });
-}
-
+  
