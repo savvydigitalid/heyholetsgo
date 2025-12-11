@@ -58,7 +58,7 @@
   <section id="tasksTab" class="tab-content">
     <div class="grid-2">
       <div class="card">
-        <div class="section-title">
+        <div class="">
           <span>Dopamine Sparks – Today</span>
           <small>Target ≥ 60%</small>
         </div>
@@ -101,7 +101,7 @@
       </div>
 
       <div class="card">
-        <div class="section-title">
+        <div class="">
           <span>28-Day Productivity Heatmap</span>
           <small id="heatmapRangeLabel">Last 28 days</small>
         </div>
@@ -125,7 +125,7 @@
     </div>
 
     <div class="card">
-      <div class="section-title">
+      <div class="">
         <span>Today’s Tasks</span>
         <small>Start with 2–5 meaningful tasks.</small>
       </div>
@@ -275,7 +275,7 @@
   <section id="learningTab" class="tab-content hidden">
     <div class="grid-2">
       <div class="card">
-        <div class="section-title">
+        <div class="">
           <span>Learning Dopamine – Today</span>
           <small>Target: minimal 1 entry/day</small>
         </div>
@@ -305,7 +305,7 @@
       </div>
 
       <div class="card">
-        <div class="section-title">
+        <div class="">
           <span>28-Day Learning Heatmap</span>
           <small id="learningHeatmapRangeLabel">Last 28 days</small>
         </div>
@@ -332,7 +332,7 @@
     </div>
 
     <div class="card">
-      <div class="section-title">
+      <div class="">
         <span>Daily Learning Log</span>
         <small>Mandatory: at least 1 learning entry per day.</small>
       </div>
@@ -382,7 +382,7 @@
     </div>
 
     <div class="card">
-      <div class="section-title">
+      <div class="">
         <span>Skill Progress (Last 6 Months)</span>
         <small>XP per skill category</small>
       </div>
@@ -439,27 +439,37 @@
 <!-- NEW: Weekly Sync Card -->
 <div class="card">
   <div class="section-title">
-    <span>Weekly Sync to Google Sheet</span>
-    <small>Send last 7 days summary to central Sheet</small>
+    <span>Sync Weekly to Google Sheet</span>
+    <small>Manual sync data minggu ini ke Google Sheet</small>
   </div>
-  <p style="font-size:12px;color:var(--text-light);margin-top:0;margin-bottom:8px;">
-    Tombol di bawah akan mengirim ringkasan 7 hari terakhir ke Google Sheet pusat
-    yang bisa diakses manager/HR.
+
+  <p class="info">
+    Gunakan tombol ini tiap akhir minggu (Jumat/Minggu) untuk kirim
+    progress Tasks, Learning & 4DX ke Google Sheet.
   </p>
 
-  <!-- Sync Task & Learning (existing) -->
-  <button id="syncWeeklyBtn" type="button" style="margin-bottom:8px;">
-    Sync Weekly Tasks & Learning
+  <!-- Tombol lama: Tasks & Learning -->
+  <button id="syncWeeklyBtn" type="button" class="btn-primary">
+    Sync Weekly – Tasks & Learning
   </button>
 
-  <!-- Sync 4DX Weekly (NEW) -->
-  <button id="syncFourdxWeeklyBtn" type="button">
+  <div class="sync-status-row">
+    <span id="syncWeeklyStatus" class="sync-status"></span>
+  </div>
+
+  <hr style="margin: 14px 0; border: none; border-top: 1px dashed var(--border);" />
+
+  <!-- Tombol baru: 4DX Weekly -->
+  <p class="info" style="margin-top: 0;">
+    Khusus 4DX: kirim summary green / yellow / red untuk 7 hari terakhir.
+  </p>
+
+  <button id="syncFourdxWeeklyBtn" type="button" class="btn-secondary">
     Sync 4DX Weekly
   </button>
 
-  <div style="font-size:11px;color:var(--text-light);margin-top:6px;">
-    • Sync Tasks & Learning = kirim XP & % harian<br />
-    • Sync 4DX Weekly = kirim persentase hijau/kuning/merah lead measures minggu ini
+  <div class="sync-status-row">
+    <span id="syncFourdxWeeklyStatus" class="sync-status"></span>
   </div>
 </div>
 
