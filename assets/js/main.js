@@ -1533,22 +1533,7 @@ function getCurrentFourdxPeriod() {
   return sel.value || "last30";
 }
 
-/* ---- Hitung summary bulanan per lead ---- */
-
-function computeFourdxMonthlyStats(periodKey) {
-  const leads = fourdxState.leads || [];
-  const stats = leads.map(name => ({
-    name: name || "",
-    red: 0,
-    yellow: 0,
-    green: 0,
-    total: 0
-  }));
-
-  if (!leads.length) {
-    return { stats, overall: { green: 0, total: 0 } };
-  }
-// ---- Hitung summary WEEKLY overall (green / yellow / red %) ----
+/* ---- Hitung summary WEEKLY overall (green / yellow / red %) ---- */
 function computeFourdxWeeklyOverall() {
   const todayKey = typeof getTodayKey === "function"
     ? getTodayKey()
@@ -1559,6 +1544,7 @@ function computeFourdxWeeklyOverall() {
   // Ambil 6 hari ke belakang + hari ini = 7 hari
   const start = new Date(today);
   start.setDate(start.getDate() - 6);
+  start.setHours(0, 0, 0, 0);
 
   let total = 0;
   let green = 0;
@@ -1603,18 +1589,25 @@ function computeFourdxWeeklyOverall() {
     weekEnd: today.toISOString().slice(0, 10)
   };
 }
-// ---- Kirim summary 4DX weekly ke Apps Script ----
+
+/* ---- Kirim summary 4DX weekly ke Apps Script ---- */
 async function syncFourdxWeeklyToSheet() {
   const btn = document.getElementById("syncFourdxWeeklyBtn");
   const statusEl = document.getElementById("syncFourdxWeeklyStatus");
 
   if (!btn || !statusEl) return;
 
-  const profileNameInput = document.getElementById("profileName");
-  const positionInput = document.getElementById("profileRole");
+  // 🧠 Pakai ID yang BENAR dari Settings tab:
+  const profileNameInput = document.getElementById("userNameInput");
+  const positionInput = document.getElementById("userPositionInput");
 
-  const userName = profileNameInput ? (profileNameInput.value || "Unknown") : "Unknown";
-  const position = positionInput ? (positionInput.value || "") : "";
+  const userName = profileNameInput && profileNameInput.value.trim()
+    ? profileNameInput.value.trim()
+    : (appState.user?.name || "Unknown");
+
+  const position = positionInput && positionInput.value.trim()
+    ? positionInput.value.trim()
+    : (appState.user?.position || "");
 
   const summary = computeFourdxWeeklyOverall();
 
@@ -1634,16 +1627,15 @@ async function syncFourdxWeeklyToSheet() {
     btn.textContent = "Syncing 4DX...";
     statusEl.textContent = "";
 
-    const res = await fetch(FOURDX_WEEKLY_SYNC_URL, {
+    await fetch(FOURDX_WEEKLY_SYNC_URL, {
       method: "POST",
+      mode: "no-cors",              // sama kayak weekly task
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "text/plain"
       },
-      mode: "no-cors",
       body: JSON.stringify(payload)
     });
 
-    // mode no-cors: kita anggap sukses kalau tidak error
     statusEl.textContent = "4DX weekly terkirim (cek di Google Sheet).";
     statusEl.classList.remove("error");
   } catch (err) {
@@ -1657,6 +1649,21 @@ async function syncFourdxWeeklyToSheet() {
     }, 800);
   }
 }
+
+/* ---- Hitung summary bulanan per lead ---- */
+function computeFourdxMonthlyStats(periodKey) {
+  const leads = fourdxState.leads || [];
+  const stats = leads.map(name => ({
+    name: name || "",
+    red: 0,
+    yellow: 0,
+    green: 0,
+    total: 0
+  }));
+
+  if (!leads.length) {
+    return { stats, overall: { green: 0, total: 0 } };
+  }
 
   const today = new Date();
   let startDate, endDate;
@@ -1672,18 +1679,17 @@ async function syncFourdxWeeklyToSheet() {
     startDate.setDate(endDate.getDate() - 29);
   }
 
-  // Normalisasi jam biar aman
-  startDate.setHours(0,0,0,0);
-  endDate.setHours(0,0,0,0);
+  startDate.setHours(0, 0, 0, 0);
+  endDate.setHours(0, 0, 0, 0);
 
   let overallGreen = 0;
   let overallTotal = 0;
 
   Object.keys(fourdxDaily || {}).forEach(key => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return;
-    const [y,m,d] = key.split("-").map(Number);
+    const [y, m, d] = key.split("-").map(Number);
     const dt = new Date(y, m - 1, d);
-    dt.setHours(0,0,0,0);
+    dt.setHours(0, 0, 0, 0);
 
     if (dt < startDate || dt > endDate) return;
 
@@ -1703,8 +1709,6 @@ async function syncFourdxWeeklyToSheet() {
     overall: { green: overallGreen, total: overallTotal }
   };
 }
-
-/* ---- Render Monthly Summary ---- */
 
 /* ---- Render Monthly Summary ---- */
 
