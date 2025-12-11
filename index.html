@@ -7,487 +7,497 @@
 
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="assets/css/styles.css" />
+
+  <!-- Global CSS -->
+  <link rel="stylesheet" href="assets/css/styles.css" />
 
   <!-- Chart.js + jsPDF + html2canvas -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
 </head>
 <body>
   <!-- TOP LOGO BAR -->
-<div id="topBar" style="
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 20px;
-  box-sizing: border-box;
-">
-  <img src="savvy-logo.png" style="height: 42px; object-fit: contain;">
-  <img src="hoho-logo.png" style="height: 46px; object-fit: contain;">
-</div>
-<div id="fullReportArea" class="app-container">
-  <header>
-    <div>
-      <h1>HeyHoLetsGo</h1>
-      <p>Daily dopamine tracker for tasks & learning</p>
-    </div>
-   <div style="display:flex;align-items:center;gap:8px;">
-  <button
-    id="themeToggle"
-    type="button"
-    class="btn-ghost"
-    style="display:flex;align-items:center;gap:6px;"
-  >
-    <span style="font-size:12px;">Light</span>
-    <span id="themeIcon">🌞</span>
-  </button>
-</div>
-  </header>
-
-  <div class="tabs">
-    <button class="tab-btn active" data-tab="tasksTab">Tasks & Productivity</button>
-      <button class="tab-btn" data-tab="fourdxTab">4DX</button>
-    <button class="tab-btn" data-tab="learningTab">Learning & Skills</button>
-    <button class="tab-btn" data-tab="settingsTab">Settings & Reports</button>
+  <div id="topBar" style="
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    box-sizing: border-box;
+  ">
+    <img src="savvy-logo.png" style="height: 42px; object-fit: contain;" alt="Savvy Digital logo">
+    <img src="hoho-logo.png" style="height: 46px; object-fit: contain;" alt="HeyHoLetsGo logo">
   </div>
 
-  <!-- ===== TAB TASKS ===== -->
-  <section id="tasksTab" class="tab-content">
-    <div class="grid-2">
-      <div class="card">
-        <div class="">
-            <div class="section-title">
-          <span>Dopamine Sparks – Today</span>
-          <small>Target ≥ 60%</small>
-        </div>
-        <div class="grid-2-stack">
-          <div style="position:relative;height:170px;max-width:170px;margin:0 auto;">
-            <canvas id="dopamineChart"></canvas>
-            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
-              <div id="dopaminePercentText" style="font-size:24px;font-weight:800;">0%</div>
-              <div style="font-size:11px;color:var(--text-light);">XP Progress</div>
-            </div>
-          </div>
-          <div style="font-size:13px;display:flex;flex-direction:column;gap:6px;">
-            <div style="display:flex;justify-content:space-between;">
-              <span>XP Today</span><span id="xpTodayText" style="font-weight:700;">0 XP</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;">
-              <span>Tasks Done</span><span id="tasksDoneText" style="font-weight:600;">0</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;">
-              <span>On Progress</span><span id="tasksProgressText" style="font-weight:600;">0</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;">
-              <span>Blocked</span><span id="tasksBlockedText" style="font-weight:600;color:#f97373;">0</span>
-            </div>
-            <div style="font-size:11px;color:var(--text-light);margin-top:4px;">
-              Todo = 0 XP, Progress = 20% XP, Done = 100% XP. Reset daily.
-            </div>
-          </div>
-        </div>
-
-        <div class="monthly-card">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:12px;font-weight:600;">28-Day Dopamine Trend</span>
-            <span id="monthlyRangeLabel" style="font-size:11px;color:var(--text-light);"></span>
-          </div>
-          <div style="height:130px;">
-            <canvas id="monthlyDopamineChart"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="">
-            <div class="section-title">
-          <span>28-Day Productivity Heatmap</span>
-          <small id="heatmapRangeLabel">Last 28 days</small>
-        </div>
-        <div id="taskHeatmap" class="heatmap"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;margin-top:6px;color:var(--text-light);flex-wrap:wrap;gap:4px;">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span>Legend:</span>
-            <span style="display:inline-flex;align-items:center;gap:3px;">
-              <span style="width:11px;height:11px;border-radius:3px;background:#fca5a5;"></span> 0–39%
-            </span>
-            <span style="display:inline-flex;align-items:center;gap:3px;">
-              <span style="width:11px;height:11px;border-radius:3px;background:#fde68a;"></span> 40–79%
-            </span>
-            <span style="display:inline-flex;align-items:center;gap:3px;">
-              <span style="width:11px;height:11px;border-radius:3px;background:#6ee7b7;"></span> 80–100%
-            </span>
-          </div>
-          <span style="font-size:10px;">Tap bubble for daily detail.</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="">
-        <span>Today’s Tasks</span>
-        <small>Start with 2–5 meaningful tasks.</small>
-      </div>
-      <div class="grid-4" style="margin-bottom:10px;">
-        <div>
-          <label>Task Name</label>
-          <input id="taskNameInput" type="text" placeholder="e.g. Handle Cimory 20 KOL campaign" />
-        </div>
-        <div>
-          <label>Effort</label>
-          <select id="taskEffortInput">
-            <option value="1">Effort 1 – Small</option>
-            <option value="2">Effort 2 – Medium</option>
-            <option value="3">Effort 3 – Large</option>
-          </select>
-        </div>
-        <div></div>
-        <div>
-          <button id="addTaskBtn" type="button">+ Add Task</button>
-        </div>
-      </div>
-      <div id="taskList" style="display:flex;flex-direction:column;gap:8px;font-size:13px;"></div>
-    </div>
-  </section>
-    <!-- ===== TAB 4DX ===== -->
-<section id="fourdxTab" class="tab-content hidden">
-  <div class="tab-header">
-    <h2>4DX Focus</h2>
-    <p class="tab-subtitle">
-      Setup WIG, Lag Measures, dan Lead Measures kamu.
-    </p>
-  </div>
-
-  <!-- 1) MONTHLY SUMMARY / BATTERY -->
-  <div class="card" style="margin-bottom:16px;">
-    <div class="fourdx-summary-header">
+  <!-- MAIN APP CONTAINER (persis versi main) -->
+  <div class="app-container">
+    <!-- HEADER -->
+    <header>
       <div>
-        <h3 style="margin:0;">📆 Monthly Lead Progress</h3>
-        <p class="info" style="margin-top:4px;">
-          Ringkasan hijau/kuning/merah untuk setiap lead dalam periode terpilih.
+        <h1>HeyHoLetsGo</h1>
+        <p>Daily dopamine tracker for tasks & learning</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button
+          id="themeToggle"
+          type="button"
+          class="btn-ghost"
+          style="display:flex;align-items:center;gap:6px;"
+        >
+          <span id="themeLabel" style="font-size:12px;">Light</span>
+          <span id="themeIcon">🌞</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- NAV TABS -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="tasksTab">Tasks & Productivity</button>
+      <button class="tab-btn" data-tab="fourdxTab">4DX</button>
+      <button class="tab-btn" data-tab="learningTab">Learning & Skills</button>
+      <button class="tab-btn" data-tab="settingsTab">Settings & Reports</button>
+    </div>
+
+    <!-- ============= TAB 1: TASKS & PRODUCTIVITY ============= -->
+    <section id="tasksTab" class="tab-content">
+      <div class="grid-2">
+        <!-- LEFT CARD: DOPAMINE TODAY + TREND -->
+        <div class="card">
+          <div class="section-title">
+            <span>Dopamine Sparks – Today</span>
+            <small>Target ≥ 60%</small>
+          </div>
+
+          <div class="grid-2-stack">
+            <!-- Donut chart -->
+            <div style="position:relative;height:170px;max-width:170px;margin:0 auto;">
+              <canvas id="dopamineChart"></canvas>
+              <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+                <div id="dopaminePercentText" style="font-size:24px;font-weight:800;">0%</div>
+                <div style="font-size:11px;color:var(--text-light);">XP Progress</div>
+              </div>
+            </div>
+
+            <!-- Stats -->
+            <div style="font-size:13px;display:flex;flex-direction:column;gap:6px;">
+              <div style="display:flex;justify-content:space-between;">
+                <span>XP Today</span><span id="xpTodayText" style="font-weight:700;">0 XP</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span>Tasks Done</span><span id="tasksDoneText" style="font-weight:600;">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span>On Progress</span><span id="tasksProgressText" style="font-weight:600;">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span>Blocked</span><span id="tasksBlockedText" style="font-weight:600;color:#f97373;">0</span>
+              </div>
+              <div style="font-size:11px;color:var(--text-light);margin-top:4px;">
+                Todo = 0 XP, Progress = 20% XP, Done = 100% XP. Reset daily.
+              </div>
+            </div>
+          </div>
+
+          <!-- 28-day dopamine trend -->
+          <div class="monthly-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:12px;font-weight:600;">28-Day Dopamine Trend</span>
+              <span id="monthlyRangeLabel" style="font-size:11px;color:var(--text-light);"></span>
+            </div>
+            <div style="height:130px;">
+              <canvas id="monthlyDopamineChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT CARD: HEATMAP -->
+        <div class="card">
+          <div class="section-title">
+            <span>28-Day Productivity Heatmap</span>
+            <small id="heatmapRangeLabel">Last 28 days</small>
+          </div>
+          <div id="taskHeatmap" class="heatmap"></div>
+          <div
+            style="display:flex;justify-content:space-between;align-items:center;font-size:10px;margin-top:6px;color:var(--text-light);flex-wrap:wrap;gap:4px;"
+          >
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span>Legend:</span>
+              <span style="display:inline-flex;align-items:center;gap:3px;">
+                <span style="width:11px;height:11px;border-radius:3px;background:#fca5a5;"></span> 0–39%
+              </span>
+              <span style="display:inline-flex;align-items:center;gap:3px;">
+                <span style="width:11px;height:11px;border-radius:3px;background:#fde68a;"></span> 40–79%
+              </span>
+              <span style="display:inline-flex;align-items:center;gap:3px;">
+                <span style="width:11px;height:11px;border-radius:3px;background:#6ee7b7;"></span> 80–100%
+              </span>
+            </div>
+            <span style="font-size:10px;">Tap bubble for daily detail.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TODAY TASKS LIST -->
+      <div class="card">
+        <div class="section-title">
+          <span>Today’s Tasks</span>
+          <small>Start with 2–5 meaningful tasks.</small>
+        </div>
+        <div class="grid-4" style="margin-bottom:10px;">
+          <div>
+            <label>Task Name</label>
+            <input id="taskNameInput" type="text" placeholder="e.g. Handle Cimory 20 KOL campaign" />
+          </div>
+          <div>
+            <label>Effort</label>
+            <select id="taskEffortInput">
+              <option value="1">Effort 1 – Small</option>
+              <option value="2">Effort 2 – Medium</option>
+              <option value="3">Effort 3 – Large</option>
+            </select>
+          </div>
+          <div></div>
+          <div>
+            <button id="addTaskBtn" type="button">+ Add Task</button>
+          </div>
+        </div>
+        <div id="taskList" style="display:flex;flex-direction:column;gap:8px;font-size:13px;"></div>
+      </div>
+    </section>
+
+    <!-- ============= TAB 2: 4DX ============= -->
+    <section id="fourdxTab" class="tab-content hidden">
+      <div class="tab-header">
+        <h2>4DX Focus</h2>
+        <p class="tab-subtitle">
+          Setup WIG, Lag Measures, dan Lead Measures kamu.
         </p>
       </div>
-      <div>
-        <label for="fourdxPeriodSelect" style="font-size:12px; color:var(--text-light); display:block; margin-bottom:2px;">
-          Periode
-        </label>
-        <select id="fourdxPeriodSelect" style="padding:4px 8px; border-radius:999px; border:1px solid var(--border); font-size:13px;">
-          <option value="last30">Last 30 days</option>
-          <option value="month">This month</option>
-        </select>
-      </div>
-    </div>
 
-    <div class="fourdx-summary-overall" id="fourdxMonthlyOverall">
-      <!-- Overall emoji & summary akan dirender via JS -->
-    </div>
-
-    <div id="fourdxCoachText" class="fourdx-coach-text" style="margin: 8px 0 16px 0; font-size:13px; color:var(--text-light);">
-      <!-- text coach akan dirender di sini -->
-    </div>
-
-    <div id="fourdxMonthlySummary">
-      <!-- Per-lead monthly summary akan dirender via JS -->
-    </div>
-  </div>
-
-  <!-- 2) LEAD MEASURES (DIPINDAH KE ATAS, DEKAT BATTERY) -->
-  <div class="card" style="margin-bottom:16px;">
-    <h3>⚡ Lead Measures</h3>
-    <p class="info">
-      Indikator harian yang bisa kamu kontrol langsung.
-    </p>
-
-    <!-- daftar lead -->
-    <div id="leadList"></div>
-
-    <!-- tombol tambah lead -->
-    <button
-      id="addLeadBtn"
-      type="button"
-      class="btn-ghost"
-      style="margin-top:10px;"
-    >
-      + Tambah Lead Measure
-    </button>
-
-    <hr style="margin:16px 0; border:none; border-top:1px dashed var(--border);" />
-
-    <h4 style="margin:0 0 8px 0;">Daily Lead Check-in (Today)</h4>
-    <p class="info">
-      Pilih status untuk setiap lead hari ini.
-    </p>
-    <div id="leadDailyToday"></div>
-  </div>
-
-  <!-- 3) LAG MEASURES -->
-  <div class="card" style="margin-bottom:16px;">
-    <h3>📊 Lag Measures</h3>
-    <p class="info">
-      Ini adalah hasil akhir yang ingin dicapai. Tidak dievaluasi harian.
-    </p>
-
-    <!-- daftar lag -->
-    <div id="lagList"></div>
-
-    <!-- tombol tambah lag -->
-    <button
-      id="addLagBtn"
-      type="button"
-      class="btn-ghost"
-      style="margin-top:10px;"
-    >
-      + Tambah Lag Measure
-    </button>
-  </div>
-
-  <!-- 4) WIG -->
-  <div class="card" style="margin-bottom:16px;">
-    <h3>🎯 WIG (Wildly Important Goal)</h3>
-    <p class="info">
-      Satu tujuan paling penting yang ingin kamu capai dalam 3–6 bulan ke depan.
-    </p>
-    <input
-      id="wigInput"
-      type="text"
-      placeholder="Masukkan WIG kamu..."
-      style="width:100%; padding:10px; margin-top:6px;"
-    />
-    <p class="info" style="font-size:11px;margin-top:6px;">
-      WIG ini akan sama terus sampai kamu ubah manual. Jangan sering-sering diganti.
-    </p>
-  </div>
-
-  <!-- Save -->
-  <button
-    id="save4dxBtn"
-    type="button"
-    class="btn-primary"
-    style="margin-top:20px;"
-  >
-    Simpan 4DX
-  </button>
-</section>
-
-
-  <!-- ===== TAB LEARNING ===== -->
-  <section id="learningTab" class="tab-content hidden">
-    <div class="grid-2">
-      <div class="card">
-        <div class="">
-            <div class="section-title">
-          <span>Learning Dopamine – Today</span>
-          <small>Target: minimal 1 entry/day</small>
-        </div>
-        <div class="grid-2-stack">
-          <div style="position:relative;height:170px;max-width:170px;margin:0 auto;">
-            <canvas id="learningChart"></canvas>
-            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
-              <div id="learningPercentText" style="font-size:24px;font-weight:800;">0%</div>
-              <div style="font-size:11px;color:var(--text-light);">Learning XP</div>
-            </div>
+      <!-- 1) MONTHLY SUMMARY / BATTERY -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="fourdx-summary-header">
+          <div>
+            <h3 style="margin:0;">📆 Monthly Lead Progress</h3>
+            <p class="info" style="margin-top:4px;">
+              Ringkasan hijau/kuning/merah untuk setiap lead dalam periode terpilih.
+            </p>
           </div>
-          <div style="font-size:13px;display:flex;flex-direction:column;gap:6px;">
-            <div style="display:flex;justify-content:space-between;">
-              <span>Entries Today</span><span id="learningEntriesToday" style="font-weight:700;">0</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;">
-              <span>XP Today</span><span id="learningXpToday" style="font-weight:700;">0</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;">
-              <span>6-Month Total XP</span><span id="learningXpSixMonths" style="font-weight:700;">0</span>
-            </div>
-            <div style="font-size:11px;color:var(--text-light);margin-top:4px;">
-              XP direset tiap 6 bulan, history tetap kebaca.
-            </div>
+          <div>
+            <label for="fourdxPeriodSelect" style="font-size:12px; color:var(--text-light); display:block; margin-bottom:2px;">
+              Periode
+            </label>
+            <select id="fourdxPeriodSelect" style="padding:4px 8px; border-radius:999px; border:1px solid var(--border); font-size:13px;">
+              <option value="last30">Last 30 days</option>
+              <option value="month">This month</option>
+            </select>
           </div>
         </div>
+
+        <div class="fourdx-summary-overall" id="fourdxMonthlyOverall"></div>
+
+        <div
+          id="fourdxCoachText"
+          class="fourdx-coach-text"
+          style="margin: 8px 0 16px 0; font-size:13px; color:var(--text-light);"
+        ></div>
+
+        <div id="fourdxMonthlySummary"></div>
       </div>
 
-      <div class="card">
-        <div class="">
-          <span>28-Day Learning Heatmap</span>
-          <small id="learningHeatmapRangeLabel">Last 28 days</small>
-        </div>
-        <div id="learningHeatmap" class="heatmap"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;margin-top:6px;color:var(--text-light);flex-wrap:wrap;gap:4px;">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span>Legend:</span>
-            <span style="display:inline-flex;align-items:center;gap:3px;">
-              <span style="width:11px;height:11px;border-radius:3px;background:#e5e7eb;"></span> 0 XP
-            </span>
-            <span style="display:inline-flex;align-items:center;gap:3px;">
-              <span style="width:11px;height:11px;border-radius:3px;background:#bfdbfe;"></span> Low
-            </span>
-            <span style="display:inline-flex;align-items:center;gap:3px;">
-              <span style="width:11px;height:11px;border-radius:3px;background:#60a5fa;"></span> Medium
-            </span>
-            <span style="display:inline-flex;align-items:center;gap:3px;">
-              <span style="width:11px;height:11px;border-radius:3px;background:#2563eb;"></span> High
-            </span>
-          </div>
-          <span>Tap bubble to see that day.</span>
-        </div>
-      </div>
-    </div>
+      <!-- 2) LEAD MEASURES -->
+      <div class="card" style="margin-bottom:16px;">
+        <h3>⚡ Lead Measures</h3>
+        <p class="info">
+          Indikator harian yang bisa kamu kontrol langsung.
+        </p>
 
-    <div class="card">
-      <div class="">
+        <div id="leadList"></div>
+
+        <button
+          id="addLeadBtn"
+          type="button"
+          class="btn-ghost"
+          style="margin-top:10px;"
+        >
+          + Tambah Lead Measure
+        </button>
+
+        <hr style="margin:16px 0; border:none; border-top:1px dashed var(--border);" />
+
+        <h4 style="margin:0 0 8px 0;">Daily Lead Check-in (Today)</h4>
+        <p class="info">
+          Pilih status untuk setiap lead hari ini.
+        </p>
+        <div id="leadDailyToday"></div>
+      </div>
+
+      <!-- 3) LAG MEASURES -->
+      <div class="card" style="margin-bottom:16px;">
+        <h3>📊 Lag Measures</h3>
+        <p class="info">
+          Ini adalah hasil akhir yang ingin dicapai. Tidak dievaluasi harian.
+        </p>
+        <div id="lagList"></div>
+        <button
+          id="addLagBtn"
+          type="button"
+          class="btn-ghost"
+          style="margin-top:10px;"
+        >
+          + Tambah Lag Measure
+        </button>
+      </div>
+
+      <!-- 4) WIG -->
+      <div class="card" style="margin-bottom:16px;">
+        <h3>🎯 WIG (Wildly Important Goal)</h3>
+        <p class="info">
+          Satu tujuan paling penting yang ingin kamu capai dalam 3–6 bulan ke depan.
+        </p>
+        <input
+          id="wigInput"
+          type="text"
+          placeholder="Masukkan WIG kamu..."
+          style="width:100%; padding:10px; margin-top:6px;"
+        />
+        <p class="info" style="font-size:11px;margin-top:6px;">
+          WIG ini akan sama terus sampai kamu ubah manual. Jangan sering-sering diganti.
+        </p>
+      </div>
+
+      <button
+        id="save4dxBtn"
+        type="button"
+        class="btn-primary"
+        style="margin-top:20px;"
+      >
+        Simpan 4DX
+      </button>
+    </section>
+
+    <!-- ============= TAB 3: LEARNING & SKILLS ============= -->
+    <section id="learningTab" class="tab-content hidden">
+      <div class="grid-2">
+        <!-- LEFT: Learning dopamine -->
+        <div class="card">
           <div class="section-title">
-        <span>Daily Learning Log</span>
-        <small>Mandatory: at least 1 learning entry per day.</small>
-      </div>
-      <div class="grid-2-equal" style="margin-bottom:8px;">
-        <div>
-          <label>Skill Category</label>
-          <select id="learningCategoryInput">
-            <option value="tools">Tools & Workspace</option>
-            <option value="digital">Digital Marketing</option>
-            <option value="ai">AI Skills</option>
-            <option value="content">Content & Creative</option>
-            <option value="data">Data Analytics & Research</option>
-            <option value="finance">Finance</option>
-            <option value="hr">HR</option>
-            <option value="sales">Sales</option>
-            <option value="cognitive">Cognitive Skills</option>
-            <option value="interpersonal">Interpersonal Skills</option>
-            <option value="intrapersonal">Intrapersonal Skills</option>
-            <option value="business">Business Acumen</option>
-            <option value="leadership">Leadership & Management</option>
-            <option value="other">Others</option>
-          </select>
-        </div>
-        <div>
-          <label>Subskill (optional)</label>
-          <input id="learningSubskillInput" type="text" placeholder="e.g. ChatGPT prompting" />
-        </div>
-      </div>
-      <div class="grid-2-equal" style="margin-bottom:8px;">
-        <div>
-          <label>Learning Effort</label>
-          <select id="learningEffortInput">
-            <option value="1">Small (5–10 mins)</option>
-            <option value="2">Medium (deep dive)</option>
-            <option value="3">Intensive (1–2 hours)</option>
-          </select>
-        </div>
-        <div style="display:flex;align-items:flex-end;justify-content:flex-end;">
-          <button id="addLearningBtn" type="button">+ Add Learning</button>
-        </div>
-      </div>
-      <div style="margin-bottom:8px;">
-        <label>What did you learn & how does it help your work?</label>
-        <textarea id="learningReflectionInput" rows="2" placeholder="Write your key insight and why it matters..."></textarea>
-      </div>
-      <div id="learningList" style="display:flex;flex-direction:column;gap:8px;font-size:13px;"></div>
-    </div>
+            <span>Learning Dopamine – Today</span>
+            <small>Target: minimal 1 entry/day</small>
+          </div>
 
-    <div class="card">
-      <div class="">
+          <div class="grid-2-stack">
+            <div style="position:relative;height:170px;max-width:170px;margin:0 auto;">
+              <canvas id="learningChart"></canvas>
+              <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+                <div id="learningPercentText" style="font-size:24px;font-weight:800;">0%</div>
+                <div style="font-size:11px;color:var(--text-light);">Learning XP</div>
+              </div>
+            </div>
+
+            <div style="font-size:13px;display:flex;flex-direction:column;gap:6px;">
+              <div style="display:flex;justify-content:space-between;">
+                <span>Entries Today</span><span id="learningEntriesToday" style="font-weight:700;">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span>XP Today</span><span id="learningXpToday" style="font-weight:700;">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span>6-Month Total XP</span><span id="learningXpSixMonths" style="font-weight:700;">0</span>
+              </div>
+              <div style="font-size:11px;color:var(--text-light);margin-top:4px;">
+                XP direset tiap 6 bulan, history tetap kebaca.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Learning heatmap -->
+        <div class="card">
           <div class="section-title">
-        <span>Skill Progress (Last 6 Months)</span>
-        <small>XP per skill category</small>
-      </div>
-      <div id="skillProgressWrapper" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;font-size:12px;"></div>
-
-      <div style="margin-top:12px;border-top:1px dashed var(--border);padding-top:8px;">
-        <div style="font-size:12px;font-weight:700;margin-bottom:6px;">Top 3 Highest Skill Gain</div>
-        <div id="top3skills" style="font-size:12px;"></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== TAB SETTINGS ===== -->
-    <!-- ===== TAB SETTINGS ===== -->
-  <section id="settingsTab" class="tab-content hidden">
-    <div class="card">
-      <div class="section-title">
-        <span>Profile</span>
-      </div>
-      <div class="grid-2-equal">
-        <div>
-          <label>Name</label>
-          <input id="userNameInput" type="text" placeholder="Your name" />
-        </div>
-        <div>
-          <label>Position</label>
-          <input id="userPositionInput" type="text" placeholder="e.g. KOL Specialist" />
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">
-        <span>Monthly Report</span>
-        <small>A4 PDF • summary-only • file size kecil</small>
-      </div>
-      <div class="grid-2-equal" style="align-items:flex-end;">
-        <div>
-          <label>Month</label>
-          <input id="reportMonthInput" type="month" />
-          <div style="font-size:11px;color:var(--text-light);margin-top:2px;">
-            Kalau kosong, otomatis pakai bulan sekarang.
+            <span>28-Day Learning Heatmap</span>
+            <small id="learningHeatmapRangeLabel">Last 28 days</small>
           </div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:6px;">
-          <button id="exportPdfBtn" type="button">📄 Export Monthly PDF</button>
-          <div style="font-size:11px;color:var(--text-light);">
-            Termasuk: heatmap 1 bulan, total XP, rata-rata dopamine, learning XP & top 3 skills.
+          <div id="learningHeatmap" class="heatmap"></div>
+          <div
+            style="display:flex;justify-content:space-between;align-items:center;font-size:10px;margin-top:6px;color:var(--text-light);flex-wrap:wrap;gap:4px;"
+          >
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span>Legend:</span>
+              <span style="display:inline-flex;align-items:center;gap:3px;">
+                <span style="width:11px;height:11px;border-radius:3px;background:#e5e7eb;"></span> 0 XP
+              </span>
+              <span style="display:inline-flex;align-items:center;gap:3px;">
+                <span style="width:11px;height:11px;border-radius:3px;background:#bfdbfe;"></span> Low
+              </span>
+              <span style="display:inline-flex;align-items:center;gap:3px;">
+                <span style="width:11px;height:11px;border-radius:3px;background:#60a5fa;"></span> Medium
+              </span>
+              <span style="display:inline-flex;align-items:center;gap:3px;">
+                <span style="width:11px;height:11px;border-radius:3px;background:#2563eb;"></span> High
+              </span>
+            </div>
+            <span>Tap bubble to see that day.</span>
           </div>
         </div>
       </div>
-    </div>
 
-<!-- NEW: Weekly Sync Card -->
-<div class="card">
-  <div class="section-title">
-    <span>Sync Weekly to Google Sheet</span>
-    <small>Manual sync data minggu ini ke Google Sheet</small>
-  </div>
+      <!-- Daily learning log -->
+      <div class="card">
+        <div class="section-title">
+          <span>Daily Learning Log</span>
+          <small>Mandatory: at least 1 learning entry per day.</small>
+        </div>
 
-  <p class="info">
-    Gunakan tombol ini tiap akhir minggu (Jumat/Minggu) untuk kirim
-    progress Tasks, Learning & 4DX ke Google Sheet.
-  </p>
+        <div class="grid-2-equal" style="margin-bottom:8px;">
+          <div>
+            <label>Skill Category</label>
+            <select id="learningCategoryInput">
+              <option value="tools">Tools & Workspace</option>
+              <option value="digital">Digital Marketing</option>
+              <option value="ai">AI Skills</option>
+              <option value="content">Content & Creative</option>
+              <option value="data">Data Analytics & Research</option>
+              <option value="finance">Finance</option>
+              <option value="hr">HR</option>
+              <option value="sales">Sales</option>
+              <option value="cognitive">Cognitive Skills</option>
+              <option value="interpersonal">Interpersonal Skills</option>
+              <option value="intrapersonal">Intrapersonal Skills</option>
+              <option value="business">Business Acumen</option>
+              <option value="leadership">Leadership & Management</option>
+              <option value="other">Others</option>
+            </select>
+          </div>
+          <div>
+            <label>Subskill (optional)</label>
+            <input id="learningSubskillInput" type="text" placeholder="e.g. ChatGPT prompting" />
+          </div>
+        </div>
 
-  <!-- Tombol lama: Tasks & Learning -->
-  <button id="syncWeeklyBtn" type="button" class="btn-primary">
-    Sync Weekly – Tasks & Learning
-  </button>
+        <div class="grid-2-equal" style="margin-bottom:8px;">
+          <div>
+            <label>Learning Effort</label>
+            <select id="learningEffortInput">
+              <option value="1">Small (5–10 mins)</option>
+              <option value="2">Medium (deep dive)</option>
+              <option value="3">Intensive (1–2 hours)</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:flex-end;justify-content:flex-end;">
+            <button id="addLearningBtn" type="button">+ Add Learning</button>
+          </div>
+        </div>
 
-  <div class="sync-status-row">
-    <span id="syncWeeklyStatus" class="sync-status"></span>
-  </div>
+        <div style="margin-bottom:8px;">
+          <label>What did you learn & how does it help your work?</label>
+          <textarea id="learningReflectionInput" rows="2" placeholder="Write your key insight and why it matters..."></textarea>
+        </div>
 
-  <hr style="margin: 14px 0; border: none; border-top: 1px dashed var(--border);" />
+        <div id="learningList" style="display:flex;flex-direction:column;gap:8px;font-size:13px;"></div>
+      </div>
 
-  <!-- Tombol baru: 4DX Weekly -->
-  <p class="info" style="margin-top: 0;">
-    Khusus 4DX: kirim summary green / yellow / red untuk 7 hari terakhir.
-  </p>
+      <!-- Skill progress -->
+      <div class="card">
+        <div class="section-title">
+          <span>Skill Progress (Last 6 Months)</span>
+          <small>XP per skill category</small>
+        </div>
+        <div id="skillProgressWrapper" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;font-size:12px;"></div>
 
-  <button id="syncFourdxWeeklyBtn" type="button" class="btn-secondary">
-    Sync 4DX Weekly
-  </button>
+        <div style="margin-top:12px;border-top:1px dashed var(--border);padding-top:8px;">
+          <div style="font-size:12px;font-weight:700;margin-bottom:6px;">Top 3 Highest Skill Gain</div>
+          <div id="top3skills" style="font-size:12px;"></div>
+        </div>
+      </div>
+    </section>
 
-  <div class="sync-status-row">
-    <span id="syncFourdxWeeklyStatus" class="sync-status"></span>
-  </div>
-</div>
+    <!-- ============= TAB 4: SETTINGS & REPORTS ============= -->
+    <section id="settingsTab" class="tab-content hidden">
+      <!-- Profile -->
+      <div class="card">
+        <div class="section-title">
+          <span>Profile</span>
+        </div>
+        <div class="grid-2-equal">
+          <div>
+            <label>Name</label>
+            <input id="userNameInput" type="text" placeholder="Your name" />
+          </div>
+          <div>
+            <label>Position</label>
+            <input id="userPositionInput" type="text" placeholder="e.g. KOL Specialist" />
+          </div>
+        </div>
+      </div>
 
-  </section>
+      <!-- Monthly PDF -->
+      <div class="card">
+        <div class="section-title">
+          <span>Monthly Report</span>
+          <small>A4 PDF • summary-only • file size kecil</small>
+        </div>
+        <div class="grid-2-equal" style="align-items:flex-end;">
+          <div>
+            <label>Month</label>
+            <input id="reportMonthInput" type="month" />
+            <div style="font-size:11px;color:var(--text-light);margin-top:2px;">
+              Kalau kosong, otomatis pakai bulan sekarang.
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <button id="exportPdfBtn" type="button">📄 Export Monthly PDF</button>
+            <div style="font-size:11px;color:var(--text-light);">
+              Termasuk: heatmap 1 bulan, total XP, rata-rata dopamine, learning XP & top 3 skills.
+            </div>
+          </div>
+        </div>
+      </div>
 
-<img id="hohoTaskFloat" class="hoho-float hidden" src="hoho-happy.png" alt="Ho-Ho Task" />
-<img id="hohoLearningFloat" class="hoho-float hidden" src="hoho-book.png" alt="Ho-Ho Learning" />
-<!-- external libs -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      <!-- Weekly sync (Tasks + Learning + 4DX) -->
+      <div class="card">
+        <div class="section-title">
+          <span>Sync Weekly to Google Sheet</span>
+          <small>Manual sync data minggu ini ke Google Sheet</small>
+        </div>
 
-<!-- app scripts -->
-<script src="assets/js/core/state.js"></script> <!-- nanti isi state -->
-<script src="assets/js/main.js"></script>
+        <p class="info">
+          Gunakan tombol ini tiap akhir minggu (Jumat/Minggu) untuk kirim
+          progress Tasks & Learning ke Google Sheet.
+        </p>
 
+        <button id="syncWeeklyBtn" type="button" class="btn-primary">
+          Sync Weekly – Tasks & Learning
+        </button>
+
+        <div class="sync-status-row">
+          <span id="syncWeeklyStatus" class="sync-status"></span>
+        </div>
+
+        <hr style="margin: 14px 0; border: none; border-top: 1px dashed var(--border);" />
+
+        <p class="info" style="margin-top: 0;">
+          Khusus 4DX: kirim summary green / yellow / red untuk 7 hari terakhir.
+        </p>
+
+        <button id="syncFourdxWeeklyBtn" type="button" class="btn-secondary">
+          Sync 4DX Weekly
+        </button>
+
+        <div class="sync-status-row">
+          <span id="syncFourdxWeeklyStatus" class="sync-status"></span>
+        </div>
+      </div>
+    </section>
+  </div> <!-- /app-container -->
+
+  <!-- Ho-Ho floating mascots -->
+  <img id="hohoTaskFloat" class="hoho-float hidden" src="hoho-happy.png" alt="Ho-Ho Task" />
+  <img id="hohoLearningFloat" class="hoho-float hidden" src="hoho-book.png" alt="Ho-Ho Learning" />
+
+  <!-- STATE + MAIN LOGIC -->
+  <script src="assets/js/core/state.js"></script>
+  <script src="assets/js/main.js"></script>
 </body>
 </html>
