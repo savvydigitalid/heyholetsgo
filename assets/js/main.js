@@ -1548,6 +1548,115 @@ function computeFourdxMonthlyStats(periodKey) {
   if (!leads.length) {
     return { stats, overall: { green: 0, total: 0 } };
   }
+// ---- Hitung summary WEEKLY overall (green / yellow / red %) ----
+function computeFourdxWeeklyOverall() {
+  const todayKey = typeof getTodayKey === "function"
+    ? getTodayKey()
+    : new Date().toISOString().slice(0, 10);
+
+  const today = new Date(todayKey + "T00:00:00");
+
+  // Ambil 6 hari ke belakang + hari ini = 7 hari
+  const start = new Date(today);
+  start.setDate(start.getDate() - 6);
+
+  let total = 0;
+  let green = 0;
+  let yellow = 0;
+  let red = 0;
+
+  for (let d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
+    const key = d.toISOString().slice(0, 10);
+    const arr = fourdxDaily[key];
+    if (!arr || !Array.isArray(arr)) continue;
+
+    arr.forEach((status) => {
+      if (!status) return;
+      total += 1;
+      if (status === "green") green += 1;
+      else if (status === "yellow") yellow += 1;
+      else if (status === "red") red += 1;
+    });
+  }
+
+  if (total === 0) {
+    return {
+      totalCheckin: 0,
+      greenPercent: 0,
+      yellowPercent: 0,
+      redPercent: 0,
+      weekStart: start.toISOString().slice(0, 10),
+      weekEnd: today.toISOString().slice(0, 10)
+    };
+  }
+
+  const greenPercent = Math.round((green / total) * 100);
+  const yellowPercent = Math.round((yellow / total) * 100);
+  const redPercent = Math.round((red / total) * 100);
+
+  return {
+    totalCheckin: total,
+    greenPercent,
+    yellowPercent,
+    redPercent,
+    weekStart: start.toISOString().slice(0, 10),
+    weekEnd: today.toISOString().slice(0, 10)
+  };
+}
+// ---- Kirim summary 4DX weekly ke Apps Script ----
+async function syncFourdxWeeklyToSheet() {
+  const btn = document.getElementById("syncFourdxWeeklyBtn");
+  const statusEl = document.getElementById("syncFourdxWeeklyStatus");
+
+  if (!btn || !statusEl) return;
+
+  const profileNameInput = document.getElementById("profileName");
+  const positionInput = document.getElementById("profileRole");
+
+  const userName = profileNameInput ? (profileNameInput.value || "Unknown") : "Unknown";
+  const position = positionInput ? (positionInput.value || "") : "";
+
+  const summary = computeFourdxWeeklyOverall();
+
+  const payload = {
+    userName,
+    position,
+    weekStart: summary.weekStart,
+    weekEnd: summary.weekEnd,
+    totalCheckin: summary.totalCheckin,
+    greenPercent: summary.greenPercent,
+    yellowPercent: summary.yellowPercent,
+    redPercent: summary.redPercent
+  };
+
+  try {
+    btn.disabled = true;
+    btn.textContent = "Syncing 4DX...";
+    statusEl.textContent = "";
+
+    const res = await fetch(FOURDX_WEEKLY_SYNC_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      mode: "no-cors",
+      body: JSON.stringify(payload)
+    });
+
+    // mode no-cors: kita anggap sukses kalau tidak error
+    statusEl.textContent = "4DX weekly terkirim (cek di Google Sheet).";
+    statusEl.classList.remove("error");
+  } catch (err) {
+    console.error("Error sync 4DX weekly:", err);
+    statusEl.textContent = "Gagal sync 4DX weekly.";
+    statusEl.classList.add("error");
+  } finally {
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = "Sync 4DX Weekly";
+    }, 800);
+  }
+}
 
   const today = new Date();
   let startDate, endDate;
@@ -2024,8 +2133,17 @@ document.addEventListener("DOMContentLoaded",()=>{
   renderProfile();
   scheduleRandomBounce();
 
-  const syncBtn = document.getElementById("syncWeeklyBtn");
-  if (syncBtn) {
-    syncBtn.addEventListener("click", syncWeeklyToGoogleSheet);
+  const syncWeeklyBtn = document.getElementById("syncWeeklyBtn");
+  if (syncWeeklyBtn) {
+    syncWeeklyBtn.addEventListener("click", () => {
+      syncWeeklyToGoogleSheet();
+    });
+  }
+
+  const syncFourdxWeeklyBtn = document.getElementById("syncFourdxWeeklyBtn");
+  if (syncFourdxWeeklyBtn) {
+    syncFourdxWeeklyBtn.addEventListener("click", () => {
+      syncFourdxWeeklyToSheet();
+    });
   }
 });
