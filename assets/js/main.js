@@ -3,7 +3,7 @@
 // Dipakai tim per 01 Desember 2025
 const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzTUS-s1rX7dfJlzc7RCbxPmsqZXeIQo70FNRnNabpbjH6KenY4AxsWK0xSkimy8MCC/exec";
 // ==== 4DX WEEKLY SYNC WEBHOOK ====
-const FOURDX_WEEKLY_SYNC_URL = "https://script.google.com/a/macros/savvydigital.id/s/AKfycbwjEB9SbzanmrhVnyVIHSz9JczI0yTBRrOgehPEpabJFEiz9wBpTeH4N53rXF_IIA0LcQ/exec";
+const FOURDX_WEEKLY_SYNC_URL = "https://script.google.com/macros/s/AKfycbwjEB9SbzanmrhVnyVIHSz9JczI0yTBRrOgehPEpabJFEiz9wBpTeH4N53rXF_IIA0LcQ/exec";
 const TASK_XP_PER_EFFORT = { 1: 10, 2: 20, 3: 30 };
 const DAILY_TASK_XP_TARGET = 60;
 const LEARNING_XP_PER_EFFORT = { 1: 5, 2: 10, 3: 20 };
