@@ -436,18 +436,33 @@
       </div>
     </div>
 
-    <!-- NEW: Weekly Sync Card -->
-    <div class="card">
-      <div class="section-title">
-        <span>Weekly Sync to Google Sheet</span>
-        <small>Send last 7 days summary to central Sheet</small>
-      </div>
-      <p style="font-size:12px;color:var(--text-light);margin-top:0;margin-bottom:8px;">
-        Tombol ini akan mengirim ringkasan 7 hari terakhir (task & learning) ke Google Sheet pusat
-        yang bisa diakses manager/HR.
-      </p>
-      <button id="syncWeeklyBtn" type="button">Sync Weekly to Google Sheet</button>
-    </div>
+<!-- NEW: Weekly Sync Card -->
+<div class="card">
+  <div class="section-title">
+    <span>Weekly Sync to Google Sheet</span>
+    <small>Send last 7 days summary to central Sheet</small>
+  </div>
+  <p style="font-size:12px;color:var(--text-light);margin-top:0;margin-bottom:8px;">
+    Tombol di bawah akan mengirim ringkasan 7 hari terakhir ke Google Sheet pusat
+    yang bisa diakses manager/HR.
+  </p>
+
+  <!-- Sync Task & Learning (existing) -->
+  <button id="syncWeeklyBtn" type="button" style="margin-bottom:8px;">
+    Sync Weekly Tasks & Learning
+  </button>
+
+  <!-- Sync 4DX Weekly (NEW) -->
+  <button id="syncFourdxWeeklyBtn" type="button">
+    Sync 4DX Weekly
+  </button>
+
+  <div style="font-size:11px;color:var(--text-light);margin-top:6px;">
+    • Sync Tasks & Learning = kirim XP & % harian<br />
+    • Sync 4DX Weekly = kirim persentase hijau/kuning/merah lead measures minggu ini
+  </div>
+</div>
+
   </section>
 
 <img id="hohoTaskFloat" class="hoho-float hidden" src="hoho-happy.png" alt="Ho-Ho Task" />
