@@ -1092,6 +1092,46 @@ async function exportPDF() {
     (a, b) => b[1] - a[1]
   );
   const top3 = skillEntries.slice(0, 3);
+  // ----- 3B. 4DX Monthly Summary (for PDF month) -----
+  let fourdxPdf = null;
+  try {
+    if (typeof fourdxState !== "undefined" && typeof fourdxDaily !== "undefined") {
+      const leads = (fourdxState && fourdxState.leads) ? fourdxState.leads : [];
+      if (leads && leads.length) {
+        const stats = leads.map(name => ({ name: name || "", red: 0, yellow: 0, green: 0, total: 0 }));
+        let overallGreen = 0, overallYellow = 0, overallRed = 0, overallTotal = 0;
+
+        dayKeys.forEach((key) => {
+          const dayStatuses = (fourdxDaily && fourdxDaily[key]) ? fourdxDaily[key] : [];
+          leads.forEach((_, idx) => {
+            const s = dayStatuses[idx];
+            if (s !== "red" && s !== "yellow" && s !== "green") return;
+            stats[idx].total += 1;
+            stats[idx][s] += 1;
+
+            overallTotal += 1;
+            if (s === "green") overallGreen += 1;
+            if (s === "yellow") overallYellow += 1;
+            if (s === "red") overallRed += 1;
+          });
+        });
+
+        fourdxPdf = {
+          leads,
+          stats,
+          overall: {
+            total: overallTotal,
+            green: overallGreen,
+            yellow: overallYellow,
+            red: overallRed
+          }
+        };
+      }
+    }
+  } catch (e) {
+    console.warn("4DX PDF calc error:", e);
+    fourdxPdf = null;
+  }
 
   // ----- 4. HEADER -----
   if (savvyImg) {
@@ -1296,6 +1336,80 @@ async function exportPDF() {
 
   const lHeatRows = Math.ceil(dayKeys.length / lCols);
   y = lStartY + lHeatRows * (lCellSize + lCellGap) + 24;
+  // ==========================
+  // 2B. SECTION – 4DX SUMMARY (MONTHLY)
+  // ==========================
+  if (fourdxPdf && fourdxPdf.overall && fourdxPdf.stats) {
+    ensureSpace(120);
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(13);
+    pdf.text("2B. 4DX Summary (Monthly)", margin, y);
+    y += 16;
+
+    const total = fourdxPdf.overall.total || 0;
+    const g = fourdxPdf.overall.green || 0;
+    const yel = fourdxPdf.overall.yellow || 0;
+    const r = fourdxPdf.overall.red || 0;
+
+    const gp = total ? Math.round((g / total) * 100) : 0;
+    const yp = total ? Math.round((yel / total) * 100) : 0;
+    const rp = total ? Math.round((r / total) * 100) : 0;
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(11);
+    pdf.text(`Overall check-ins: ${total}`, margin, y); y += 14;
+    pdf.text(`Green: ${gp}%  |  Yellow: ${yp}%  |  Red: ${rp}%`, margin, y); y += 16;
+
+    // Mini bars per lead (simple & ringan)
+    const barW = pageWidth - margin * 2;
+    const barH = 10;
+
+    fourdxPdf.stats.slice(0, 4).forEach((s) => {
+      ensureSpace(28);
+
+      const lt = (s.total || 0);
+      const g2 = (s.green || 0);
+      const y2 = (s.yellow || 0);
+      const r2 = (s.red || 0);
+
+      const g2p = lt ? (g2 / lt) : 0;
+      const y2p = lt ? (y2 / lt) : 0;
+      const r2p = lt ? (r2 / lt) : 0;
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(10);
+      pdf.text(`• ${s.name || "-"}`, margin, y);
+      y += 10;
+
+      // outline
+      pdf.setDrawColor(210, 210, 210);
+      pdf.rect(margin, y, barW, barH);
+
+      // green
+      pdf.setFillColor(34, 197, 94);
+      pdf.rect(margin, y, barW * g2p, barH, "F");
+
+      // yellow
+      pdf.setFillColor(234, 179, 8);
+      pdf.rect(margin + barW * g2p, y, barW * y2p, barH, "F");
+
+      // red
+      pdf.setFillColor(239, 68, 68);
+      pdf.rect(margin + barW * (g2p + y2p), y, barW * r2p, barH, "F");
+
+      y += 16;
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(9);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`(${lt} check-ins)`, margin, y);
+      pdf.setTextColor(0, 0, 0);
+      y += 12;
+    });
+
+    y += 6;
+  }
 
   // =====================================================
   // 7. SECTION 3 – TASK DETAILS (PER DAY)
