@@ -1093,19 +1093,44 @@ async function exportPDF() {
   );
   const top3 = skillEntries.slice(0, 3);
   // ----- 3B. 4DX Monthly Summary (for PDF month) -----
+  // RULE:
+  // - Weekday (Mon–Fri) kalau gak check-in => dihitung RED
+  // - Weekend (Sat–Sun) kalau gak check-in => gak dihitung (0), tapi kalau check-in => masuk hitungan
   let fourdxPdf = null;
+
   try {
     if (typeof fourdxState !== "undefined" && typeof fourdxDaily !== "undefined") {
-      const leads = (fourdxState && fourdxState.leads) ? fourdxState.leads : [];
-      if (leads && leads.length) {
-        const stats = leads.map(name => ({ name: name || "", red: 0, yellow: 0, green: 0, total: 0 }));
+      const leads = (fourdxState && Array.isArray(fourdxState.leads)) ? fourdxState.leads : [];
+
+      if (leads.length) {
+        const stats = leads.map((name) => ({ name: name || "", red: 0, yellow: 0, green: 0, total: 0 }));
         let overallGreen = 0, overallYellow = 0, overallRed = 0, overallTotal = 0;
 
+        const isWeekend = (dateKey) => {
+          // dateKey format: YYYY-MM-DD
+          const d = new Date(dateKey + "T00:00:00");
+          const day = d.getDay(); // 0 Sun ... 6 Sat
+          return day === 0 || day === 6;
+        };
+
         dayKeys.forEach((key) => {
-          const dayStatuses = (fourdxDaily && fourdxDaily[key]) ? fourdxDaily[key] : [];
+          const weekend = isWeekend(key);
+          const dayStatuses = (fourdxDaily && Array.isArray(fourdxDaily[key])) ? fourdxDaily[key] : [];
+
           leads.forEach((_, idx) => {
-            const s = dayStatuses[idx];
-            if (s !== "red" && s !== "yellow" && s !== "green") return;
+            let s = dayStatuses[idx];
+
+            // kalau status valid → pakai
+            if (s === "red" || s === "yellow" || s === "green") {
+              // ok
+            } else {
+              // kalau weekend & gak ada check-in → skip (gak dihitung)
+              if (weekend) return;
+
+              // weekday & gak ada check-in → dianggap RED
+              s = "red";
+            }
+
             stats[idx].total += 1;
             stats[idx][s] += 1;
 
