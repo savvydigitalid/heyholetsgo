@@ -1343,9 +1343,30 @@ async function exportPDF() {
     ensureSpace(120);
 
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(13);
-    pdf.text("2B. 4DX Summary (Monthly)", margin, y);
-    y += 16;
+pdf.setFontSize(13);
+
+// month label dari report yang dipilih
+// monthKey biasanya sudah ada dari flow exportPDF lo (mis. "2025-12")
+const _m = (typeof monthKey !== "undefined" && monthKey) ? monthKey : "";
+const _monthTitle = _m ? _m : "Selected Month";
+
+pdf.text(`2B. 4DX Summary — ${_monthTitle}`, margin, y);
+y += 10;
+
+// range tanggal yang dipakai (berdasarkan dayKeys)
+let _start = "-", _end = "-";
+if (typeof dayKeys !== "undefined" && dayKeys && dayKeys.length) {
+  _start = dayKeys[0];
+  _end = dayKeys[dayKeys.length - 1];
+}
+
+pdf.setFont("helvetica", "normal");
+pdf.setFontSize(10);
+pdf.setTextColor(90, 90, 90);
+pdf.text(`Period: ${_start} → ${_end}`, margin, y);
+pdf.setTextColor(0, 0, 0);
+y += 14;
+
 
     const total = fourdxPdf.overall.total || 0;
     const g = fourdxPdf.overall.green || 0;
