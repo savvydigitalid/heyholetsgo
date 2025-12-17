@@ -1667,6 +1667,10 @@ function getCurrentFourdxPeriod() {
   if (!sel) return "last30";
   return sel.value || "last30";
 }
+function isWeekend(dateObj) {
+  const day = dateObj.getDay(); // 0=Sun, 6=Sat
+  return day === 0 || day === 6;
+}
 
 /* ---- Hitung summary WEEKLY overall (green / yellow / red %) ---- */
 function computeFourdxWeeklyOverall() {
@@ -1681,6 +1685,9 @@ function computeFourdxWeeklyOverall() {
   start.setDate(start.getDate() - 6);
   start.setHours(0, 0, 0, 0);
 
+  const leads = Array.isArray(fourdxState.leads) ? fourdxState.leads : [];
+  const leadCount = leads.length;
+
   let total = 0;
   let green = 0;
   let yellow = 0;
@@ -1688,32 +1695,37 @@ function computeFourdxWeeklyOverall() {
 
   for (let d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
     const key = d.toISOString().slice(0, 10);
-    const arr = fourdxDaily[key];
-    if (!arr || !Array.isArray(arr)) continue;
+    const arr = fourdxDaily[key]; // bisa undefined
 
-    arr.forEach((status) => {
-      if (!status) return;
-      total += 1;
-      if (status === "green") green += 1;
-      else if (status === "yellow") yellow += 1;
-      else if (status === "red") red += 1;
-    });
+    // Weekend: hanya dihitung kalau memang ada check-in hari itu
+    if (isWeekend(d)) {
+      if (!arr || !Array.isArray(arr)) continue;
+
+      for (let i = 0; i < leadCount; i++) {
+        const s = arr[i];
+        if (s !== "red" && s !== "yellow" && s !== "green") continue; // weekend kosong -> skip
+        total++;
+        if (s === "green") green++;
+        else if (s === "yellow") yellow++;
+        else red++;
+      }
+      continue;
+    }
+
+    // Weekday: WAJIB dihitung. Missing = red.
+    for (let i = 0; i < leadCount; i++) {
+      const s = (arr && Array.isArray(arr)) ? arr[i] : undefined;
+      total++;
+
+      if (s === "green") green++;
+      else if (s === "yellow") yellow++;
+      else red++; // termasuk missing / undefined -> merah
+    }
   }
 
-  if (total === 0) {
-    return {
-      totalCheckin: 0,
-      greenPercent: 0,
-      yellowPercent: 0,
-      redPercent: 0,
-      weekStart: start.toISOString().slice(0, 10),
-      weekEnd: today.toISOString().slice(0, 10)
-    };
-  }
-
-  const greenPercent = Math.round((green / total) * 100);
-  const yellowPercent = Math.round((yellow / total) * 100);
-  const redPercent = Math.round((red / total) * 100);
+  const greenPercent = total ? Math.round((green / total) * 100) : 0;
+  const yellowPercent = total ? Math.round((yellow / total) * 100) : 0;
+  const redPercent = total ? Math.round((red / total) * 100) : 0;
 
   return {
     totalCheckin: total,
@@ -1724,6 +1736,7 @@ function computeFourdxWeeklyOverall() {
     weekEnd: today.toISOString().slice(0, 10)
   };
 }
+
 
 /* ---- Kirim summary 4DX weekly ke Apps Script ---- */
 async function syncFourdxWeeklyToSheet() {
@@ -1787,7 +1800,9 @@ async function syncFourdxWeeklyToSheet() {
 
 /* ---- Hitung summary bulanan per lead ---- */
 function computeFourdxMonthlyStats(periodKey) {
-  const leads = fourdxState.leads || [];
+  const leads = Array.isArray(fourdxState.leads) ? fourdxState.leads : [];
+  const leadCount = leads.length;
+
   const stats = leads.map(name => ({
     name: name || "",
     red: 0,
@@ -1796,19 +1811,17 @@ function computeFourdxMonthlyStats(periodKey) {
     total: 0
   }));
 
-  if (!leads.length) {
-    return { stats, overall: { green: 0, total: 0 } };
+  if (!leadCount) {
+    return { stats, overall: { green: 0, total: 0, yellow: 0, red: 0 } };
   }
 
   const today = new Date();
   let startDate, endDate;
 
   if (periodKey === "month") {
-    // This month: dari tanggal 1 sampai hari ini
     startDate = new Date(today.getFullYear(), today.getMonth(), 1);
     endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   } else {
-    // Default: last 30 days (termasuk hari ini)
     endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     startDate = new Date(endDate);
     startDate.setDate(endDate.getDate() - 29);
@@ -1818,30 +1831,59 @@ function computeFourdxMonthlyStats(periodKey) {
   endDate.setHours(0, 0, 0, 0);
 
   let overallGreen = 0;
+  let overallYellow = 0;
+  let overallRed = 0;
   let overallTotal = 0;
 
-  Object.keys(fourdxDaily || {}).forEach(key => {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return;
-    const [y, m, d] = key.split("-").map(Number);
-    const dt = new Date(y, m - 1, d);
-    dt.setHours(0, 0, 0, 0);
+  // ITERASI per hari (bukan cuma key yang ada di object)
+  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+    const key = d.toISOString().slice(0, 10);
+    const arr = fourdxDaily[key]; // bisa undefined
 
-    if (dt < startDate || dt > endDate) return;
+    // Weekend: cuma dihitung kalau ada check-in
+    if (isWeekend(d)) {
+      if (!arr || !Array.isArray(arr)) continue;
 
-    const dayStatuses = fourdxDaily[key] || [];
-    leads.forEach((_, idx) => {
-      const s = dayStatuses[idx];
-      if (s !== "red" && s !== "yellow" && s !== "green") return;
-      stats[idx].total += 1;
-      stats[idx][s] += 1;
-      overallTotal += 1;
-      if (s === "green") overallGreen += 1;
-    });
-  });
+      for (let i = 0; i < leadCount; i++) {
+        const s = arr[i];
+        if (s !== "red" && s !== "yellow" && s !== "green") continue; // weekend kosong -> skip
+
+        stats[i].total++;
+        stats[i][s]++;
+
+        overallTotal++;
+        if (s === "green") overallGreen++;
+        else if (s === "yellow") overallYellow++;
+        else overallRed++;
+      }
+      continue;
+    }
+
+    // Weekday: WAJIB dihitung untuk semua lead. Missing => red.
+    for (let i = 0; i < leadCount; i++) {
+      const s = (arr && Array.isArray(arr)) ? arr[i] : undefined;
+
+      stats[i].total++;
+      overallTotal++;
+
+      if (s === "green") {
+        stats[i].green++; overallGreen++;
+      } else if (s === "yellow") {
+        stats[i].yellow++; overallYellow++;
+      } else {
+        stats[i].red++; overallRed++; // missing -> red
+      }
+    }
+  }
 
   return {
     stats,
-    overall: { green: overallGreen, total: overallTotal }
+    overall: {
+      total: overallTotal,
+      green: overallGreen,
+      yellow: overallYellow,
+      red: overallRed
+    }
   };
 }
 
@@ -1939,20 +1981,35 @@ function renderFourdxMonthlySummary(periodKey) {
     const glowClass = total > 0 && greenPct >= 70 ? " glow-green" : "";
 
     // --- Hitung streak green ke belakang (max 60 hari) ---
-    let streak = 0;
-    const today = new Date();
+   // --- Hitung streak green ke belakang (max 90 hari) ---
+// Rules:
+// - Weekday: wajib ada status, kalau missing dianggap red (break)
+// - Weekend: kalau tidak ada check-in => skip (tidak break, tidak nambah)
+//          kalau ada check-in dan bukan green => break
+let streak = 0;
+const today = new Date();
 
-    for (let i = 0; i < 60; i++) {
-      const dt = new Date(today);
-      dt.setDate(today.getDate() - i);
-      const key = dt.toISOString().slice(0, 10);
+for (let i = 0; i < 90; i++) {
+  const dt = new Date(today);
+  dt.setDate(today.getDate() - i);
+  const key = dt.toISOString().slice(0, 10);
 
-      const daily = fourdxDaily[key];
-      if (!daily || !daily[index]) break;
-      if (daily[index] !== "green") break;
+  const daily = fourdxDaily[key];
+  const s = (daily && Array.isArray(daily)) ? daily[index] : undefined;
 
-      streak++;
+  if (isWeekend(dt)) {
+    if (!daily || !Array.isArray(daily) || !s) {
+      continue; // weekend kosong => skip
     }
+    if (s === "green") { streak++; continue; }
+    break; // weekend ada input tapi bukan green
+  }
+
+  // weekday
+  if (s === "green") { streak++; continue; }
+  break; // missing / yellow / red => stop streak
+}
+
 
     // Badge konsistensi
     let badge = "";
