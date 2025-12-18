@@ -176,10 +176,26 @@
       </div>
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
-      <div style="padding:10px 12px;border-radius:14px;background:var(--bg-alt);border:1px solid var(--border);font-size:13px;">
-        😡 Overall green ratio: <b><span id="fourdxOverallGreen">0%</span></b> di periode ini.
+<!-- Battery Bar – Monthly Discipline -->
+<div style="padding:10px 12px;border-radius:14px;background:var(--bg-alt);border:1px solid var(--border);font-size:13px;">
+  <div style="font-weight:800;margin-bottom:8px;">Battery Bar – Monthly Discipline</div>
+
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div style="flex:1;height:12px;border-radius:999px;background:rgba(148,163,184,0.35);overflow:hidden;border:1px solid var(--border);">
+      <div id="fourdxBatteryFill" style="height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#6ee7b7,#34d399);"></div>
+    </div>
+
+    <div style="min-width:160px;text-align:right;">
+      <div style="font-weight:900;">
+        <span id="fourdxBatteryPct">0%</span> GREEN
       </div>
+      <div style="font-size:11px;color:var(--text-light);">
+        (<span id="fourdxBatteryFraction">0/0</span> check-ins)
+      </div>
+    </div>
+  </div>
+</div>
+
 
       <div style="padding:10px 12px;border-radius:14px;background:var(--bg-alt);border:1px solid var(--border);font-size:13px;color:var(--text-light);">
         Ho-Ho: Banyak hari merah nih. Pilih 1 lead paling penting dan fokus push itu minggu depan! 🔥
