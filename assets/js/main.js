@@ -107,6 +107,20 @@ const userNameInput = document.getElementById("userNameInput");
 const userPositionInput = document.getElementById("userPositionInput");
 const exportPdfBtn = document.getElementById("exportPdfBtn");
 
+// ===== 4DX DOM (UI only for now) =====
+const fourdxPeriodSelect = document.getElementById("fourdxPeriodSelect");
+const fourdxOverallGreen = document.getElementById("fourdxOverallGreen");
+const fourdxMonthlyRows = document.getElementById("fourdxMonthlyRows");
+
+const leadMeasuresList = document.getElementById("leadMeasuresList");
+const addLeadMeasureBtn = document.getElementById("addLeadMeasureBtn");
+const leadCheckinToday = document.getElementById("leadCheckinToday");
+
+const lagMeasuresList = document.getElementById("lagMeasuresList");
+const addLagMeasureBtn = document.getElementById("addLagMeasureBtn");
+
+const wigInput = document.getElementById("wigInput");
+
 /* THEME */
 function applyTheme(theme){
   if(theme === "dark"){
@@ -1445,6 +1459,118 @@ function scheduleRandomBounce() {
     scheduleRandomBounce();
   }, delay);
 }
+// ===== 4DX RENDER (DUMMY UI) =====
+function render4DXDummy() {
+  if (!fourdxMonthlyRows) return;
+
+  // Dummy: 4 Lead Measures (sesuai konsep max 4)
+  const leads = [
+    "Cross Selling 5 Brand per hari",
+    "Reach Out 10 Talent SSS per hari",
+    "Reach Out 8 Brand per hari",
+    "Listing 15 KOL per hari",
+  ];
+
+  const period = parseInt((fourdxPeriodSelect && fourdxPeriodSelect.value) || "30", 10);
+
+  // bikin emoji row sepanjang period
+  const makeEmojiRow = (len) => {
+    const arr = [];
+    for (let i = 0; i < len; i++) {
+      const r = Math.random();
+      if (r < 0.70) arr.push("😡");
+      else if (r < 0.88) arr.push("😐");
+      else arr.push("😄");
+    }
+    return arr;
+  };
+
+  const rows = leads.map((name) => ({
+    name,
+    cells: makeEmojiRow(period),
+  }));
+
+  // overall % green (dummy)
+  let g = 0, total = 0;
+  rows.forEach((row) => {
+    row.cells.forEach((c) => {
+      total++;
+      if (c === "😄") g++;
+    });
+  });
+  const pct = total ? Math.round((g / total) * 100) : 0;
+  if (fourdxOverallGreen) fourdxOverallGreen.textContent = pct + "%";
+
+  // Render Monthly Lead Progress (emoji berjejer)
+  fourdxMonthlyRows.innerHTML = "";
+  rows.forEach((row) => {
+    const green = row.cells.filter((x) => x === "😄").length;
+    const yellow = row.cells.filter((x) => x === "😐").length;
+    const red = row.cells.filter((x) => x === "😡").length;
+    const greenPct = Math.round((green / (green + yellow + red)) * 100);
+
+    const block = document.createElement("div");
+    block.innerHTML = `
+      <div style="font-weight:800;margin-bottom:6px;">${row.name}</div>
+
+      <div style="font-family:ui-monospace, Menlo, Consolas, monospace;font-size:16px;white-space:nowrap;overflow-x:auto;padding-bottom:2px;">
+        ${row.cells.join(" ")}
+      </div>
+
+      <div style="font-size:12px;color:var(--text-light);margin-top:6px;">
+        Green ${green} · Yellow ${yellow} · Red ${red} — <b>${greenPct}% green</b>
+      </div>
+
+      <div style="font-size:12px;margin-top:6px;">
+        🔥 Streak: <b>0</b> hari
+      </div>
+
+      <div style="font-size:12px;margin-top:4px;color:var(--text-light);">
+        🎯 ${greenPct < 50 ? "😡 Needs focus" : (greenPct < 80 ? "😐 Keep pushing" : "😄 Good job")}
+      </div>
+    `;
+    fourdxMonthlyRows.appendChild(block);
+  });
+
+  // Render Lead Measures list (dummy input UI)
+  if (leadMeasuresList) {
+    leadMeasuresList.innerHTML = leads.map((name) => `
+      <div style="display:flex;gap:10px;align-items:center;">
+        <input type="text" value="${name}" style="flex:1;" />
+        <button type="button" class="btn-ghost" style="width:42px;background:#f97373;color:#111827;">✕</button>
+      </div>
+    `).join("");
+  }
+
+  // Render Daily Lead Check-in (dummy buttons)
+  if (leadCheckinToday) {
+    leadCheckinToday.innerHTML = leads.map((name) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+        <div style="font-size:13px;font-weight:700;">${name}</div>
+        <div style="display:flex;gap:8px;">
+          <button type="button" style="padding:8px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg-alt);">😡</button>
+          <button type="button" style="padding:8px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg-alt);">😐</button>
+          <button type="button" style="padding:8px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg-alt);">😄</button>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  // Render Lag Measures (dummy)
+  if (lagMeasuresList) {
+    lagMeasuresList.innerHTML = `
+      <div style="display:flex;gap:10px;align-items:center;">
+        <input type="text" value="Profit IFMN 200jt per bulan sepanjang 2026" style="flex:1;" />
+        <button type="button" class="btn-ghost" style="width:42px;background:#f97373;color:#111827;">✕</button>
+      </div>
+    `;
+  }
+
+  // WIG dummy default
+  if (wigInput && !wigInput.value) {
+    wigInput.value = "Meningkatkan pertumbuhan revenue 30% YoY di 2026";
+  }
+}
 
 /* INIT */
 document.addEventListener("DOMContentLoaded", () => {
@@ -1472,6 +1598,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Ho-Ho idle bounce
   scheduleRandomBounce();
+
+  // 4DX UI (dummy)
+  render4DXDummy();
+  if (fourdxPeriodSelect) {
+    fourdxPeriodSelect.addEventListener("change", render4DXDummy);
+  }
 
   // 🔗 Hubungkan tombol Sync Weekly → fungsi syncWeeklyToGoogleSheet()
   const syncBtn = document.getElementById("syncWeeklyBtn");
