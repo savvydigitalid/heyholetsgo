@@ -110,6 +110,10 @@ const exportPdfBtn = document.getElementById("exportPdfBtn");
 // ===== 4DX DOM (UI only for now) =====
 const fourdxPeriodSelect = document.getElementById("fourdxPeriodSelect");
 const fourdxOverallGreen = document.getElementById("fourdxOverallGreen");
+const fourdxBatteryFill = document.getElementById("fourdxBatteryFill");
+const fourdxBatteryPct = document.getElementById("fourdxBatteryPct");
+const fourdxBatteryFraction = document.getElementById("fourdxBatteryFraction");
+
 const fourdxMonthlyRows = document.getElementById("fourdxMonthlyRows");
 
 const leadMeasuresList = document.getElementById("leadMeasuresList");
@@ -1500,6 +1504,11 @@ function render4DXDummy() {
   });
   const pct = total ? Math.round((g / total) * 100) : 0;
   if (fourdxOverallGreen) fourdxOverallGreen.textContent = pct + "%";
+    // Battery bar (dummy) – %green + fraction
+  if (fourdxBatteryPct) fourdxBatteryPct.textContent = pct + "%";
+  if (fourdxBatteryFill) fourdxBatteryFill.style.width = pct + "%";
+  if (fourdxBatteryFraction) fourdxBatteryFraction.textContent = `${g}/${total}`;
+
 
   // Render Monthly Lead Progress (emoji berjejer)
   fourdxMonthlyRows.innerHTML = "";
