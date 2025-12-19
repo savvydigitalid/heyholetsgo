@@ -1570,19 +1570,32 @@ const makeStatusRow = (len) => {
     `).join("");
   }
 
-  // Render Daily Lead Check-in (dummy buttons)
+   // Render Daily Lead Check-in (dummy buttons with hoho icons)
   if (leadCheckinToday) {
     leadCheckinToday.innerHTML = leads.map((name) => `
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
         <div style="font-size:13px;font-weight:700;">${name}</div>
-        <div style="display:flex;gap:8px;">
-          <button type="button" style="padding:8px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg-alt);">😡</button>
-          <button type="button" style="padding:8px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg-alt);">😐</button>
-          <button type="button" style="padding:8px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg-alt);">😄</button>
+
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button type="button" class="fourdx-check-btn" data-status="RED"
+            style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
+            <img class="fourdx-icon" src="${hohoIconForStatus("RED")}" alt="RED">
+          </button>
+
+          <button type="button" class="fourdx-check-btn" data-status="YELLOW"
+            style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
+            <img class="fourdx-icon" src="${hohoIconForStatus("YELLOW")}" alt="YELLOW">
+          </button>
+
+          <button type="button" class="fourdx-check-btn" data-status="GREEN"
+            style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
+            <img class="fourdx-icon" src="${hohoIconForStatus("GREEN")}" alt="GREEN">
+          </button>
         </div>
       </div>
     `).join("");
   }
+
 
   // Render Lag Measures (dummy)
   if (lagMeasuresList) {
