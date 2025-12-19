@@ -233,4 +233,37 @@
       50% { transform: translateY(-6px); }
       100% { transform: translateY(0); }
     }
-  
+  /* ===== 4DX UI polish ===== */
+.fourdx-lead-box{
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.fourdx-lead-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom: 8px;
+}
+
+.fourdx-emoji-grid{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+.fourdx-emoji-cell{
+  width: 28px;
+  height: 28px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.65);
+  font-size: 16px;
+}
+
