@@ -1475,7 +1475,8 @@ function render4DXDummy() {
     "Listing 15 KOL per hari",
   ];
 
-  const period = parseInt((fourdxPeriodSelect && fourdxPeriodSelect.value) || "30", 10);
+  const periodVal = (fourdxPeriodSelect && fourdxPeriodSelect.value) || "30";
+  const period = (periodVal === "month") ? new Date().getDate() : parseInt(periodVal, 10);
 
   // bikin emoji row sepanjang period
   const makeEmojiRow = (len) => {
