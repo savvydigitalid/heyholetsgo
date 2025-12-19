@@ -278,4 +278,8 @@
   height: 24px !important;
   display: block !important;
 }
+.fourdx-check-btn{
+  padding: 0 !important;
+  line-height: 0 !important;
+}
 
