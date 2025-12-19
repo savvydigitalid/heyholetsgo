@@ -1519,15 +1519,23 @@ function render4DXDummy() {
     const greenPct = Math.round((green / (green + yellow + red)) * 100);
 
     const block = document.createElement("div");
-    block.innerHTML = `
-      <div style="font-weight:800;margin-bottom:6px;">${row.name}</div>
+       const gridHtml = row.cells.map((c) => `<div class="fourdx-emoji-cell">${c}</div>`).join("");
 
-      <div style="font-family:ui-monospace, Menlo, Consolas, monospace;font-size:16px;white-space:nowrap;overflow-x:auto;padding-bottom:2px;">
-        ${row.cells.join(" ")}
+    block.className = "fourdx-lead-box";
+    block.innerHTML = `
+      <div class="fourdx-lead-head">
+        <div style="font-weight:800;">${row.name}</div>
+        <div style="font-size:12px;color:var(--text-light);white-space:nowrap;">
+          <b>${greenPct}% green</b>
+        </div>
       </div>
 
-      <div style="font-size:12px;color:var(--text-light);margin-top:6px;">
-        Green ${green} · Yellow ${yellow} · Red ${red} — <b>${greenPct}% green</b>
+      <div class="fourdx-emoji-grid">
+        ${gridHtml}
+      </div>
+
+      <div style="font-size:12px;color:var(--text-light);margin-top:8px;">
+        Green ${green} · Yellow ${yellow} · Red ${red}
       </div>
 
       <div style="font-size:12px;margin-top:6px;">
@@ -1538,8 +1546,7 @@ function render4DXDummy() {
         🎯 ${greenPct < 50 ? "😡 Needs focus" : (greenPct < 80 ? "😐 Keep pushing" : "😄 Good job")}
       </div>
     `;
-    fourdxMonthlyRows.appendChild(block);
-  });
+
 
   // Render Lead Measures list (dummy input UI)
   if (leadMeasuresList) {
