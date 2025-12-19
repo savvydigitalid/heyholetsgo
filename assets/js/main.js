@@ -1547,7 +1547,9 @@ function render4DXDummy() {
         🎯 ${greenPct < 50 ? "😡 Needs focus" : (greenPct < 80 ? "😐 Keep pushing" : "😄 Good job")}
       </div>
     `;
-
+    
+    fourdxMonthlyRows.appendChild(block);
+  });
 
   // Render Lead Measures list (dummy input UI)
   if (leadMeasuresList) {
