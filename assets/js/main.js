@@ -1464,6 +1464,11 @@ function scheduleRandomBounce() {
   }, delay);
 }
 // ===== 4DX RENDER (DUMMY UI) =====
+function hohoIconForStatus(status){
+  if(status === "GREEN") return "assets/emothoho/hoho4dx_green.png";
+  if(status === "YELLOW") return "assets/emothoho/hoho4dx_yellow.png";
+  return "assets/emothoho/hoho4dx_red.png";
+}
 function render4DXDummy() {
   if (!fourdxMonthlyRows) return;
 
@@ -1479,20 +1484,20 @@ function render4DXDummy() {
   const period = (periodVal === "month") ? new Date().getDate() : parseInt(periodVal, 10);
 
   // bikin emoji row sepanjang period
-  const makeEmojiRow = (len) => {
-    const arr = [];
-    for (let i = 0; i < len; i++) {
-      const r = Math.random();
-      if (r < 0.70) arr.push("😡");
-      else if (r < 0.88) arr.push("😐");
-      else arr.push("😄");
-    }
-    return arr;
-  };
+const makeStatusRow = (len) => {
+  const arr = [];
+  for (let i = 0; i < len; i++) {
+    const r = Math.random();
+    if (r < 0.70) arr.push("RED");
+    else if (r < 0.88) arr.push("YELLOW");
+    else arr.push("GREEN");
+  }
+  return arr;
+};
 
   const rows = leads.map((name) => ({
     name,
-    cells: makeEmojiRow(period),
+    cells: makeStatusRow(period),
   }));
 
   // overall % green (dummy)
@@ -1500,7 +1505,7 @@ function render4DXDummy() {
   rows.forEach((row) => {
     row.cells.forEach((c) => {
       total++;
-      if (c === "😄") g++;
+      if (c === "GREEN") g++;
     });
   });
   const pct = total ? Math.round((g / total) * 100) : 0;
@@ -1514,13 +1519,17 @@ function render4DXDummy() {
   // Render Monthly Lead Progress (emoji berjejer)
   fourdxMonthlyRows.innerHTML = "";
   rows.forEach((row) => {
-    const green = row.cells.filter((x) => x === "😄").length;
-    const yellow = row.cells.filter((x) => x === "😐").length;
-    const red = row.cells.filter((x) => x === "😡").length;
+    const green = row.cells.filter((x) => x === "GREEN").length;
+    const yellow = row.cells.filter((x) => x === "YELLOW").length;
+    const red = row.cells.filter((x) => x === "RED").length;
     const greenPct = Math.round((green / (green + yellow + red)) * 100);
 
     const block = document.createElement("div");
-       const gridHtml = row.cells.map((c) => `<div class="fourdx-emoji-cell">${c}</div>`).join("");
+      const gridHtml = row.cells.map((status) => `
+  <div class="fourdx-emoji-cell" data-status="${status}">
+    <img class="fourdx-icon" src="${hohoIconForStatus(status)}" alt="${status}">
+  </div>
+`).join("");
 
     block.className = "fourdx-lead-box";
     block.innerHTML = `
