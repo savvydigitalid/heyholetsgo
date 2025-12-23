@@ -1515,15 +1515,7 @@ const pctDebug = forcePct;
   if (fourdxOverallGreen) fourdxOverallGreen.textContent = pct + "%";
     // Battery bar (dummy) – %green + fraction
   if (fourdxBatteryPct) fourdxBatteryPct.textContent = pct + "%";
-  if (fourdxBatteryFill) fourdxBatteryFill.style.width = pctForBattery + "%";
-    // DEBUG (hapus nanti): paksa pct jadi 95 biar efek listrik keliatan
-  const pctForBattery = 95;
-    if (fourdxBatteryFill) {
-    fourdxBatteryFill.classList.remove("level-red","level-yellow","level-green");
-    if (pctForBattery < 50) fourdxBatteryFill.classList.add("level-red");
-    else if (pctForBattery < 90) fourdxBatteryFill.classList.add("level-yellow");
-    else fourdxBatteryFill.classList.add("level-green");
-  }
+  if (fourdxBatteryFill) fourdxBatteryFill.style.width = pct + "%";
   if (fourdxBatteryFraction) fourdxBatteryFraction.textContent = `${g}/${total}`;
 
 
