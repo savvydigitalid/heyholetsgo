@@ -1616,7 +1616,7 @@ if (leadCheckinToday && !leadCheckinToday.dataset.bound) {
     btn.classList.add("selected");
   });
 }
-
+}
 
   // Render Lag Measures (dummy)
   if (lagMeasuresList) {
