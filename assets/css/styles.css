@@ -288,20 +288,6 @@
   transform: translateZ(0);
 }
 
-.fourdx-check-btn:hover{
-  transform: scale(1.04);
-}
-
-.fourdx-check-btn.pop{
-  animation: fourdxPop 220ms ease-out;
-}
-
-@keyframes fourdxPop{
-  0%   { transform: scale(0.92); }
-  55%  { transform: scale(1.12); }
-  100% { transform: scale(1.00); }
-}
-
 /* selected state */
 .fourdx-check-btn.selected{
   border-color: rgba(17, 24, 39, 0.25) !important;
