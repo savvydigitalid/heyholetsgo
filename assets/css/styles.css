@@ -293,6 +293,26 @@
   border-color: rgba(17, 24, 39, 0.25) !important;
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.18);
 }
+/* Safe dopamine pulse (no movement) */
+.fourdx-check-btn.selected{
+  position: relative;
+}
+
+.fourdx-check-btn.selected::after{
+  content:"";
+  position:absolute;
+  inset:-6px;
+  border-radius:14px;
+  box-shadow: 0 0 0 0 rgba(59,130,246,0.35);
+  animation: fourdxPulse 420ms ease-out;
+  pointer-events:none;
+}
+
+@keyframes fourdxPulse{
+  0%   { box-shadow: 0 0 0 0 rgba(59,130,246,0.35); }
+  100% { box-shadow: 0 0 0 8px rgba(59,130,246,0); }
+}
+
 /* Prevent image drag/ghost preview on hoho icons */
 .fourdx-icon{
   pointer-events: none;
