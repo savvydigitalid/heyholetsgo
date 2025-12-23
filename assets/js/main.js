@@ -1617,21 +1617,6 @@ const pctDebug = forcePct;
       // mark selected
       btn.classList.add("selected");
 
-      // trigger pop animation (restart safely)
-      btn.classList.remove("pop");
-      // force reflow so animation can replay
-      void btn.offsetWidth;
-      btn.classList.add("pop");
-
-      // cleanup pop class after animation ends
-      const onEnd = () => {
-        btn.classList.remove("pop");
-        btn.removeEventListener("animationend", onEnd);
-      };
-      btn.addEventListener("animationend", onEnd);
-    });
-  }
-
   }
 
 
