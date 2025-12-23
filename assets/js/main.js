@@ -1576,7 +1576,7 @@ const pctDebug = forcePct;
    // Render Daily Lead Check-in (dummy buttons with hoho icons)
   if (leadCheckinToday) {
     leadCheckinToday.innerHTML = leads.map((name) => `
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+      <div data-lead="${name}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
         <div style="font-size:13px;font-weight:700;">${name}</div>
 
         <div style="display:flex;gap:10px;align-items:center;">
