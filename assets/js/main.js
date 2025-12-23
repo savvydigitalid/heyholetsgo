@@ -1602,6 +1602,9 @@ const pctDebug = forcePct;
     leadCheckinToday.dataset.bound = "1";
 
     leadCheckinToday.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
       const btn = e.target.closest(".fourdx-check-btn");
       if (!btn) return;
 
