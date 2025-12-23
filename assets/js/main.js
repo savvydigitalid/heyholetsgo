@@ -1597,6 +1597,38 @@ const pctDebug = forcePct;
         </div>
       </div>
     `).join("");
+      // Click micro-animation + selected state (UI only)
+  if (leadCheckinToday && !leadCheckinToday.dataset.bound) {
+    leadCheckinToday.dataset.bound = "1";
+
+    leadCheckinToday.addEventListener("click", (e) => {
+      const btn = e.target.closest(".fourdx-check-btn");
+      if (!btn) return;
+
+      const row = btn.closest("[data-lead]");
+      if (!row) return;
+
+      // remove selected from other buttons in same row
+      row.querySelectorAll(".fourdx-check-btn").forEach((b) => b.classList.remove("selected"));
+
+      // mark selected
+      btn.classList.add("selected");
+
+      // trigger pop animation (restart safely)
+      btn.classList.remove("pop");
+      // force reflow so animation can replay
+      void btn.offsetWidth;
+      btn.classList.add("pop");
+
+      // cleanup pop class after animation ends
+      const onEnd = () => {
+        btn.classList.remove("pop");
+        btn.removeEventListener("animationend", onEnd);
+      };
+      btn.addEventListener("animationend", onEnd);
+    });
+  }
+
   }
 
 
