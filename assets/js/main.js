@@ -1513,6 +1513,12 @@ const makeStatusRow = (len) => {
     // Battery bar (dummy) – %green + fraction
   if (fourdxBatteryPct) fourdxBatteryPct.textContent = pct + "%";
   if (fourdxBatteryFill) fourdxBatteryFill.style.width = pct + "%";
+    if (fourdxBatteryFill) {
+    fourdxBatteryFill.classList.remove("level-red","level-yellow","level-green");
+    if (pct < 50) fourdxBatteryFill.classList.add("level-red");
+    else if (pct < 90) fourdxBatteryFill.classList.add("level-yellow");
+    else fourdxBatteryFill.classList.add("level-green");
+  }
   if (fourdxBatteryFraction) fourdxBatteryFraction.textContent = `${g}/${total}`;
 
 
