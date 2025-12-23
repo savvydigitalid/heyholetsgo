@@ -282,4 +282,71 @@
   padding: 0 !important;
   line-height: 0 !important;
 }
+/* ===== 4DX Battery (no assets) ===== */
+.fourdx-battery{
+  position: relative;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(148,163,184,0.35);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.fourdx-battery::after{
+  /* battery cap */
+  content:"";
+  position:absolute;
+  right:-8px;
+  top:50%;
+  transform:translateY(-50%);
+  width:10px;
+  height:10px;
+  border-radius:6px;
+  border: 1px solid var(--border);
+  background: rgba(148,163,184,0.35);
+}
+
+#fourdxBatteryFill{
+  height:100%;
+  width:0%;
+  border-radius:999px;
+  transition: width 500ms ease, filter 250ms ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* states */
+#fourdxBatteryFill.level-red{
+  background: linear-gradient(90deg, rgba(239,68,68,0.9), rgba(248,113,113,0.9));
+}
+#fourdxBatteryFill.level-yellow{
+  background: linear-gradient(90deg, rgba(245,158,11,0.95), rgba(253,224,71,0.95));
+}
+#fourdxBatteryFill.level-green{
+  background: linear-gradient(90deg, rgba(34,197,94,0.95), rgba(110,231,183,0.95));
+  filter: drop-shadow(0 0 6px rgba(34,197,94,0.55));
+}
+
+/* lightning / electric shimmer when >=90% */
+#fourdxBatteryFill.level-green::before{
+  content:"";
+  position:absolute;
+  inset:-40% -20%;
+  background:
+    repeating-linear-gradient(
+      115deg,
+      rgba(255,255,255,0.0) 0px,
+      rgba(255,255,255,0.0) 10px,
+      rgba(255,255,255,0.30) 14px,
+      rgba(255,255,255,0.0) 18px
+    );
+  animation: fourdxSpark 0.9s linear infinite;
+  mix-blend-mode: screen;
+  pointer-events:none;
+}
+
+@keyframes fourdxSpark{
+  0% { transform: translateX(-30%) translateY(-10%) rotate(0deg); }
+  100% { transform: translateX(30%) translateY(10%) rotate(0deg); }
+}
 
