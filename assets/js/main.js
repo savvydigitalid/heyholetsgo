@@ -1597,27 +1597,27 @@ const pctDebug = forcePct;
         </div>
       </div>
     `).join("");
-      // Click micro-animation + selected state (UI only)
-  if (leadCheckinToday && !leadCheckinToday.dataset.bound) {
-    leadCheckinToday.dataset.bound = "1";
+// Click micro-interaction: select 1 status per lead row (UI only)
+if (leadCheckinToday && !leadCheckinToday.dataset.bound) {
+  leadCheckinToday.dataset.bound = "1";
 
-    leadCheckinToday.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
+  leadCheckinToday.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-      const btn = e.target.closest(".fourdx-check-btn");
-      if (!btn) return;
+    const btn = e.target.closest(".fourdx-check-btn");
+    if (!btn) return;
 
-      const row = btn.closest("[data-lead]");
-      if (!row) return;
+    const row = btn.closest("[data-lead]");
+    if (!row) return;
 
-      // remove selected from other buttons in same row
-      row.querySelectorAll(".fourdx-check-btn").forEach((b) => b.classList.remove("selected"));
+    // remove selected from other buttons in same row
+    row.querySelectorAll(".fourdx-check-btn").forEach((b) => b.classList.remove("selected"));
 
-      // mark selected
-      btn.classList.add("selected");
-
-  }
+    // mark selected
+    btn.classList.add("selected");
+  });
+}
 
 
   // Render Lag Measures (dummy)
