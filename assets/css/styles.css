@@ -307,3 +307,9 @@
   border-color: rgba(17, 24, 39, 0.25) !important;
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.18);
 }
+/* Prevent image drag/ghost preview on hoho icons */
+.fourdx-icon{
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
