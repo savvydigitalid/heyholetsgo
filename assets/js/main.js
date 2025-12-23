@@ -1582,17 +1582,17 @@ const pctDebug = forcePct;
         <div style="display:flex;gap:10px;align-items:center;">
           <button type="button" class="fourdx-check-btn" data-status="RED"
             style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
-            <img class="fourdx-icon" src="${hohoIconForStatus("RED")}" alt="RED">
+            <img class="fourdx-icon" src="${hohoIconForStatus("RED")}" alt="RED" draggable="false">
           </button>
 
           <button type="button" class="fourdx-check-btn" data-status="YELLOW"
             style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
-            <img class="fourdx-icon" src="${hohoIconForStatus("YELLOW")}" alt="YELLOW">
+            <img class="fourdx-icon" src="${hohoIconForStatus("YELLOW")}" alt="YELLOW" draggable="false">
           </button>
 
           <button type="button" class="fourdx-check-btn" data-status="GREEN"
             style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
-            <img class="fourdx-icon" src="${hohoIconForStatus("GREEN")}" alt="GREEN">
+            <img class="fourdx-icon" src="${hohoIconForStatus("GREEN")}" alt="GREEN" draggable="false">
           </button>
         </div>
       </div>
