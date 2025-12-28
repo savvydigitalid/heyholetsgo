@@ -1679,12 +1679,10 @@ function render4DX() {
       </div>
     `).join("");
 // Click micro-interaction: select 1 status per lead row (UI only)
-if (leadCheckinToday && !leadCheckinToday.dataset.bound) {
-  leadCheckinToday.dataset.bound = "1";
-
-  leadCheckinToday.addEventListener("click", (e) => {
+// Click micro-interaction + AUTOSAVE
+if (leadCheckinToday) {
+  leadCheckinToday.onclick = (e) => {
     e.preventDefault();
-    e.stopPropagation();
 
     const btn = e.target.closest(".fourdx-check-btn");
     if (!btn) return;
@@ -1692,25 +1690,29 @@ if (leadCheckinToday && !leadCheckinToday.dataset.bound) {
     const row = btn.closest("[data-lead]");
     if (!row) return;
 
-    // remove selected from other buttons in same row
-    row.querySelectorAll(".fourdx-check-btn").forEach((b) => b.classList.remove("selected"));
+    // reset selection in same row
+    row.querySelectorAll(".fourdx-check-btn")
+      .forEach(b => b.classList.remove("selected"));
 
-    // mark selected
     btn.classList.add("selected");
-        // AUTOSAVE 4DX check-in
+
+    // === AUTOSAVE ===
     ensure4DXState();
     const leadName = row.getAttribute("data-lead");
     const status = btn.getAttribute("data-status") || "RED";
+    const todayKey = getTodayKey();
 
-    const dk = getTodayKey();
-    if (!appState.fourdx.checkins[dk]) appState.fourdx.checkins[dk] = {};
-    appState.fourdx.checkins[dk][leadName] = status;
+    if (!appState.fourdx.checkins[todayKey]) {
+      appState.fourdx.checkins[todayKey] = {};
+    }
+
+    appState.fourdx.checkins[todayKey][leadName] = status;
 
     saveState();
-    render4DX(); // refresh monthly + battery
-  });
+    render4DX(); // refresh battery + monthly view
+  };
 }
-}
+
 
   // Render Lag Measures (dummy)
    if (lagMeasuresList) {
