@@ -1712,7 +1712,7 @@ if (leadCheckinToday) {
     render4DX(); // refresh battery + monthly view
   };
 }
-
+}
 
   // Render Lag Measures (dummy)
    if (lagMeasuresList) {
@@ -1781,7 +1781,7 @@ if (leadCheckinToday) {
       });
     }
   }
-
+}
 
 /* INIT */
 document.addEventListener("DOMContentLoaded", () => {
