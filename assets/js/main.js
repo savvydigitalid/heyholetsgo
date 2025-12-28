@@ -1482,36 +1482,60 @@ function ensure4DXState() {
   if (!Array.isArray(appState.fourdx.lagMeasures)) appState.fourdx.lagMeasures = [];
   if (!appState.fourdx.checkins || typeof appState.fourdx.checkins !== "object") appState.fourdx.checkins = {};
 }
-function render4DXDummy() {
-  if (!fourdxMonthlyRows) return;
+function render4DX() {
+    ensure4DXState();
 
-  // Dummy: 4 Lead Measures (sesuai konsep max 4)
-  const leads = [
+  if (!fourdxMonthlyRows) return;
+  const leads = (appState.fourdx.leadMeasures || []).slice(0, 4);
+
+  // fallback kalau masih kosong (biar UI gak blank)
+  const defaultLeads = [
     "Cross Selling 5 Brand per hari",
     "Reach Out 10 Talent SSS per hari",
     "Reach Out 8 Brand per hari",
     "Listing 15 KOL per hari",
   ];
+  if (!leads.length) {
+    appState.fourdx.leadMeasures = defaultLeads.slice(0, 4);
+  }
+  const finalLeads = (appState.fourdx.leadMeasures || []).slice(0, 4);
+
 
   const periodVal = (fourdxPeriodSelect && fourdxPeriodSelect.value) || "30";
   const period = (periodVal === "month") ? new Date().getDate() : parseInt(periodVal, 10);
+  const todayKey = getTodayKey();
+  const today = new Date(todayKey + "T00:00:00");
+
+  const dayKeys = [];
+  if (periodVal === "month") {
+    const daysInThisMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    for (let i = daysInThisMonth - 1; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth(), daysInThisMonth - i);
+      const iso = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+      dayKeys.push(iso);
+    }
+  } else {
+    const n = parseInt(periodVal, 10) || 30;
+    for (let i = n - 1; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      dayKeys.push(d.toISOString().slice(0, 10));
+    }
+  }
 
   // bikin emoji row sepanjang period
-const makeStatusRow = (len) => {
-  const arr = [];
-  for (let i = 0; i < len; i++) {
-    const r = Math.random();
-    if (r < 0.70) arr.push("RED");
-    else if (r < 0.88) arr.push("YELLOW");
-    else arr.push("GREEN");
-  }
-  return arr;
-};
+  const getStatus = (dateKey, leadName) => {
+    const dayObj = appState.fourdx.checkins[dateKey];
+    const s = dayObj ? dayObj[leadName] : null;
+    return s || "RED"; // no status = red (anti green palsu)
+  };
 
-  const rows = leads.map((name) => ({
+
+   const rows = finalLeads.map((name) => ({
     name,
-    cells: makeStatusRow(period),
+    cells: dayKeys.map((dk) => getStatus(dk, name))
   }));
+
 
   // overall % green (dummy)
   let g = 0, total = 0;
