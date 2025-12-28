@@ -1490,10 +1490,10 @@ function render4DX() {
 
   // fallback kalau masih kosong (biar UI gak blank)
   const defaultLeads = [
-    "Cross Selling 5 Brand per hari",
-    "Reach Out 10 Talent SSS per hari",
-    "Reach Out 8 Brand per hari",
-    "Listing 15 KOL per hari",
+    "Masukkan Lead 1",
+    "Masukkan Lead 2",
+    "Masukkan Lead 3",
+    "Masukkan Lead 4",
   ];
   if (!leads.length) {
     appState.fourdx.leadMeasures = defaultLeads.slice(0, 4);
@@ -1647,7 +1647,7 @@ function render4DX() {
         alert("Max 4 lead measures ya bro 😄");
         return;
       }
-      appState.fourdx.leadMeasures.push(`Lead Measure ${appState.fourdx.leadMeasures.length + 1}`);
+      appState.fourdx.leadMeasures.push(`Masukkan Lead ${appState.fourdx.leadMeasures.length + 1}`);
       saveState();
       render4DX();
     });
@@ -1755,15 +1755,15 @@ if (leadCheckinToday) {
     });
   }
 
-  if (addLagMeasureBtn && !addLagMeasureBtn.dataset.bound) {
-    addLagMeasureBtn.dataset.bound = "1";
-    addLagMeasureBtn.addEventListener("click", () => {
-      ensure4DXState();
-      appState.fourdx.lagMeasures.push(`Lag Measure ${appState.fourdx.lagMeasures.length + 1}`);
-      saveState();
-      render4DX();
-    });
-  }
+  if (addLagMeasureBtn) {
+  addLagMeasureBtn.onclick = () => {
+    ensure4DXState();
+    appState.fourdx.lagMeasures.push(`Lag Measure ${appState.fourdx.lagMeasures.length + 1}`);
+    saveState();
+    render4DX();
+  };
+}
+
 
 
   // WIG dummy default
