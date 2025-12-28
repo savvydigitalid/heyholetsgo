@@ -1469,6 +1469,19 @@ function hohoIconForStatus(status){
   if(status === "YELLOW") return "assets/emothoho/hoho4dx_yellow.png";
   return "assets/emothoho/hoho4dx_red.png";
 }
+function ensure4DXState() {
+  if (!appState.fourdx) {
+    appState.fourdx = {
+      wig: "",
+      leadMeasures: [],
+      lagMeasures: [],
+      checkins: {} // { "YYYY-MM-DD": { "Lead name": "RED|YELLOW|GREEN" } }
+    };
+  }
+  if (!Array.isArray(appState.fourdx.leadMeasures)) appState.fourdx.leadMeasures = [];
+  if (!Array.isArray(appState.fourdx.lagMeasures)) appState.fourdx.lagMeasures = [];
+  if (!appState.fourdx.checkins || typeof appState.fourdx.checkins !== "object") appState.fourdx.checkins = {};
+}
 function render4DXDummy() {
   if (!fourdxMonthlyRows) return;
 
