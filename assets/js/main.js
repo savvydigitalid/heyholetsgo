@@ -1697,6 +1697,17 @@ if (leadCheckinToday && !leadCheckinToday.dataset.bound) {
 
     // mark selected
     btn.classList.add("selected");
+        // AUTOSAVE 4DX check-in
+    ensure4DXState();
+    const leadName = row.getAttribute("data-lead");
+    const status = btn.getAttribute("data-status") || "RED";
+
+    const dk = getTodayKey();
+    if (!appState.fourdx.checkins[dk]) appState.fourdx.checkins[dk] = {};
+    appState.fourdx.checkins[dk][leadName] = status;
+
+    saveState();
+    render4DX(); // refresh monthly + battery
   });
 }
 }
