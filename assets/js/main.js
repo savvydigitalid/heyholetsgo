@@ -1809,9 +1809,9 @@ document.addEventListener("DOMContentLoaded", () => {
   scheduleRandomBounce();
 
   // 4DX UI (dummy)
-  render4DXDummy();
+  render4DX();
   if (fourdxPeriodSelect) {
-    fourdxPeriodSelect.addEventListener("change", render4DXDummy);
+    fourdxPeriodSelect.addEventListener("change", render4DX);
   }
 
   // 🔗 Hubungkan tombol Sync Weekly → fungsi syncWeeklyToGoogleSheet()
