@@ -1600,13 +1600,59 @@ function render4DX() {
 
   // Render Lead Measures list (dummy input UI)
   if (leadMeasuresList) {
-    leadMeasuresList.innerHTML = leads.map((name) => `
-      <div style="display:flex;gap:10px;align-items:center;">
-        <input type="text" value="${name}" style="flex:1;" />
-        <button type="button" class="btn-ghost" style="width:42px;background:#f97373;color:#111827;">✕</button>
-      </div>
-    `).join("");
+    leadMeasuresList.innerHTML = "";
+    finalLeads.forEach((name, idx) => {
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.gap = "10px";
+      row.style.alignItems = "center";
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = name;
+      input.style.flex = "1";
+      input.addEventListener("change", () => {
+        ensure4DXState();
+        appState.fourdx.leadMeasures[idx] = input.value.trim() || `Lead ${idx + 1}`;
+        saveState();
+        render4DX();
+      });
+
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "btn-ghost";
+      del.textContent = "✕";
+      del.style.width = "42px";
+      del.style.background = "#f97373";
+      del.style.color = "#111827";
+      del.addEventListener("click", () => {
+        ensure4DXState();
+        appState.fourdx.leadMeasures.splice(idx, 1);
+        saveState();
+        render4DX();
+      });
+
+      row.appendChild(input);
+      row.appendChild(del);
+      leadMeasuresList.appendChild(row);
+    });
   }
+
+  // add lead measure (max 4)
+  if (addLeadMeasureBtn && !addLeadMeasureBtn.dataset.bound) {
+    addLeadMeasureBtn.dataset.bound = "1";
+    addLeadMeasureBtn.addEventListener("click", () => {
+      ensure4DXState();
+      if (appState.fourdx.leadMeasures.length >= 4) {
+        alert("Max 4 lead measures ya bro 😄");
+        return;
+      }
+      appState.fourdx.leadMeasures.push(`Lead Measure ${appState.fourdx.leadMeasures.length + 1}`);
+      saveState();
+      render4DX();
+    });
+  }
+
 
    // Render Daily Lead Check-in (dummy buttons with hoho icons)
   if (leadCheckinToday) {
@@ -1656,20 +1702,73 @@ if (leadCheckinToday && !leadCheckinToday.dataset.bound) {
 }
 
   // Render Lag Measures (dummy)
-  if (lagMeasuresList) {
-    lagMeasuresList.innerHTML = `
-      <div style="display:flex;gap:10px;align-items:center;">
-        <input type="text" value="Profit IFMN 200jt per bulan sepanjang 2026" style="flex:1;" />
-        <button type="button" class="btn-ghost" style="width:42px;background:#f97373;color:#111827;">✕</button>
-      </div>
-    `;
+   if (lagMeasuresList) {
+    ensure4DXState();
+    lagMeasuresList.innerHTML = "";
+    const lags = appState.fourdx.lagMeasures.length ? appState.fourdx.lagMeasures : ["Profit IFMN 200jt per bulan sepanjang 2026"];
+    if (!appState.fourdx.lagMeasures.length) appState.fourdx.lagMeasures = lags;
+
+    appState.fourdx.lagMeasures.forEach((name, idx) => {
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.gap = "10px";
+      row.style.alignItems = "center";
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = name;
+      input.style.flex = "1";
+      input.addEventListener("change", () => {
+        appState.fourdx.lagMeasures[idx] = input.value.trim() || `Lag ${idx + 1}`;
+        saveState();
+      });
+
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "btn-ghost";
+      del.textContent = "✕";
+      del.style.width = "42px";
+      del.style.background = "#f97373";
+      del.style.color = "#111827";
+      del.addEventListener("click", () => {
+        appState.fourdx.lagMeasures.splice(idx, 1);
+        saveState();
+        render4DX();
+      });
+
+      row.appendChild(input);
+      row.appendChild(del);
+      lagMeasuresList.appendChild(row);
+    });
   }
 
-  // WIG dummy default
-  if (wigInput && !wigInput.value) {
-    wigInput.value = "Meningkatkan pertumbuhan revenue 30% YoY di 2026";
+  if (addLagMeasureBtn && !addLagMeasureBtn.dataset.bound) {
+    addLagMeasureBtn.dataset.bound = "1";
+    addLagMeasureBtn.addEventListener("click", () => {
+      ensure4DXState();
+      appState.fourdx.lagMeasures.push(`Lag Measure ${appState.fourdx.lagMeasures.length + 1}`);
+      saveState();
+      render4DX();
+    });
   }
-}
+
+
+  // WIG dummy default
+  if (wigInput) {
+    ensure4DXState();
+    if (!appState.fourdx.wig) appState.fourdx.wig = "Meningkatkan pertumbuhan revenue 30% YoY di 2026";
+    wigInput.value = appState.fourdx.wig;
+
+    if (!wigInput.dataset.bound) {
+      wigInput.dataset.bound = "1";
+      wigInput.addEventListener("change", () => {
+        ensure4DXState();
+        appState.fourdx.wig = wigInput.value.trim();
+        saveState();
+      });
+    }
+  }
+
 
 /* INIT */
 document.addEventListener("DOMContentLoaded", () => {
