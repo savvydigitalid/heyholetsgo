@@ -1656,7 +1656,7 @@ function render4DX() {
 
    // Render Daily Lead Check-in (dummy buttons with hoho icons)
   if (leadCheckinToday) {
-    leadCheckinToday.innerHTML = finalleads.map((name) => `
+    leadCheckinToday.innerHTML = finalLeads.map((name) => `
       <div data-lead="${name}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
         <div style="font-size:13px;font-weight:700;">${name}</div>
 
