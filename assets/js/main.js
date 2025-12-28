@@ -1656,22 +1656,30 @@ function render4DX() {
 
    // Render Daily Lead Check-in (dummy buttons with hoho icons)
   if (leadCheckinToday) {
+const todayKey = getTodayKey();
+const todayObj = (appState.fourdx.checkins && appState.fourdx.checkins[todayKey]) ? appState.fourdx.checkins[todayKey] : {};
     leadCheckinToday.innerHTML = finalLeads.map((name) => `
       <div data-lead="${name}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
         <div style="font-size:13px;font-weight:700;">${name}</div>
 
         <div style="display:flex;gap:10px;align-items:center;">
-          <button type="button" class="fourdx-check-btn" data-status="RED"
+          <button type="button"
+          class="fourdx-check-btn ${todayObj[name] === "RED" ? "selected" : ""}"
+            data-status="RED"
             style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
             <img class="fourdx-icon" src="${hohoIconForStatus("RED")}" alt="RED" draggable="false">
           </button>
 
-          <button type="button" class="fourdx-check-btn" data-status="YELLOW"
+          <button type="button"
+            class="fourdx-check-btn ${todayObj[name] === "YELLOW" ? "selected" : ""}"
+            data-status="YELLOW"
             style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
             <img class="fourdx-icon" src="${hohoIconForStatus("YELLOW")}" alt="YELLOW" draggable="false">
           </button>
 
-          <button type="button" class="fourdx-check-btn" data-status="GREEN"
+          <button type="button"
+          class="fourdx-check-btn ${todayObj[name] === "GREEN" ? "selected" : ""}"
+          data-status="GREEN"
             style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
             <img class="fourdx-icon" src="${hohoIconForStatus("GREEN")}" alt="GREEN" draggable="false">
           </button>
