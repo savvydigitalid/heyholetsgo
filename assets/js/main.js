@@ -1469,37 +1469,86 @@ function hohoIconForStatus(status){
   if(status === "YELLOW") return "assets/emothoho/hoho4dx_yellow.png";
   return "assets/emothoho/hoho4dx_red.png";
 }
+function fourdxIsOffday(dateKey){
+  ensure4DXState();
+  return !!appState.fourdx.offdays[dateKey];
+}
+
+// raw status: bisa null kalau belum diisi
+function fourdxGetRawStatus(dateKey, leadName){
+  ensure4DXState();
+  const dayObj = appState.fourdx.checkins[dateKey];
+  return dayObj ? (dayObj[leadName] || null) : null;
+}
+
+// display status: kalau belum diisi → dianggap RED (anti green palsu), tapi completion tetap ngitung "missing"
+function fourdxGetDisplayStatus(dateKey, leadName){
+  if (fourdxIsOffday(dateKey)) return "OFF";
+  const raw = fourdxGetRawStatus(dateKey, leadName);
+  return raw || "RED";
+}
+
+function fourdxLastNDaysKeys(n){
+  const todayKey = getTodayKey();
+  const today = new Date(todayKey + "T00:00:00");
+  const keys = [];
+  for(let i = n - 1; i >= 0; i--){
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    keys.push(d.toISOString().slice(0,10));
+  }
+  return keys;
+}
+
+function fourdxComputeLeadCompletion(lead, dayKeys){
+  // expected: tanggal >= activeFrom dan bukan offday
+  const activeFrom = lead.activeFrom || "0000-01-01";
+  const expectedDays = dayKeys.filter(dk => dk >= activeFrom && !fourdxIsOffday(dk));
+  const filledDays = expectedDays.filter(dk => !!fourdxGetRawStatus(dk, lead.name));
+  const expected = expectedDays.length;
+  const filled = filledDays.length;
+  const pct = expected ? Math.round((filled/expected)*100) : 0;
+  return { expected, filled, pct };
+}
 function ensure4DXState() {
   if (!appState.fourdx) {
     appState.fourdx = {
       wig: "",
-      leadMeasures: [],
+      leadMeasures: [],   // [{ name, activeFrom }]
       lagMeasures: [],
-      checkins: {} // { "YYYY-MM-DD": { "Lead name": "RED|YELLOW|GREEN" } }
+      checkins: {},       // { "YYYY-MM-DD": { "Lead name": "RED|YELLOW|GREEN" } }
+      offdays: {}         // { "YYYY-MM-DD": true }
     };
   }
+
   if (!Array.isArray(appState.fourdx.leadMeasures)) appState.fourdx.leadMeasures = [];
   if (!Array.isArray(appState.fourdx.lagMeasures)) appState.fourdx.lagMeasures = [];
   if (!appState.fourdx.checkins || typeof appState.fourdx.checkins !== "object") appState.fourdx.checkins = {};
+  if (!appState.fourdx.offdays || typeof appState.fourdx.offdays !== "object") appState.fourdx.offdays = {};
+
+  // MIGRATION: kalau leadMeasures masih array string → ubah jadi object + activeFrom (hari ini)
+  const todayKey = getTodayKey();
+  if (appState.fourdx.leadMeasures.length && typeof appState.fourdx.leadMeasures[0] === "string") {
+    appState.fourdx.leadMeasures = appState.fourdx.leadMeasures.slice(0,4).map((nm) => ({
+      name: (nm || "").trim() || "Masukkan Lead 1",
+      activeFrom: todayKey
+    }));
+    saveState();
+  }
 }
 function render4DX() {
     ensure4DXState();
 
   if (!fourdxMonthlyRows) return;
-  const leads = (appState.fourdx.leadMeasures || []).slice(0, 4);
 
-  // fallback kalau masih kosong (biar UI gak blank)
-  const defaultLeads = [
-    "Masukkan Lead 1",
-    "Masukkan Lead 2",
-    "Masukkan Lead 3",
-    "Masukkan Lead 4",
-  ];
-  if (!leads.length) {
-    appState.fourdx.leadMeasures = defaultLeads.slice(0, 4);
-  }
-  const finalLeads = (appState.fourdx.leadMeasures || []).slice(0, 4);
+  // default: cukup 1 lead dulu biar user rename (lebih clean)
+if (!appState.fourdx.leadMeasures || !appState.fourdx.leadMeasures.length) {
+  appState.fourdx.leadMeasures = [{ name: "Masukkan Lead 1", activeFrom: getTodayKey() }];
+  saveState();
+}
 
+// normalisasi max 4
+const finalLeads = (appState.fourdx.leadMeasures || []).slice(0, 4);
 
   const periodVal = (fourdxPeriodSelect && fourdxPeriodSelect.value) || "30";
   const period = (periodVal === "month") ? new Date().getDate() : parseInt(periodVal, 10);
@@ -1524,12 +1573,10 @@ function render4DX() {
   }
 
   // bikin emoji row sepanjang period
-  const getStatus = (dateKey, leadName) => {
-    const dayObj = appState.fourdx.checkins[dateKey];
-    const s = dayObj ? dayObj[leadName] : null;
-    return s || "RED"; // no status = red (anti green palsu)
-  };
-
+  const rows = finalLeads.map((lead) => ({
+  lead,
+  cells: dayKeys.map((dk) => fourdxGetDisplayStatus(dk, lead.name))
+}));
 
    const rows = finalLeads.map((name) => ({
     name,
@@ -1561,6 +1608,7 @@ function render4DX() {
     const yellow = row.cells.filter((x) => x === "YELLOW").length;
     const red = row.cells.filter((x) => x === "RED").length;
     const greenPct = Math.round((green / (green + yellow + red)) * 100);
+    const comp = fourdxComputeLeadCompletion(row.lead, dayKeys);
 
     const block = document.createElement("div");
       const gridHtml = row.cells.map((status) => `
@@ -1572,10 +1620,15 @@ function render4DX() {
     block.className = "fourdx-lead-box";
     block.innerHTML = `
       <div class="fourdx-lead-head">
-        <div style="font-weight:800;">${row.name}</div>
-        <div style="font-size:12px;color:var(--text-light);white-space:nowrap;">
-          <b>${greenPct}% green</b>
-        </div>
+        <div style="font-weight:800;">${row.lead.name}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;white-space:nowrap;">
+  <div style="font-size:12px;color:var(--text-light);">
+    <b>${greenPct}% green</b>
+  </div>
+  <div style="font-size:11px;color:var(--text-light);">
+    Completion: <b>${comp.pct}%</b> (${comp.filled}/${comp.expected})
+  </div>
+</div>
       </div>
 
       <div class="fourdx-emoji-grid">
@@ -1601,22 +1654,72 @@ function render4DX() {
   // Render Lead Measures list (dummy input UI)
   if (leadMeasuresList) {
     leadMeasuresList.innerHTML = "";
-    finalLeads.forEach((name, idx) => {
-      const row = document.createElement("div");
-      row.style.display = "flex";
-      row.style.gap = "10px";
-      row.style.alignItems = "center";
+    finalLeads.forEach((lead, idx) => {
+  const row = document.createElement("div");
+  row.style.display = "grid";
+  row.style.gridTemplateColumns = "minmax(0,1fr) 160px 42px";
+  row.style.gap = "10px";
+  row.style.alignItems = "center";
 
-      const input = document.createElement("input");
-      input.type = "text";
-      input.value = name;
-      input.style.flex = "1";
-      input.addEventListener("change", () => {
-        ensure4DXState();
-        appState.fourdx.leadMeasures[idx] = input.value.trim() || `Lead ${idx + 1}`;
-        saveState();
-        render4DX();
+  const input = document.createElement("input");
+  input.type = "text";
+  input.value = lead.name || `Masukkan Lead ${idx + 1}`;
+
+  const active = document.createElement("input");
+  active.type = "date";
+  active.value = lead.activeFrom || getTodayKey();
+  active.title = "Active from (biar fair, tanggal sebelum ini gak dihitung completion)";
+
+  input.addEventListener("change", () => {
+    ensure4DXState();
+
+    const oldName = (appState.fourdx.leadMeasures[idx]?.name || "").trim();
+    const newName = input.value.trim() || `Masukkan Lead ${idx + 1}`;
+
+    // rename lead
+    appState.fourdx.leadMeasures[idx].name = newName;
+
+    // MIGRATE CHECKINS KEY (biar data lama gak hilang)
+    if (oldName && oldName !== newName) {
+      Object.keys(appState.fourdx.checkins || {}).forEach((dk) => {
+        const dayObj = appState.fourdx.checkins[dk];
+        if (dayObj && dayObj[oldName]) {
+          dayObj[newName] = dayObj[oldName];
+          delete dayObj[oldName];
+        }
       });
+    }
+
+    saveState();
+    render4DX();
+  });
+
+  active.addEventListener("change", () => {
+    ensure4DXState();
+    appState.fourdx.leadMeasures[idx].activeFrom = active.value || getTodayKey();
+    saveState();
+    render4DX();
+  });
+
+  const del = document.createElement("button");
+  del.type = "button";
+  del.className = "btn-ghost";
+  del.textContent = "✕";
+  del.style.width = "42px";
+  del.style.background = "#f97373";
+  del.style.color = "#111827";
+  del.addEventListener("click", () => {
+    ensure4DXState();
+    appState.fourdx.leadMeasures.splice(idx, 1);
+    saveState();
+    render4DX();
+  });
+
+  row.appendChild(input);
+  row.appendChild(active);
+  row.appendChild(del);
+  leadMeasuresList.appendChild(row);
+});
 
       const del = document.createElement("button");
       del.type = "button";
@@ -1659,33 +1762,37 @@ function render4DX() {
 const todayKey = getTodayKey();
 const todayObj = (appState.fourdx.checkins && appState.fourdx.checkins[todayKey]) ? appState.fourdx.checkins[todayKey] : {};
     leadCheckinToday.innerHTML = finalLeads.map((name) => `
-      <div data-lead="${name}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
-        <div style="font-size:13px;font-weight:700;">${name}</div>
+const todayKey2 = getTodayKey();
+const isOff = fourdxIsOffday(todayKey2);
 
-        <div style="display:flex;gap:10px;align-items:center;">
-          <button type="button"
-          class="fourdx-check-btn ${todayObj[name] === "RED" ? "selected" : ""}"
-            data-status="RED"
-            style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
-            <img class="fourdx-icon" src="${hohoIconForStatus("RED")}" alt="RED" draggable="false">
-          </button>
+leadCheckinToday.innerHTML = finalLeads.map((lead) => `
+  <div data-lead="${lead.name}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+    <div style="font-size:13px;font-weight:700;">${lead.name}</div>
 
-          <button type="button"
-            class="fourdx-check-btn ${todayObj[name] === "YELLOW" ? "selected" : ""}"
-            data-status="YELLOW"
-            style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
-            <img class="fourdx-icon" src="${hohoIconForStatus("YELLOW")}" alt="YELLOW" draggable="false">
-          </button>
+    <div style="display:flex;gap:10px;align-items:center;${isOff ? "opacity:0.55;pointer-events:none;" : ""}">
+      <button type="button"
+        class="fourdx-check-btn ${todayObj[lead.name] === "RED" ? "selected" : ""}"
+        data-status="RED"
+        style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
+        <img class="fourdx-icon" src="${hohoIconForStatus("RED")}" alt="RED" draggable="false">
+      </button>
 
-          <button type="button"
-          class="fourdx-check-btn ${todayObj[name] === "GREEN" ? "selected" : ""}"
-          data-status="GREEN"
-            style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
-            <img class="fourdx-icon" src="${hohoIconForStatus("GREEN")}" alt="GREEN" draggable="false">
-          </button>
-        </div>
-      </div>
-    `).join("");
+      <button type="button"
+        class="fourdx-check-btn ${todayObj[lead.name] === "YELLOW" ? "selected" : ""}"
+        data-status="YELLOW"
+        style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
+        <img class="fourdx-icon" src="${hohoIconForStatus("YELLOW")}" alt="YELLOW" draggable="false">
+      </button>
+
+      <button type="button"
+        class="fourdx-check-btn ${todayObj[lead.name] === "GREEN" ? "selected" : ""}"
+        data-status="GREEN"
+        style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
+        <img class="fourdx-icon" src="${hohoIconForStatus("GREEN")}" alt="GREEN" draggable="false">
+      </button>
+    </div>
+  </div>
+`).join("") + (isOff ? `<div style="margin-top:8px;font-size:12px;color:var(--text-light);">Hari ini OFFDAY. Check-in dimatikan.</div>` : "");
 // Click micro-interaction: select 1 status per lead row (UI only)
 // Click micro-interaction + AUTOSAVE
 if (leadCheckinToday) {
@@ -1763,13 +1870,14 @@ if (leadCheckinToday) {
     });
   }
 
-  if (addLagMeasureBtn) {
-  addLagMeasureBtn.onclick = () => {
+  if (addLagMeasureBtn && !addLagMeasureBtn.dataset.bound) {
+  addLagMeasureBtn.dataset.bound = "1";
+  addLagMeasureBtn.addEventListener("click", () => {
     ensure4DXState();
     appState.fourdx.lagMeasures.push(`Lag Measure ${appState.fourdx.lagMeasures.length + 1}`);
     saveState();
     render4DX();
-  };
+  });
 }
 
 
@@ -1790,7 +1898,118 @@ if (leadCheckinToday) {
     }
   }
 }
+function fourdxOpenEditModal(){
+  const modal = document.getElementById("fourdxEditModal");
+  if(!modal) return;
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden","false");
+  fourdxRenderEditGrid();
+}
 
+function fourdxCloseEditModal(){
+  const modal = document.getElementById("fourdxEditModal");
+  if(!modal) return;
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden","true");
+}
+
+function fourdxCycleStatus(current){
+  // cycle: RED → YELLOW → GREEN → OFF
+  if(current === "RED") return "YELLOW";
+  if(current === "YELLOW") return "GREEN";
+  if(current === "GREEN") return "OFF";
+  return "RED";
+}
+
+function fourdxSetStatus(dateKey, leadName, status){
+  ensure4DXState();
+
+  // OFFDAY global per tanggal
+  if(status === "OFF"){
+    appState.fourdx.offdays[dateKey] = true;
+    saveState();
+    return;
+  }
+
+  // kalau status bukan OFF, pastikan tanggal bukan offday
+  if(appState.fourdx.offdays[dateKey]) delete appState.fourdx.offdays[dateKey];
+
+  if(!appState.fourdx.checkins[dateKey]) appState.fourdx.checkins[dateKey] = {};
+  appState.fourdx.checkins[dateKey][leadName] = status;
+  saveState();
+}
+
+function fourdxRenderEditGrid(){
+  ensure4DXState();
+  const grid = document.getElementById("fourdxEditGrid");
+  if(!grid) return;
+
+  const leads = (appState.fourdx.leadMeasures || []).slice(0,4);
+  const dayKeys = fourdxLastNDaysKeys(14);
+
+  // Header row: label + 14 dates
+  let html = `<div class="fourdx-edit-row">`;
+  html += `<div class="fourdx-edit-cell fourdx-edit-head fourdx-edit-leadname">Lead \\ Date</div>`;
+  dayKeys.forEach(dk=>{
+    const day = new Date(dk+"T00:00:00").getDate();
+    const off = fourdxIsOffday(dk);
+    html += `<div class="fourdx-edit-cell fourdx-edit-head ${off ? "fourdx-edit-offday" : ""}" data-datehead="${dk}">
+      ${day}<div style="font-size:10px;margin-top:2px;">${off ? "OFF" : ""}</div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Rows per lead
+  leads.forEach(lead=>{
+    html += `<div class="fourdx-edit-row">`;
+    html += `<div class="fourdx-edit-cell fourdx-edit-leadname">${lead.name || "Lead"}</div>`;
+
+    dayKeys.forEach(dk=>{
+      const disp = fourdxGetDisplayStatus(dk, lead.name);
+      const isOff = (disp === "OFF");
+      html += `<div class="fourdx-edit-cell ${isOff ? "fourdx-edit-offday" : ""}">
+        <div class="fourdx-edit-btn" data-date="${dk}" data-lead="${lead.name}" data-status="${disp}">
+          ${isOff ? `<span style="font-size:11px;font-weight:900;color:var(--text-light);">OFF</span>`
+                  : `<img src="${hohoIconForStatus(disp)}" alt="${disp}" draggable="false">`}
+        </div>
+      </div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  grid.innerHTML = html;
+
+  // Click handler: cell cycle
+  grid.onclick = (e) => {
+    const btn = e.target.closest(".fourdx-edit-btn");
+    if(btn){
+      const dateKey = btn.getAttribute("data-date");
+      const leadName = btn.getAttribute("data-lead");
+      const cur = btn.getAttribute("data-status") || "RED";
+      const next = fourdxCycleStatus(cur);
+
+      fourdxSetStatus(dateKey, leadName, next);
+
+      // refresh modal + main UI
+      fourdxRenderEditGrid();
+      render4DX();
+      return;
+    }
+
+    // Click date header: toggle OFFDAY (lebih gampang buat meeting)
+    const head = e.target.closest("[data-datehead]");
+    if(head){
+      const dk = head.getAttribute("data-datehead");
+      ensure4DXState();
+      if(appState.fourdx.offdays[dk]) delete appState.fourdx.offdays[dk];
+      else appState.fourdx.offdays[dk] = true;
+      saveState();
+      fourdxRenderEditGrid();
+      render4DX();
+    }
+  };
+}
 /* INIT */
 document.addEventListener("DOMContentLoaded", () => {
   // Load state awal
@@ -1823,7 +2042,27 @@ document.addEventListener("DOMContentLoaded", () => {
   if (fourdxPeriodSelect) {
     fourdxPeriodSelect.addEventListener("change", render4DX);
   }
+// 4DX Edit Mode bindings
+  const editBtn = document.getElementById("fourdxEditBtn");
+  const closeBtn = document.getElementById("fourdxEditCloseBtn");
+  const modal = document.getElementById("fourdxEditModal");
 
+  if (editBtn && !editBtn.dataset.bound) {
+    editBtn.dataset.bound = "1";
+    editBtn.addEventListener("click", fourdxOpenEditModal);
+  }
+  if (closeBtn && !closeBtn.dataset.bound) {
+    closeBtn.dataset.bound = "1";
+    closeBtn.addEventListener("click", fourdxCloseEditModal);
+  }
+  if (modal && !modal.dataset.bound) {
+    modal.dataset.bound = "1";
+    modal.addEventListener("click", (e) => {
+      if (e.target && e.target.getAttribute("data-close") === "1") {
+        fourdxCloseEditModal();
+      }
+    });
+  }
   // 🔗 Hubungkan tombol Sync Weekly → fungsi syncWeeklyToGoogleSheet()
   const syncBtn = document.getElementById("syncWeeklyBtn");
   if (syncBtn) {
