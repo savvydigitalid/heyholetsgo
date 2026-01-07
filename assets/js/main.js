@@ -1499,25 +1499,27 @@ function fourdxLastNDaysKeys(n){
   }
   return keys;
 }
-
-function fourdxComputeLeadCompletion(lead, dayKeys){
-  // expected: tanggal >= activeFrom, <= today, dan bukan offday
+function fourdxExpectedKeysForLead(lead, dayKeys){
+  ensure4DXState();
   const activeFrom = lead.activeFrom || "0000-01-01";
   const todayKey = getTodayKey();
 
-  const expectedDays = dayKeys.filter(dk =>
+  return dayKeys.filter(dk =>
     dk >= activeFrom &&
-    dk <= todayKey &&                 // 🔥 ini yang bikin fair
-    !fourdxIsOffday(dk)
+    dk <= todayKey &&          // exclude future
+    !fourdxIsOffday(dk)        // exclude global offdays
   );
+}
+function fourdxComputeLeadCompletion(lead, dayKeys){
+  const expectedDays = fourdxExpectedKeysForLead(lead, dayKeys);
 
   const filledDays = expectedDays.filter(dk => !!fourdxGetRawStatus(dk, lead.name));
 
   const expected = expectedDays.length;
   const filled = filledDays.length;
   const miss = Math.max(0, expected - filled);
-
   const pct = expected ? Math.round((filled/expected)*100) : 0;
+
   return { expected, filled, miss, pct };
 }
 function ensure4DXState() {
@@ -1588,15 +1590,20 @@ const finalLeads = (appState.fourdx.leadMeasures || []).slice(0, 4);
   cells: dayKeys.map((dk) => fourdxGetDisplayStatus(dk, lead.name))
 }));
 
-  // overall % green (dummy)
-  let g = 0, total = 0;
-  rows.forEach((row) => {
-    row.cells.forEach((c) => {
-      total++;
-      if (c === "GREEN") g++;
-    });
+// overall % green (expected-slot based)
+let g = 0, total = 0;
+
+finalLeads.forEach((lead) => {
+  const expectedKeys = fourdxExpectedKeysForLead(lead, dayKeys);
+  total += expectedKeys.length;
+
+  expectedKeys.forEach((dk) => {
+    const raw = fourdxGetRawStatus(dk, lead.name);
+    if (raw === "GREEN") g++;
   });
-  const pct = total ? Math.round((g / total) * 100) : 0;
+});
+
+const pct = total ? Math.round((g / total) * 100) : 0;
 
   if (fourdxOverallGreen) fourdxOverallGreen.textContent = pct + "%";
     // Battery bar (dummy) – %green + fraction
@@ -1608,11 +1615,25 @@ const finalLeads = (appState.fourdx.leadMeasures || []).slice(0, 4);
   // Render Monthly Lead Progress (emoji berjejer)
   fourdxMonthlyRows.innerHTML = "";
   rows.forEach((row) => {
-    const green = row.cells.filter((x) => x === "GREEN").length;
-    const yellow = row.cells.filter((x) => x === "YELLOW").length;
-    const red = row.cells.filter((x) => x === "RED").length;
-    const greenPct = Math.round((green / (green + yellow + red)) * 100);
-    const comp = fourdxComputeLeadCompletion(row.lead, dayKeys);
+// ✅ expected slots khusus lead ini (ikut activeFrom + offday + sampai hari ini)
+const expectedKeys = fourdxExpectedKeysForLead(row.lead, dayKeys);
+
+// hitung GREEN/YELLOW/RED dari expectedKeys (raw status aja)
+// kalau null (belum diisi) => itu MISS, bukan RED
+let green = 0, yellow = 0, red = 0;
+
+expectedKeys.forEach((dk) => {
+  const raw = fourdxGetRawStatus(dk, row.lead.name);
+  if (raw === "GREEN") green++;
+  else if (raw === "YELLOW") yellow++;
+  else if (raw === "RED") red++;
+});
+
+const expected = expectedKeys.length;
+const greenPct = expected ? Math.round((green / expected) * 100) : 0;
+
+// completion (udah include miss)
+const comp = fourdxComputeLeadCompletion(row.lead, dayKeys);
 
     const block = document.createElement("div");
       const gridHtml = row.cells.map((status) => `
@@ -1630,8 +1651,7 @@ const finalLeads = (appState.fourdx.leadMeasures || []).slice(0, 4);
     <b>${greenPct}% green</b>
   </div>
   <div style="font-size:11px;color:var(--text-light);">
-  Completion: <b>${comp.pct}%</b> (${comp.filled}/${comp.expected}) · MISS: <b>${comp.miss}</b>
-</div>
+  Completion: <b>${comp.pct}%</b> (${comp.filled}/${comp.expected}) · MISS: <b>${comp.miss}</b></div>
 </div>
       </div>
 
