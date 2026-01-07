@@ -1578,12 +1578,6 @@ const finalLeads = (appState.fourdx.leadMeasures || []).slice(0, 4);
   cells: dayKeys.map((dk) => fourdxGetDisplayStatus(dk, lead.name))
 }));
 
-   const rows = finalLeads.map((name) => ({
-    name,
-    cells: dayKeys.map((dk) => getStatus(dk, name))
-  }));
-
-
   // overall % green (dummy)
   let g = 0, total = 0;
   rows.forEach((row) => {
@@ -1750,10 +1744,10 @@ const finalLeads = (appState.fourdx.leadMeasures || []).slice(0, 4);
         alert("Max 4 lead measures ya bro 😄");
         return;
       }
-      appState.fourdx.leadMeasures.push(`Masukkan Lead ${appState.fourdx.leadMeasures.length + 1}`);
-      saveState();
-      render4DX();
-    });
+      appState.fourdx.leadMeasures.push({
+  name: `Masukkan Lead ${appState.fourdx.leadMeasures.length + 1}`,
+  activeFrom: getTodayKey()
+});
   }
 
 
@@ -2042,6 +2036,34 @@ document.addEventListener("DOMContentLoaded", () => {
   if (fourdxPeriodSelect) {
     fourdxPeriodSelect.addEventListener("change", render4DX);
   }
+  // 4DX: click handler for Today check-in (bind once)
+if (leadCheckinToday && !leadCheckinToday.dataset.bound) {
+  leadCheckinToday.dataset.bound = "1";
+
+  leadCheckinToday.addEventListener("click", (e) => {
+    const btn = e.target.closest(".fourdx-check-btn");
+    if (!btn) return;
+
+    const row = btn.closest("[data-lead]");
+    if (!row) return;
+
+    // UI: highlight selected inside that row
+    row.querySelectorAll(".fourdx-check-btn").forEach((b) => b.classList.remove("selected"));
+    btn.classList.add("selected");
+
+    // Save
+    ensure4DXState();
+    const leadName = row.getAttribute("data-lead");
+    const status = btn.getAttribute("data-status") || "RED";
+    const todayKey = getTodayKey();
+
+    if (!appState.fourdx.checkins[todayKey]) appState.fourdx.checkins[todayKey] = {};
+    appState.fourdx.checkins[todayKey][leadName] = status;
+
+    saveState();
+    render4DX(); // refresh monthly + completion + battery
+  });
+}
 // 4DX Edit Mode bindings
   const editBtn = document.getElementById("fourdxEditBtn");
   const closeBtn = document.getElementById("fourdxEditCloseBtn");
