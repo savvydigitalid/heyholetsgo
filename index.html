@@ -221,9 +221,15 @@
     </button>
 
     <div style="margin-top:14px;border-top:1px dashed var(--border);padding-top:14px;">
-      <div style="font-weight:800;margin-bottom:6px;">Daily Lead Check-in (Today)</div>
-      <div style="font-size:12px;color:var(--text-light);margin-bottom:10px;">
-        Pilih status untuk setiap lead hari ini.
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
+  <div style="font-weight:800;">Daily Lead Check-in (Today)</div>
+  <button id="fourdxEditBtn" type="button" class="btn-ghost" style="font-size:12px;padding:6px 10px;">
+    Edit last 14 days
+  </button>
+</div>
+
+<div style="font-size:12px;color:var(--text-light);margin-bottom:10px;">
+            Pilih status untuk setiap lead hari ini.
      <div style="margin-bottom:12px;padding:10px 12px;border-radius:14px;background:var(--bg-alt);border:1px solid var(--border);font-size:12px;color:var(--text-light);">
   <div style="font-weight:800;color:var(--text);margin-bottom:6px;">Rules biar gak “green palsu”</div>
   <div>🔴 <b>RED</b> = &lt;50% target tercapai, atau <b>tidak input sama sekali</b> (anggap red).</div>
@@ -261,6 +267,27 @@
 
     <input id="wigInput" type="text" placeholder="Contoh: Naikin revenue 30% YoY di 2026" />
   </div>
+  <!-- ===== 4DX EDIT MODE MODAL ===== -->
+<div id="fourdxEditModal" class="fourdx-modal hidden" aria-hidden="true">
+  <div class="fourdx-modal-backdrop" data-close="1"></div>
+
+  <div class="fourdx-modal-panel" role="dialog" aria-modal="true">
+    <div class="fourdx-modal-head">
+      <div>
+        <div class="fourdx-modal-title">Edit Mode</div>
+        <div class="fourdx-modal-sub">Last 14 days • click cell to cycle • OFFDAY berlaku global per tanggal</div>
+      </div>
+      <button id="fourdxEditCloseBtn" type="button" class="btn-ghost" style="padding:6px 10px;">Close</button>
+    </div>
+
+    <div class="fourdx-modal-help">
+      <div><b>Cycle:</b> RED → YELLOW → GREEN → OFFDAY</div>
+      <div><b>Completion</b> naik kalau semua hari “kerja” udah keisi. OFFDAY gak dihitung.</div>
+    </div>
+
+    <div id="fourdxEditGrid" class="fourdx-edit-grid"></div>
+  </div>
+</div>
 </section>
 
   <!-- ===== TAB LEARNING ===== -->
