@@ -1501,14 +1501,24 @@ function fourdxLastNDaysKeys(n){
 }
 
 function fourdxComputeLeadCompletion(lead, dayKeys){
-  // expected: tanggal >= activeFrom dan bukan offday
+  // expected: tanggal >= activeFrom, <= today, dan bukan offday
   const activeFrom = lead.activeFrom || "0000-01-01";
-  const expectedDays = dayKeys.filter(dk => dk >= activeFrom && !fourdxIsOffday(dk));
+  const todayKey = getTodayKey();
+
+  const expectedDays = dayKeys.filter(dk =>
+    dk >= activeFrom &&
+    dk <= todayKey &&                 // 🔥 ini yang bikin fair
+    !fourdxIsOffday(dk)
+  );
+
   const filledDays = expectedDays.filter(dk => !!fourdxGetRawStatus(dk, lead.name));
+
   const expected = expectedDays.length;
   const filled = filledDays.length;
+  const miss = Math.max(0, expected - filled);
+
   const pct = expected ? Math.round((filled/expected)*100) : 0;
-  return { expected, filled, pct };
+  return { expected, filled, miss, pct };
 }
 function ensure4DXState() {
   if (!appState.fourdx) {
@@ -1620,8 +1630,8 @@ const finalLeads = (appState.fourdx.leadMeasures || []).slice(0, 4);
     <b>${greenPct}% green</b>
   </div>
   <div style="font-size:11px;color:var(--text-light);">
-    Completion: <b>${comp.pct}%</b> (${comp.filled}/${comp.expected})
-  </div>
+  Completion: <b>${comp.pct}%</b> (${comp.filled}/${comp.expected}) · MISS: <b>${comp.miss}</b>
+</div>
 </div>
       </div>
 
@@ -1659,10 +1669,22 @@ const finalLeads = (appState.fourdx.leadMeasures || []).slice(0, 4);
   input.type = "text";
   input.value = lead.name || `Masukkan Lead ${idx + 1}`;
 
-  const active = document.createElement("input");
-  active.type = "date";
-  active.value = lead.activeFrom || getTodayKey();
-  active.title = "Active from (biar fair, tanggal sebelum ini gak dihitung completion)";
+const activeWrap = document.createElement("div");
+activeWrap.style.display = "flex";
+activeWrap.style.flexDirection = "column";
+activeWrap.style.gap = "4px";
+
+const active = document.createElement("input");
+active.type = "date";
+active.value = lead.activeFrom || getTodayKey();
+
+const hint = document.createElement("div");
+hint.style.fontSize = "11px";
+hint.style.color = "var(--text-light)";
+hint.textContent = "Mulai dihitung dari tanggal ini";
+
+activeWrap.appendChild(active);
+activeWrap.appendChild(hint);
 
   input.addEventListener("change", () => {
     ensure4DXState();
@@ -1710,7 +1732,7 @@ const finalLeads = (appState.fourdx.leadMeasures || []).slice(0, 4);
   });
 
   row.appendChild(input);
-  row.appendChild(active);
+  row.appendChild(activeWrap);;
   row.appendChild(del);
   leadMeasuresList.appendChild(row);
 });
