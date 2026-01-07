@@ -1714,113 +1714,58 @@ const finalLeads = (appState.fourdx.leadMeasures || []).slice(0, 4);
   row.appendChild(del);
   leadMeasuresList.appendChild(row);
 });
-
-      const del = document.createElement("button");
-      del.type = "button";
-      del.className = "btn-ghost";
-      del.textContent = "✕";
-      del.style.width = "42px";
-      del.style.background = "#f97373";
-      del.style.color = "#111827";
-      del.addEventListener("click", () => {
-        ensure4DXState();
-        appState.fourdx.leadMeasures.splice(idx, 1);
-        saveState();
-        render4DX();
-      });
-
-      row.appendChild(input);
-      row.appendChild(del);
-      leadMeasuresList.appendChild(row);
-    });
   }
 
-  // add lead measure (max 4)
-  if (addLeadMeasureBtn && !addLeadMeasureBtn.dataset.bound) {
-    addLeadMeasureBtn.dataset.bound = "1";
-    addLeadMeasureBtn.addEventListener("click", () => {
-      ensure4DXState();
-      if (appState.fourdx.leadMeasures.length >= 4) {
-        alert("Max 4 lead measures ya bro 😄");
-        return;
-      }
-      appState.fourdx.leadMeasures.push({
-  name: `Masukkan Lead ${appState.fourdx.leadMeasures.length + 1}`,
-  activeFrom: getTodayKey()
-});
-  }
-
-
-   // Render Daily Lead Check-in (dummy buttons with hoho icons)
-  if (leadCheckinToday) {
-const todayKey = getTodayKey();
-const todayObj = (appState.fourdx.checkins && appState.fourdx.checkins[todayKey]) ? appState.fourdx.checkins[todayKey] : {};
-    leadCheckinToday.innerHTML = finalLeads.map((name) => `
-const todayKey2 = getTodayKey();
-const isOff = fourdxIsOffday(todayKey2);
-
-leadCheckinToday.innerHTML = finalLeads.map((lead) => `
-  <div data-lead="${lead.name}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
-    <div style="font-size:13px;font-weight:700;">${lead.name}</div>
-
-    <div style="display:flex;gap:10px;align-items:center;${isOff ? "opacity:0.55;pointer-events:none;" : ""}">
-      <button type="button"
-        class="fourdx-check-btn ${todayObj[lead.name] === "RED" ? "selected" : ""}"
-        data-status="RED"
-        style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
-        <img class="fourdx-icon" src="${hohoIconForStatus("RED")}" alt="RED" draggable="false">
-      </button>
-
-      <button type="button"
-        class="fourdx-check-btn ${todayObj[lead.name] === "YELLOW" ? "selected" : ""}"
-        data-status="YELLOW"
-        style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
-        <img class="fourdx-icon" src="${hohoIconForStatus("YELLOW")}" alt="YELLOW" draggable="false">
-      </button>
-
-      <button type="button"
-        class="fourdx-check-btn ${todayObj[lead.name] === "GREEN" ? "selected" : ""}"
-        data-status="GREEN"
-        style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
-        <img class="fourdx-icon" src="${hohoIconForStatus("GREEN")}" alt="GREEN" draggable="false">
-      </button>
-    </div>
-  </div>
-`).join("") + (isOff ? `<div style="margin-top:8px;font-size:12px;color:var(--text-light);">Hari ini OFFDAY. Check-in dimatikan.</div>` : "");
-// Click micro-interaction: select 1 status per lead row (UI only)
-// Click micro-interaction + AUTOSAVE
-if (leadCheckinToday) {
-  leadCheckinToday.onclick = (e) => {
-    e.preventDefault();
-
-    const btn = e.target.closest(".fourdx-check-btn");
-    if (!btn) return;
-
-    const row = btn.closest("[data-lead]");
-    if (!row) return;
-
-    // reset selection in same row
-    row.querySelectorAll(".fourdx-check-btn")
-      .forEach(b => b.classList.remove("selected"));
-
-    btn.classList.add("selected");
-
-    // === AUTOSAVE ===
+// add lead measure (max 4)
+if (addLeadMeasureBtn && !addLeadMeasureBtn.dataset.bound) {
+  addLeadMeasureBtn.dataset.bound = "1";
+  addLeadMeasureBtn.addEventListener("click", () => {
     ensure4DXState();
-    const leadName = row.getAttribute("data-lead");
-    const status = btn.getAttribute("data-status") || "RED";
-    const todayKey = getTodayKey();
-
-    if (!appState.fourdx.checkins[todayKey]) {
-      appState.fourdx.checkins[todayKey] = {};
+    if (appState.fourdx.leadMeasures.length >= 4) {
+      alert("Max 4 lead measures ya bro 😄");
+      return;
     }
-
-    appState.fourdx.checkins[todayKey][leadName] = status;
-
+    appState.fourdx.leadMeasures.push({
+      name: `Masukkan Lead ${appState.fourdx.leadMeasures.length + 1}`,
+      activeFrom: getTodayKey()
+    });
     saveState();
-    render4DX(); // refresh battery + monthly view
-  };
+    render4DX();
+  });
 }
+   // Render Daily Lead Check-in (dummy buttons with hoho icons)
+// Render Daily Lead Check-in (Today)
+if (leadCheckinToday) {
+  ensure4DXState();
+
+  const todayKey = getTodayKey();
+  const isOff = fourdxIsOffday(todayKey);
+  const todayObj = appState.fourdx.checkins[todayKey] || {};
+
+  leadCheckinToday.innerHTML =
+    finalLeads.map((lead) => `
+      <div data-lead="${lead.name}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;">
+        <div style="font-size:13px;font-weight:700;">${lead.name}</div>
+
+        <div style="display:flex;gap:10px;align-items:center;${isOff ? "opacity:0.55;pointer-events:none;" : ""}">
+          <button type="button" class="fourdx-check-btn ${todayObj[lead.name] === "RED" ? "selected" : ""}" data-status="RED"
+            style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
+            <img class="fourdx-icon" src="${hohoIconForStatus("RED")}" alt="RED" draggable="false">
+          </button>
+
+          <button type="button" class="fourdx-check-btn ${todayObj[lead.name] === "YELLOW" ? "selected" : ""}" data-status="YELLOW"
+            style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
+            <img class="fourdx-icon" src="${hohoIconForStatus("YELLOW")}" alt="YELLOW" draggable="false">
+          </button>
+
+          <button type="button" class="fourdx-check-btn ${todayObj[lead.name] === "GREEN" ? "selected" : ""}" data-status="GREEN"
+            style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
+            <img class="fourdx-icon" src="${hohoIconForStatus("GREEN")}" alt="GREEN" draggable="false">
+          </button>
+        </div>
+      </div>
+    `).join("") +
+    (isOff ? `<div style="margin-top:8px;font-size:12px;color:var(--text-light);">Hari ini OFFDAY. Check-in dimatikan.</div>` : "");
 }
 
   // Render Lag Measures (dummy)
@@ -1873,8 +1818,6 @@ if (leadCheckinToday) {
     render4DX();
   });
 }
-
-
 
   // WIG dummy default
   if (wigInput) {
