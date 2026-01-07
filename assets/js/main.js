@@ -1482,10 +1482,26 @@ function fourdxGetRawStatus(dateKey, leadName){
 }
 
 // display status: kalau belum diisi → dianggap RED (anti green palsu), tapi completion tetap ngitung "missing"
-function fourdxGetDisplayStatus(dateKey, leadName){
+function fourdxGetDisplayStatus(dateKey, leadName, leadActiveFrom){
+  // OFFDAY global
   if (fourdxIsOffday(dateKey)) return "OFF";
+
+  const todayKey = getTodayKey();
+
+  // Future date: tetap ada slot tapi kosong
+  if (dateKey > todayKey) return "FUTURE";
+
+  // Sebelum lead berlaku: slot kosong beda style
+  const activeFrom = leadActiveFrom || "0000-01-01";
+  if (dateKey < activeFrom) return "INACTIVE";
+
+  // Past/today dan sudah aktif:
   const raw = fourdxGetRawStatus(dateKey, leadName);
-  return raw || "RED";
+
+  // Belum diisi → MISS (lebih jujur daripada RED)
+  if (!raw) return "MISS";
+
+  return raw; // GREEN/YELLOW/RED
 }
 
 function fourdxLastNDaysKeys(n){
@@ -1585,9 +1601,9 @@ const finalLeads = (appState.fourdx.leadMeasures || []).slice(0, 4);
   }
 
   // bikin emoji row sepanjang period
-  const rows = finalLeads.map((lead) => ({
+const rows = finalLeads.map((lead) => ({
   lead,
-  cells: dayKeys.map((dk) => fourdxGetDisplayStatus(dk, lead.name))
+  cells: dayKeys.map((dk) => fourdxGetDisplayStatus(dk, lead.name, lead.activeFrom))
 }));
 
 // overall % green (expected-slot based)
@@ -1636,11 +1652,34 @@ const greenPct = expected ? Math.round((green / expected) * 100) : 0;
 const comp = fourdxComputeLeadCompletion(row.lead, dayKeys);
 
     const block = document.createElement("div");
-      const gridHtml = row.cells.map((status) => `
-  <div class="fourdx-emoji-cell" data-status="${status}">
-    <img class="fourdx-icon" src="${hohoIconForStatus(status)}" alt="${status}">
-  </div>
-`).join("");
+const gridHtml = row.cells.map((status) => {
+  // FUTURE: slot kosong tapi keliatan (dashed)
+  if (status === "FUTURE") {
+    return `<div class="fourdx-emoji-cell is-future" data-status="${status}" title="Future day"></div>`;
+  }
+
+  // INACTIVE: sebelum activeFrom (abu tipis)
+  if (status === "INACTIVE") {
+    return `<div class="fourdx-emoji-cell is-inactive" data-status="${status}" title="Belum berlaku"></div>`;
+  }
+
+  // OFF: offday (tulisan OFF)
+  if (status === "OFF") {
+    return `<div class="fourdx-emoji-cell is-off" data-status="${status}" title="Off day">OFF</div>`;
+  }
+
+  // MISS: belum diisi
+  if (status === "MISS") {
+    return `<div class="fourdx-emoji-cell is-miss" data-status="${status}" title="Belum diisi">MISS</div>`;
+  }
+
+  // GREEN/YELLOW/RED: icon
+  return `
+    <div class="fourdx-emoji-cell" data-status="${status}">
+      <img class="fourdx-icon" src="${hohoIconForStatus(status)}" alt="${status}">
+    </div>
+  `;
+}).join("");
 
     block.className = "fourdx-lead-box";
     block.innerHTML = `
