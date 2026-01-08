@@ -1263,7 +1263,6 @@ async function exportPDF() {
   // Prepare month keys
   ensure4DXState();
   const monthKeys = monthDayKeys(reportYear, reportMonthIdx);
-  const todayKey = getTodayKey();
 
   const leads = (appState.fourdx && appState.fourdx.leadMeasures) ? appState.fourdx.leadMeasures : [];
 
