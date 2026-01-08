@@ -451,23 +451,16 @@ await fetch(FOURDX_WEEKLY_WEBHOOK_URL, {
 function build4DXWeeklyPayload() {
   ensure4DXState();
 
-  // Range: Mon–Sun minggu ini
-  const today = new Date();
-  const day = today.getDay(); // 0=Sun
-  const diffToMonday = (day === 0 ? -6 : 1) - day;
+// Range: rolling last 7 days (today-6 .. today), no future
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - 6);
 
-  const monday = new Date(today);
-  monday.setDate(today.getDate() + diffToMonday);
+  const weekStart = start.toISOString().slice(0, 10);
+  const weekEnd = end.toISOString().slice(0, 10);
 
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-
-  const weekStart = monday.toISOString().slice(0, 10);
-  const weekEnd = sunday.toISOString().slice(0, 10);
-
-  // dayKeys untuk 7 hari range
   const dayKeys = [];
-  for (let d = new Date(monday); d <= sunday; d.setDate(d.getDate() + 1)) {
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     dayKeys.push(d.toISOString().slice(0, 10));
   }
 
