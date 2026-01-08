@@ -1,8 +1,8 @@
 // HeyHoLetsGo – V1.3.7 STABLE
 // Struktur: state.js terpisah, semua domain + UI di main.js
 // Dipakai tim per 01 Desember 2025
-const FOURDX_WEEKLY_SYNC_URL = "https://script.google.com/macros/s/AKfycbwm_x-Ig_ixU1CN6RRta8q5RJoUZ_TbFcUygadu5OuEGMlKKWULrvGycvEvs0MzUPy5/exec";
 const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzTUS-s1rX7dfJlzc7RCbxPmsqZXeIQo70FNRnNabpbjH6KenY4AxsWK0xSkimy8MCC/exec";
+const FOURDX_WEEKLY_SYNC_URL = "https://script.google.com/macros/s/AKfycbwm_x-Ig_ixU1CN6RRta8q5RJoUZ_TbFcUygadu5OuEGMlKKWULrvGycvEvs0MzUPy5/exec";
 const TASK_XP_PER_EFFORT = { 1: 10, 2: 20, 3: 30 };
 const DAILY_TASK_XP_TARGET = 60;
 const LEARNING_XP_PER_EFFORT = { 1: 5, 2: 10, 3: 20 };
@@ -450,7 +450,117 @@ async function syncWeeklyToGoogleSheet() {
     }
   }
 }
+function build4DXWeeklyPayload() {
+  ensure4DXState();
 
+  // Range: Mon–Sun minggu ini
+  const today = new Date();
+  const day = today.getDay(); // 0=Sun
+  const diffToMonday = (day === 0 ? -6 : 1) - day;
+
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + diffToMonday);
+
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+
+  const weekStart = monday.toISOString().slice(0, 10);
+  const weekEnd = sunday.toISOString().slice(0, 10);
+
+  // dayKeys untuk 7 hari range
+  const dayKeys = [];
+  for (let d = new Date(monday); d <= sunday; d.setDate(d.getDate() + 1)) {
+    dayKeys.push(d.toISOString().slice(0, 10));
+  }
+
+  const leads = (appState.fourdx && Array.isArray(appState.fourdx.leadMeasures))
+    ? appState.fourdx.leadMeasures
+    : [];
+
+  const rows = leads.map((lead) => {
+    // expectedKeys sudah include activeFrom + exclude offday + exclude future (<= today)
+    const expectedKeys = fourdxExpectedKeysForLead(lead, dayKeys);
+
+    let green = 0, yellow = 0, red = 0, miss = 0, off = 0, filled = 0;
+
+    expectedKeys.forEach((dk) => {
+      if (fourdxIsOffday(dk)) { off++; return; }
+
+      const raw = fourdxGetRawStatus(dk, lead.name);
+      if (!raw) { miss++; return; }
+
+      filled++;
+      if (raw === "GREEN") green++;
+      else if (raw === "YELLOW") yellow++;
+      else if (raw === "RED") red++;
+    });
+
+    const expected = expectedKeys.length;
+
+    return {
+      weekStart,
+      weekEnd,
+      leadName: lead.name,
+      activeFrom: lead.activeFrom || "",
+      expectedDays: expected,
+      filledDays: filled,
+      missDays: miss,
+      offDays: off,
+      greenDays: green,
+      yellowDays: yellow,
+      redDays: red,
+      greenPct: expected ? Math.round((green / expected) * 100) : 0,
+      completionPct: expected ? Math.round((filled / expected) * 100) : 0
+    };
+  });
+
+  return { sheetName: "4DX_Weekly", rows, weekStart, weekEnd };
+}
+
+async function sync4DXWeeklyToGoogleSheet() {
+  if (!FOURDX_WEEKLY_WEBHOOK_URL || FOURDX_WEEKLY_WEBHOOK_URL.indexOf("script.google.com") === -1) {
+    alert("4DX Weekly webhook URL belum di-set atau tidak valid.");
+    return;
+  }
+
+  const payload = build4DXWeeklyPayload();
+
+  if (!payload.rows.length) {
+    alert("Belum ada lead measures 4DX yang diset. Set dulu lead measures di tab 4DX.");
+    return;
+  }
+
+  const ok = confirm(
+    `Sync 4DX Weekly ke Google Sheet?\n\n` +
+    `Week: ${payload.weekStart} → ${payload.weekEnd}\n` +
+    `Leads: ${payload.rows.length}`
+  );
+  if (!ok) return;
+
+  const btn = document.getElementById("sync4DXWeeklyBtn");
+  const statusEl = document.getElementById("sync4DXWeeklyStatus");
+
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = "Syncing 4DX..."; }
+    if (statusEl) statusEl.textContent = "Sending...";
+
+    // pakai no-cors biar gak ke-block (Apps Script kadang strict)
+    await fetch(FOURDX_WEEKLY_WEBHOOK_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sheetName: "4DX_Weekly", rows: payload.rows })
+    });
+
+    if (statusEl) statusEl.textContent = "✅ Sent (cek tab 4DX_Weekly)";
+    alert("✅ 4DX Weekly sent. Cek Google Sheet tab 4DX_Weekly.");
+  } catch (err) {
+    if (statusEl) statusEl.textContent = "❌ Failed";
+    alert("❌ Gagal kirim 4DX Weekly.\n\nError: " + (err && err.message ? err.message : err));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "Sync 4DX Weekly"; }
+  }
+}
 
 function categoryLabel(cat){
   const map = {
@@ -2353,82 +2463,11 @@ if (leadCheckinToday && !leadCheckinToday.dataset.bound) {
     });
   }
 });
-document.getElementById("sync4DXWeeklyBtn")
-  ?.addEventListener("click", sync4DXWeekly);
-
-function sync4DXWeekly(){
-  ensure4DXState();
-
-  // ====== hitung week range (Mon–Sun) ======
-  const today = new Date();
-  const day = today.getDay(); // 0=Sun
-  const diffToMonday = (day === 0 ? -6 : 1) - day;
-
-  const monday = new Date(today);
-  monday.setDate(today.getDate() + diffToMonday);
-
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-
-  const weekStart = monday.toISOString().slice(0,10);
-  const weekEnd = sunday.toISOString().slice(0,10);
-
-  const dayKeys = [];
-  for (let d = new Date(monday); d <= sunday; d.setDate(d.getDate() + 1)) {
-    dayKeys.push(d.toISOString().slice(0,10));
-  }
-
-  // ====== build payload per lead ======
-  const rows = appState.fourdx.leadMeasures.map(lead => {
-    const expectedKeys = fourdxExpectedKeysForLead(lead, dayKeys);
-
-    let green=0, yellow=0, red=0, miss=0, off=0, filled=0;
-
-    expectedKeys.forEach(dk => {
-      if (fourdxIsOffday(dk)) {
-        off++;
-        return;
-      }
-      const raw = fourdxGetRawStatus(dk, lead.name);
-      if (!raw) {
-        miss++;
-        return;
-      }
-      filled++;
-      if (raw === "GREEN") green++;
-      else if (raw === "YELLOW") yellow++;
-      else if (raw === "RED") red++;
+// 🔗 Tombol Sync 4DX Weekly
+  const sync4dxBtn = document.getElementById("sync4DXWeeklyBtn");
+  if (sync4dxBtn) {
+    sync4dxBtn.addEventListener("click", () => {
+      if (sync4dxBtn.disabled) return;
+      sync4DXWeeklyToGoogleSheet();
     });
-
-    const expected = expectedKeys.length;
-
-    return {
-      weekStart,
-      weekEnd,
-      leadName: lead.name,
-      activeFrom: lead.activeFrom || "",
-      expectedDays: expected,
-      filledDays: filled,
-      missDays: miss,
-      offDays: off,
-      greenDays: green,
-      yellowDays: yellow,
-      redDays: red,
-      greenPct: expected ? Math.round((green/expected)*100) : 0,
-      completionPct: expected ? Math.round((filled/expected)*100) : 0
-    };
-  });
-
-  // ====== POST ke Apps Script ======
-  fetch(FOURDX_WEEKLY_SYNC_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      sheetName: "4DX_Weekly",
-      rows
-    })
-  })
-  .then(() => alert("✅ 4DX Weekly synced"))
-  .catch(() => alert("❌ Sync failed"));
-}
-  
+  }
