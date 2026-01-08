@@ -2,7 +2,7 @@
 // Struktur: state.js terpisah, semua domain + UI di main.js
 // Dipakai tim per 01 Desember 2025
 const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzTUS-s1rX7dfJlzc7RCbxPmsqZXeIQo70FNRnNabpbjH6KenY4AxsWK0xSkimy8MCC/exec";
-const FOURDX_WEEKLY_SYNC_URL = "https://script.google.com/macros/s/AKfycbwm_x-Ig_ixU1CN6RRta8q5RJoUZ_TbFcUygadu5OuEGMlKKWULrvGycvEvs0MzUPy5/exec";
+const FOURDX_WEEKLY_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwm_x-Ig_ixU1CN6RRta8q5RJoUZ_TbFcUygadu5OuEGMlKKWULrvGycvEvs0MzUPy5/exec";
 const TASK_XP_PER_EFFORT = { 1: 10, 2: 20, 3: 30 };
 const DAILY_TASK_XP_TARGET = 60;
 const LEARNING_XP_PER_EFFORT = { 1: 5, 2: 10, 3: 20 };
@@ -429,14 +429,12 @@ async function syncWeeklyToGoogleSheet() {
     }
 
     // Kirim tanpa baca response (biar gak ke-block CORS)
-    await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
-      method: "POST",
-      mode: "no-cors",                    // penting: jangan cek response
-      headers: {
-        "Content-Type": "text/plain"      // simple header, aman buat no-cors
-      },
-      body: JSON.stringify(payload)
-    });
+await fetch(FOURDX_WEEKLY_WEBHOOK_URL, {
+  method: "POST",
+  mode: "no-cors",
+  headers: { "Content-Type": "text/plain" },
+  body: JSON.stringify({ sheetName: "4DX_Weekly", rows: payload.rows })
+});
 
     alert("Permintaan sync sudah dikirim. Cek Google Sheet apakah barisnya sudah bertambah.");
   } catch (err) {
@@ -523,7 +521,10 @@ async function sync4DXWeeklyToGoogleSheet() {
     return;
   }
 
-  const payload = build4DXWeeklyPayload();
+const payload = build4DXWeeklyPayload();
+
+  console.log("SYNC4DX CLICKED URL:", FOURDX_WEEKLY_WEBHOOK_URL);
+  console.log("SYNC4DX payload:", payload);
 
   if (!payload.rows.length) {
     alert("Belum ada lead measures 4DX yang diset. Set dulu lead measures di tab 4DX.");
