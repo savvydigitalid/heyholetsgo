@@ -992,6 +992,18 @@ userPositionInput.addEventListener("change",()=>{
 
 /* PDF */
 // GANTI exportPDF lama dengan ini
+function pad2(n){ return String(n).padStart(2,"0"); }
+
+function monthDayKeys(year, monthIdx){
+  // monthIdx: 0-11
+  const lastDay = new Date(year, monthIdx + 1, 0).getDate();
+  const keys = [];
+  for(let d=1; d<=lastDay; d++){
+    keys.push(`${year}-${pad2(monthIdx+1)}-${pad2(d)}`);
+  }
+  return keys;
+}
+
 async function exportPDF() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({
@@ -1227,7 +1239,229 @@ async function exportPDF() {
 
   const heatRows = Math.ceil(dayKeys.length / cols);
   y = startY + heatRows * (cellSize + cellGap) + 22;
+  
+// ==========================
+  // 5B. SECTION – 4DX (MONTHLY)
+  // ==========================
+  // Page break safety
+  if (y > pageHeight - margin - 120) {
+    pdf.addPage();
+    y = margin + 10;
+  }
 
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(14);
+  pdf.text("4DX – Execution Discipline (This Month)", margin, y);
+  y += 10;
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(10);
+  pdf.setTextColor(90, 90, 90);
+  pdf.text("Green % + per-lead calendar (Off / Miss / RYG). Future & inactive shown as empty slots.", margin, y);
+  y += 14;
+
+  // Prepare month keys
+  ensure4DXState();
+  const monthKeys = monthDayKeys(reportYear, reportMonthIdx);
+  const todayKey = getTodayKey();
+
+  const leads = (appState.fourdx && appState.fourdx.leadMeasures) ? appState.fourdx.leadMeasures : [];
+
+  // If no leads
+  if (!leads.length) {
+    pdf.setTextColor(70,70,70);
+    pdf.text("No 4DX lead measures set for this month.", margin, y);
+    y += 16;
+  } else {
+    // --------- Global green percentage (expected-slot based) ---------
+    let gTotal = 0, expectedTotal = 0, missTotal = 0, offTotal = 0;
+
+    monthKeys.forEach(dk => {
+      if (dk <= todayKey && fourdxIsOffday(dk)) offTotal++;
+    });
+
+    leads.forEach((lead) => {
+      const expectedKeys = fourdxExpectedKeysForLead(lead, monthKeys); // already excludes future + offdays + before activeFrom
+      expectedTotal += expectedKeys.length;
+
+      expectedKeys.forEach((dk) => {
+        const raw = fourdxGetRawStatus(dk, lead.name);
+        if (raw === "GREEN") gTotal++;
+        if (!raw) missTotal++;
+      });
+    });
+
+    const greenPct = expectedTotal ? Math.round((gTotal / expectedTotal) * 100) : 0;
+
+    // Draw bar
+    const barW = pageWidth - (margin * 2) - 140;
+    const barH = 10;
+    const barX = margin;
+    const barY = y;
+
+    // Track
+    pdf.setDrawColor(200,200,200);
+    pdf.setFillColor(245,245,245);
+    pdf.roundedRect(barX, barY, barW, barH, 5, 5, "FD");
+
+    // Fill
+    const fillW = Math.max(0, Math.min(barW, (barW * greenPct) / 100));
+    pdf.setFillColor(34,197,94);
+    pdf.roundedRect(barX, barY, fillW, barH, 5, 5, "F");
+
+    // Text
+    pdf.setTextColor(30,30,30);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(`${greenPct}%`, barX + barW + 10, barY + 8);
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(90,90,90);
+    pdf.text(`${gTotal}/${expectedTotal} expected`, barX + barW + 45, barY + 8);
+
+    y += 18;
+
+    // Small counters
+    pdf.setTextColor(60,60,60);
+    pdf.text(`MISS: ${missTotal}   |   OFF days (month-to-date): ${offTotal}`, margin, y);
+    y += 16;
+
+    // Legend (tiny)
+    const legendY = y;
+    const box = 8;
+    const gap = 10;
+    let lx = margin;
+
+    function legendItem(label, fill, stroke){
+      if (stroke) pdf.setDrawColor(...stroke);
+      else pdf.setDrawColor(210,210,210);
+      if (fill) pdf.setFillColor(...fill);
+      else pdf.setFillColor(255,255,255);
+
+      pdf.rect(lx, legendY-7, box, box, "FD");
+      lx += box + 5;
+      pdf.setTextColor(80,80,80);
+      pdf.text(label, lx, legendY-1);
+      lx += pdf.getTextWidth(label) + gap;
+    }
+
+    legendItem("Green",  [34,197,94],  [34,197,94]);
+    legendItem("Yellow", [234,179,8],  [234,179,8]);
+    legendItem("Red",    [239,68,68],  [239,68,68]);
+    legendItem("Miss",   [251,191,36], [251,191,36]);
+    legendItem("Off",    [148,163,184],[148,163,184]);
+    legendItem("Empty",  null,         [210,210,210]);
+
+    y += 14;
+
+    // --------- Per-lead calendar grid ---------
+    const cols = 7;
+    const cell = 14;
+    const cg = 4; // gap
+    const rowH = cell + cg;
+
+    leads.forEach((lead, leadIdx) => {
+      // Page break for each lead block
+      const approxH = 14 + 10 + (Math.ceil(monthKeys.length / cols) * rowH) + 14;
+      if (y + approxH > pageHeight - margin) {
+        pdf.addPage();
+        y = margin + 10;
+      }
+
+      // Lead title
+      pdf.setTextColor(20,20,20);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(11);
+      pdf.text(`${lead.name}`, margin, y);
+      y += 10;
+
+      // Lead metrics
+      const expectedKeys = fourdxExpectedKeysForLead(lead, monthKeys);
+      let g=0,yw=0,r=0,miss=0;
+      expectedKeys.forEach((dk)=>{
+        const raw = fourdxGetRawStatus(dk, lead.name);
+        if (raw === "GREEN") g++;
+        else if (raw === "YELLOW") yw++;
+        else if (raw === "RED") r++;
+        else miss++;
+      });
+      const leadGreenPct = expectedKeys.length ? Math.round((g/expectedKeys.length)*100) : 0;
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(9);
+      pdf.setTextColor(90,90,90);
+      pdf.text(`Green: ${leadGreenPct}%   |   Expected: ${expectedKeys.length}   |   MISS: ${miss}   |   Active from: ${lead.activeFrom || "-"}`, margin, y);
+      y += 10;
+
+      // Calendar cells (1..lastDay)
+      const startX = margin;
+      let x = startX;
+      let col = 0;
+
+      monthKeys.forEach((dk) => {
+        const dayNum = Number(dk.slice(8,10));
+
+        // status using your display logic
+        const st = fourdxGetDisplayStatus(dk, lead.name, lead.activeFrom);
+
+        // color mapping
+        let fill = null, stroke = [210,210,210], textColor = [80,80,80], label = null;
+
+        if (st === "GREEN") { fill = [34,197,94]; stroke = [34,197,94]; }
+        else if (st === "YELLOW") { fill = [234,179,8]; stroke = [234,179,8]; }
+        else if (st === "RED") { fill = [239,68,68]; stroke = [239,68,68]; }
+        else if (st === "MISS") { fill = [251,191,36]; stroke = [251,191,36]; }
+        else if (st === "OFF") { fill = [148,163,184]; stroke = [148,163,184]; label = "OFF"; }
+        else {
+          // FUTURE or INACTIVE => empty slot
+          fill = null;
+          stroke = [210,210,210];
+        }
+
+        // Draw cell
+        pdf.setDrawColor(...stroke);
+        if (fill) {
+          pdf.setFillColor(fill[0], fill[1], fill[2]);
+          // light fill
+          pdf.rect(x, y, cell, cell, "FD");
+        } else {
+          pdf.setFillColor(255,255,255);
+          pdf.rect(x, y, cell, cell, "D");
+        }
+
+        // Day number (small)
+        pdf.setTextColor(...textColor);
+        pdf.setFontSize(7);
+        pdf.text(String(dayNum), x + 3, y + 5);
+
+        // OFF label
+        if (label) {
+          pdf.setFontSize(6);
+          pdf.setTextColor(30,30,30);
+          pdf.text(label, x + 2, y + cell - 3);
+        }
+
+        // move
+        col++;
+        if (col >= cols) {
+          col = 0;
+          x = startX;
+          y += rowH;
+        } else {
+          x += (cell + cg);
+        }
+      });
+
+      // after grid: move y if last row not ended perfectly
+      if (col !== 0) y += rowH;
+      y += 10;
+    });
+  }
+
+  // Divider line before next section
+  pdf.setDrawColor(220, 220, 220);
+  pdf.line(margin, y, pageWidth - margin, y);
+  y += 14;
+  
   // ==========================
   // 6. SECTION 2 – LEARNING SUMMARY
   // ==========================
