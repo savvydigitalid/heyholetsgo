@@ -44,6 +44,7 @@
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="tasksTab">Tasks & Productivity</button>
+    <button class="tab-btn" data-tab="fourdxTab">4DX</button>
     <button class="tab-btn" data-tab="learningTab">Learning & Skills</button>
     <button class="tab-btn" data-tab="settingsTab">Settings & Reports</button>
   </div>
@@ -144,6 +145,150 @@
       <div id="taskList" style="display:flex;flex-direction:column;gap:8px;font-size:13px;"></div>
     </div>
   </section>
+  
+<!-- ===== TAB 4DX ===== -->
+<section id="fourdxTab" class="tab-content hidden">
+  <div class="card">
+    <div class="section-title">
+      <span>4DX Focus</span>
+    </div>
+    <p style="margin:0;color:var(--text-light);font-size:12px;">
+      Setup WIG, Lag Measures, dan Lead Measures kamu.
+    </p>
+  </div>
+
+  <!-- Monthly Lead Progress -->
+  <div class="card">
+    <div class="section-title" style="align-items:flex-start;">
+      <div>
+        <div style="font-weight:800;font-size:18px;">Monthly Lead Progress</div>
+        <div style="font-size:12px;color:var(--text-light);margin-top:3px;">
+          Ringkasan hijau/kuning/merah untuk setiap lead dalam periode terpilih.
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+        <div style="font-size:12px;color:var(--text-light);">Periode</div>
+        <select id="fourdxPeriodSelect" style="width:150px;">
+          <option value="month">This Month</option>
+          <option value="7">Last 7 days</option>
+          <option value="14">Last 14 days</option>
+          <option value="30" selected>Last 30 days</option>
+        </select>
+      </div>
+    </div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
+<!-- Battery Bar – Monthly Discipline -->
+<div style="padding:10px 12px;border-radius:14px;background:var(--bg-alt);border:1px solid var(--border);font-size:13px;">
+  <div style="font-weight:800;margin-bottom:8px;">Battery Bar – Monthly Discipline</div>
+
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div style="flex:1;height:12px;border-radius:999px;background:rgba(148,163,184,0.35);overflow:hidden;border:1px solid var(--border);">
+      <div id="fourdxBatteryFill" style="height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#6ee7b7,#34d399);"></div>
+    </div>
+
+    <div style="min-width:160px;text-align:right;">
+      <div style="font-weight:900;">
+        <span id="fourdxBatteryPct">0%</span> GREEN
+      </div>
+      <div style="font-size:11px;color:var(--text-light);">
+        (<span id="fourdxBatteryFraction">0/0</span> check-ins)
+      </div>
+    </div>
+  </div>
+</div>
+
+
+      <div style="padding:10px 12px;border-radius:14px;background:var(--bg-alt);border:1px solid var(--border);font-size:13px;color:var(--text-light);">
+        Ho-Ho: Banyak hari merah nih. Pilih 1 lead paling penting dan fokus push itu minggu depan! 🔥
+      </div>
+    </div>
+
+    <div id="fourdxMonthlyRows" style="margin-top:14px;display:flex;flex-direction:column;gap:18px;"></div>
+  </div>
+
+  <!-- Lead Measures + Daily Check-in -->
+  <div class="card">
+    <div class="section-title">
+      <span>⚡ Lead Measures</span>
+      <small>Indikator harian yang bisa kamu kontrol langsung. (Max 4)</small>
+    </div>
+
+    <div id="leadMeasuresList" style="display:flex;flex-direction:column;gap:10px;margin-top:10px;"></div>
+
+    <button id="addLeadMeasureBtn" type="button" class="btn-ghost" style="margin-top:10px;">
+      + Tambah Lead Measure
+    </button>
+
+    <div style="margin-top:14px;border-top:1px dashed var(--border);padding-top:14px;">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
+  <div style="font-weight:800;">Daily Lead Check-in (Today)</div>
+  <button id="fourdxEditBtn" type="button" class="btn-ghost" style="font-size:12px;padding:6px 10px;">
+    Edit last 14 days
+  </button>
+</div>
+
+<div style="font-size:12px;color:var(--text-light);margin-bottom:10px;">
+            Pilih status untuk setiap lead hari ini.
+     <div style="margin-bottom:12px;padding:10px 12px;border-radius:14px;background:var(--bg-alt);border:1px solid var(--border);font-size:12px;color:var(--text-light);">
+  <div style="font-weight:800;color:var(--text);margin-bottom:6px;">Rules biar gak “green palsu”</div>
+  <div>🔴 <b>RED</b> = &lt;50% target tercapai, atau <b>tidak input sama sekali</b> (anggap red).</div>
+  <div>🟡 <b>YELLOW</b> = 50%–89% target tercapai.</div>
+  <div>🟢 <b>GREEN</b> = ≥90% target tercapai.</div>
+  <div style="margin-top:6px;">Contoh: target 10 → RED ≤4, YELLOW 5–8, GREEN ≥9.</div>
+</div>
+
+      </div>
+
+      <div id="leadCheckinToday" style="display:flex;flex-direction:column;gap:14px;"></div>
+    </div>
+  </div>
+
+  <!-- Lag Measures -->
+  <div class="card">
+    <div class="section-title">
+      <span>📊 Lag Measures</span>
+      <small>Ini adalah hasil akhir yang ingin dicapai. Tidak dievaluasi harian.</small>
+    </div>
+
+    <div id="lagMeasuresList" style="display:flex;flex-direction:column;gap:10px;margin-top:10px;"></div>
+
+    <button id="addLagMeasureBtn" type="button" class="btn-ghost" style="margin-top:10px;">
+      + Tambah Lag Measure
+    </button>
+  </div>
+
+  <!-- WIG -->
+  <div class="card">
+    <div class="section-title">
+      <span>🎯 WIG (Wildly Important Goal)</span>
+      <small>Satu tujuan paling penting yang ingin kamu capai dalam 3–6 bulan ke depan.</small>
+    </div>
+
+    <input id="wigInput" type="text" placeholder="Contoh: Naikin revenue 30% YoY di 2026" />
+  </div>
+  <!-- ===== 4DX EDIT MODE MODAL ===== -->
+<div id="fourdxEditModal" class="fourdx-modal hidden" aria-hidden="true">
+  <div class="fourdx-modal-backdrop" data-close="1"></div>
+
+  <div class="fourdx-modal-panel" role="dialog" aria-modal="true">
+    <div class="fourdx-modal-head">
+      <div>
+        <div class="fourdx-modal-title">Edit Mode</div>
+        <div class="fourdx-modal-sub">Last 14 days • click cell to cycle • OFFDAY berlaku global per tanggal</div>
+      </div>
+      <button id="fourdxEditCloseBtn" type="button" class="btn-ghost" style="padding:6px 10px;">Close</button>
+    </div>
+
+    <div class="fourdx-modal-help">
+      <div><b>Cycle:</b> RED → YELLOW → GREEN → OFFDAY</div>
+      <div><b>Completion</b> naik kalau semua hari “kerja” udah keisi. OFFDAY gak dihitung.</div>
+    </div>
+
+    <div id="fourdxEditGrid" class="fourdx-edit-grid"></div>
+  </div>
+</div>
+</section>
 
   <!-- ===== TAB LEARNING ===== -->
   <section id="learningTab" class="tab-content hidden">
@@ -323,16 +468,19 @@
 <button id="syncWeeklyBtn" type="button">
   Sync Weekly to Google Sheet
 </button>
-
 <span id="syncWeeklyStatus" class="sync-status"></span>
+<button id="sync4DXWeeklyBtn" type="button" style="margin-top:10px;">
+  Sync 4DX Weekly
+</button>
+
+<span id="sync4DXWeeklyStatus" class="sync-status"></span>
 
     </div>
   </section>
+</div>
 
 <img id="hohoTaskFloat" class="hoho-float hidden" src="hoho-happy.png" alt="Ho-Ho Task" />
 <img id="hohoLearningFloat" class="hoho-float hidden" src="hoho-book.png" alt="Ho-Ho Learning" />
-<!-- external libs -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <!-- app scripts -->
 <script src="assets/js/core/state.js"></script> <!-- nanti isi state -->

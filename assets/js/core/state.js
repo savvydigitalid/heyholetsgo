@@ -15,6 +15,15 @@ let appState = {
     name: "",
     position: ""
   },
+    // 4DX state (lead measures + check-ins + offdays)
+  fourdx: {
+    wig: "",
+    leadMeasures: [],
+    lagMeasures: [],
+    checkins: {},
+    offdays: {}
+  },
+
   // optional: dipakai kalau nanti mau hidupin lagi fitur carry-over
   lastOpenDate: null
 };
@@ -39,6 +48,7 @@ function loadState() {
     appState.learning    = parsed.learning    || {};
     appState.theme       = parsed.theme       || "light";
     appState.user        = parsed.user        || { name: "", position: "" };
+    appState.fourdx      = parsed.fourdx      || appState.fourdx;    
     appState.lastOpenDate = parsed.lastOpenDate || null;
   } catch (e) {
     console.error("Failed to load state:", e);
@@ -53,6 +63,7 @@ function saveState() {
       learning:     appState.learning,
       theme:        appState.theme,
       user:         appState.user,
+      fourdx:       appState.fourdx,
       lastOpenDate: appState.lastOpenDate || null
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));

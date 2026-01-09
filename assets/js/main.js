@@ -2,6 +2,7 @@
 // Struktur: state.js terpisah, semua domain + UI di main.js
 // Dipakai tim per 01 Desember 2025
 const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzTUS-s1rX7dfJlzc7RCbxPmsqZXeIQo70FNRnNabpbjH6KenY4AxsWK0xSkimy8MCC/exec";
+const FOURDX_WEEKLY_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwm_x-Ig_ixU1CN6RRta8q5RJoUZ_TbFcUygadu5OuEGMlKKWULrvGycvEvs0MzUPy5/exec";
 const TASK_XP_PER_EFFORT = { 1: 10, 2: 20, 3: 30 };
 const DAILY_TASK_XP_TARGET = 60;
 const LEARNING_XP_PER_EFFORT = { 1: 5, 2: 10, 3: 20 };
@@ -65,6 +66,7 @@ function carryOverFromYesterday() {
 /* DOM */
 const tabButtons = document.querySelectorAll(".tab-btn");
 const tasksTabEl = document.getElementById("tasksTab");
+const fourdxTabEl = document.getElementById("fourdxTab");
 const learningTabEl = document.getElementById("learningTab");
 const settingsTabEl = document.getElementById("settingsTab");
   const topBarEl = document.getElementById("topBar");
@@ -106,6 +108,24 @@ const userNameInput = document.getElementById("userNameInput");
 const userPositionInput = document.getElementById("userPositionInput");
 const exportPdfBtn = document.getElementById("exportPdfBtn");
 
+// ===== 4DX DOM (UI only for now) =====
+const fourdxPeriodSelect = document.getElementById("fourdxPeriodSelect");
+const fourdxOverallGreen = document.getElementById("fourdxOverallGreen");
+const fourdxBatteryFill = document.getElementById("fourdxBatteryFill");
+const fourdxBatteryPct = document.getElementById("fourdxBatteryPct");
+const fourdxBatteryFraction = document.getElementById("fourdxBatteryFraction");
+
+const fourdxMonthlyRows = document.getElementById("fourdxMonthlyRows");
+
+const leadMeasuresList = document.getElementById("leadMeasuresList");
+const addLeadMeasureBtn = document.getElementById("addLeadMeasureBtn");
+const leadCheckinToday = document.getElementById("leadCheckinToday");
+
+const lagMeasuresList = document.getElementById("lagMeasuresList");
+const addLagMeasureBtn = document.getElementById("addLagMeasureBtn");
+
+const wigInput = document.getElementById("wigInput");
+
 /* THEME */
 function applyTheme(theme){
   if(theme === "dark"){
@@ -126,8 +146,9 @@ themeToggleBtn.addEventListener("click", ()=>{
 
 /* TABS */
 function showTab(tabId){
-  [tasksTabEl, learningTabEl, settingsTabEl].forEach(el=>el.classList.add("hidden"));
+[tasksTabEl, fourdxTabEl, learningTabEl, settingsTabEl].forEach(el=>el.classList.add("hidden"));
   if(tabId==="tasksTab") tasksTabEl.classList.remove("hidden");
+  if(tabId==="fourdxTab") fourdxTabEl.classList.remove("hidden");
   if(tabId==="learningTab") learningTabEl.classList.remove("hidden");
   if(tabId==="settingsTab") settingsTabEl.classList.remove("hidden");
 
@@ -408,14 +429,12 @@ async function syncWeeklyToGoogleSheet() {
     }
 
     // Kirim tanpa baca response (biar gak ke-block CORS)
-    await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
-      method: "POST",
-      mode: "no-cors",                    // penting: jangan cek response
-      headers: {
-        "Content-Type": "text/plain"      // simple header, aman buat no-cors
-      },
-      body: JSON.stringify(payload)
-    });
+await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+  method: "POST",
+  mode: "no-cors",
+  headers: { "Content-Type": "text/plain" },
+  body: JSON.stringify(payload)
+});
 
     alert("Permintaan sync sudah dikirim. Cek Google Sheet apakah barisnya sudah bertambah.");
   } catch (err) {
@@ -429,7 +448,118 @@ async function syncWeeklyToGoogleSheet() {
     }
   }
 }
+function build4DXWeeklyPayload() {
+  ensure4DXState();
 
+// Range: rolling last 7 days (today-6 .. today), no future
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - 6);
+
+  const weekStart = start.toISOString().slice(0, 10);
+  const weekEnd = end.toISOString().slice(0, 10);
+
+  const dayKeys = [];
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    dayKeys.push(d.toISOString().slice(0, 10));
+  }
+
+  const leads = (appState.fourdx && Array.isArray(appState.fourdx.leadMeasures))
+    ? appState.fourdx.leadMeasures
+    : [];
+
+  const rows = leads.map((lead) => {
+    // expectedKeys sudah include activeFrom + exclude offday + exclude future (<= today)
+    const expectedKeys = fourdxExpectedKeysForLead(lead, dayKeys);
+
+    let green = 0, yellow = 0, red = 0, miss = 0, off = 0, filled = 0;
+
+    expectedKeys.forEach((dk) => {
+      if (fourdxIsOffday(dk)) { off++; return; }
+
+      const raw = fourdxGetRawStatus(dk, lead.name);
+      if (!raw) { miss++; return; }
+
+      filled++;
+      if (raw === "GREEN") green++;
+      else if (raw === "YELLOW") yellow++;
+      else if (raw === "RED") red++;
+    });
+
+    const expected = expectedKeys.length;
+
+    return {
+      weekStart,
+      weekEnd,
+      leadName: lead.name,
+      activeFrom: lead.activeFrom || "",
+      expectedDays: expected,
+      filledDays: filled,
+      missDays: miss,
+      offDays: off,
+      greenDays: green,
+      yellowDays: yellow,
+      redDays: red,
+      greenPct: expected ? Math.round((green / expected) * 100) : 0,
+      completionPct: expected ? Math.round((filled / expected) * 100) : 0
+    };
+  });
+
+  return { sheetName: "4DX_Weekly", rows, weekStart, weekEnd };
+}
+
+async function sync4DXWeeklyToGoogleSheet() {
+  if (!FOURDX_WEEKLY_WEBHOOK_URL || FOURDX_WEEKLY_WEBHOOK_URL.indexOf("script.google.com") === -1) {
+    alert("4DX Weekly webhook URL belum di-set atau tidak valid.");
+    return;
+  }
+
+const payload = build4DXWeeklyPayload();
+
+  console.log("SYNC4DX CLICKED URL:", FOURDX_WEEKLY_WEBHOOK_URL);
+  console.log("SYNC4DX payload:", payload);
+
+  if (!payload.rows.length) {
+    alert("Belum ada lead measures 4DX yang diset. Set dulu lead measures di tab 4DX.");
+    return;
+  }
+
+  const ok = confirm(
+    `Sync 4DX Weekly ke Google Sheet?\n\n` +
+    `Week: ${payload.weekStart} → ${payload.weekEnd}\n` +
+    `Leads: ${payload.rows.length}`
+  );
+  if (!ok) return;
+
+  const btn = document.getElementById("sync4DXWeeklyBtn");
+  const statusEl = document.getElementById("sync4DXWeeklyStatus");
+
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = "Syncing 4DX..."; }
+    if (statusEl) statusEl.textContent = "Sending...";
+
+    // pakai no-cors biar gak ke-block (Apps Script kadang strict)
+    await fetch(FOURDX_WEEKLY_WEBHOOK_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+  sheetName: "4DX_Weekly",
+  userName: (appState.user && appState.user.name) ? appState.user.name : "",
+  userPosition: (appState.user && appState.user.position) ? appState.user.position : "",
+  rows: payload.rows
+})
+    });
+
+    if (statusEl) statusEl.textContent = "✅ Sent (cek tab 4DX_Weekly)";
+    alert("✅ 4DX Weekly sent. Cek Google Sheet tab 4DX_Weekly.");
+  } catch (err) {
+    if (statusEl) statusEl.textContent = "❌ Failed";
+    alert("❌ Gagal kirim 4DX Weekly.\n\nError: " + (err && err.message ? err.message : err));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "Sync 4DX Weekly"; }
+  }
+}
 
 function categoryLabel(cat){
   const map = {
@@ -972,6 +1102,18 @@ userPositionInput.addEventListener("change",()=>{
 
 /* PDF */
 // GANTI exportPDF lama dengan ini
+function pad2(n){ return String(n).padStart(2,"0"); }
+
+function monthDayKeys(year, monthIdx){
+  // monthIdx: 0-11
+  const lastDay = new Date(year, monthIdx + 1, 0).getDate();
+  const keys = [];
+  for(let d=1; d<=lastDay; d++){
+    keys.push(`${year}-${pad2(monthIdx+1)}-${pad2(d)}`);
+  }
+  return keys;
+}
+
 async function exportPDF() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({
@@ -1207,7 +1349,228 @@ async function exportPDF() {
 
   const heatRows = Math.ceil(dayKeys.length / cols);
   y = startY + heatRows * (cellSize + cellGap) + 22;
+  
+// ==========================
+  // 5B. SECTION – 4DX (MONTHLY)
+  // ==========================
+  // Page break safety
+  if (y > pageHeight - margin - 120) {
+    pdf.addPage();
+    y = margin + 10;
+  }
 
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(14);
+  pdf.text("4DX – Execution Discipline (This Month)", margin, y);
+  y += 10;
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(10);
+  pdf.setTextColor(90, 90, 90);
+  pdf.text("Green % + per-lead calendar (Off / Miss / RYG). Future & inactive shown as empty slots.", margin, y);
+  y += 14;
+
+  // Prepare month keys
+  ensure4DXState();
+  const monthKeys = monthDayKeys(reportYear, reportMonthIdx);
+
+  const leads = (appState.fourdx && appState.fourdx.leadMeasures) ? appState.fourdx.leadMeasures : [];
+
+  // If no leads
+  if (!leads.length) {
+    pdf.setTextColor(70,70,70);
+    pdf.text("No 4DX lead measures set for this month.", margin, y);
+    y += 16;
+  } else {
+    // --------- Global green percentage (expected-slot based) ---------
+    let gTotal = 0, expectedTotal = 0, missTotal = 0, offTotal = 0;
+
+    monthKeys.forEach(dk => {
+      if (dk <= todayKey && fourdxIsOffday(dk)) offTotal++;
+    });
+
+    leads.forEach((lead) => {
+      const expectedKeys = fourdxExpectedKeysForLead(lead, monthKeys); // already excludes future + offdays + before activeFrom
+      expectedTotal += expectedKeys.length;
+
+      expectedKeys.forEach((dk) => {
+        const raw = fourdxGetRawStatus(dk, lead.name);
+        if (raw === "GREEN") gTotal++;
+        if (!raw) missTotal++;
+      });
+    });
+
+    const greenPct = expectedTotal ? Math.round((gTotal / expectedTotal) * 100) : 0;
+
+    // Draw bar
+    const barW = pageWidth - (margin * 2) - 140;
+    const barH = 10;
+    const barX = margin;
+    const barY = y;
+
+    // Track
+    pdf.setDrawColor(200,200,200);
+    pdf.setFillColor(245,245,245);
+    pdf.roundedRect(barX, barY, barW, barH, 5, 5, "FD");
+
+    // Fill
+    const fillW = Math.max(0, Math.min(barW, (barW * greenPct) / 100));
+    pdf.setFillColor(34,197,94);
+    pdf.roundedRect(barX, barY, fillW, barH, 5, 5, "F");
+
+    // Text
+    pdf.setTextColor(30,30,30);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(`${greenPct}%`, barX + barW + 10, barY + 8);
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(90,90,90);
+    pdf.text(`${gTotal}/${expectedTotal} expected`, barX + barW + 45, barY + 8);
+
+    y += 18;
+
+    // Small counters
+    pdf.setTextColor(60,60,60);
+    pdf.text(`MISS: ${missTotal}   |   OFF days (month-to-date): ${offTotal}`, margin, y);
+    y += 16;
+
+    // Legend (tiny)
+    const legendY = y;
+    const box = 8;
+    const gap = 10;
+    let lx = margin;
+
+    function legendItem(label, fill, stroke){
+      if (stroke) pdf.setDrawColor(...stroke);
+      else pdf.setDrawColor(210,210,210);
+      if (fill) pdf.setFillColor(...fill);
+      else pdf.setFillColor(255,255,255);
+
+      pdf.rect(lx, legendY-7, box, box, "FD");
+      lx += box + 5;
+      pdf.setTextColor(80,80,80);
+      pdf.text(label, lx, legendY-1);
+      lx += pdf.getTextWidth(label) + gap;
+    }
+
+    legendItem("Green",  [34,197,94],  [34,197,94]);
+    legendItem("Yellow", [234,179,8],  [234,179,8]);
+    legendItem("Red",    [239,68,68],  [239,68,68]);
+    legendItem("Miss",   [251,191,36], [251,191,36]);
+    legendItem("Off",    [148,163,184],[148,163,184]);
+    legendItem("Empty",  null,         [210,210,210]);
+
+    y += 14;
+
+    // --------- Per-lead calendar grid ---------
+    const cols = 7;
+    const cell = 14;
+    const cg = 4; // gap
+    const rowH = cell + cg;
+
+    leads.forEach((lead, leadIdx) => {
+      // Page break for each lead block
+      const approxH = 14 + 10 + (Math.ceil(monthKeys.length / cols) * rowH) + 14;
+      if (y + approxH > pageHeight - margin) {
+        pdf.addPage();
+        y = margin + 10;
+      }
+
+      // Lead title
+      pdf.setTextColor(20,20,20);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(11);
+      pdf.text(`${lead.name}`, margin, y);
+      y += 10;
+
+      // Lead metrics
+      const expectedKeys = fourdxExpectedKeysForLead(lead, monthKeys);
+      let g=0,yw=0,r=0,miss=0;
+      expectedKeys.forEach((dk)=>{
+        const raw = fourdxGetRawStatus(dk, lead.name);
+        if (raw === "GREEN") g++;
+        else if (raw === "YELLOW") yw++;
+        else if (raw === "RED") r++;
+        else miss++;
+      });
+      const leadGreenPct = expectedKeys.length ? Math.round((g/expectedKeys.length)*100) : 0;
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(9);
+      pdf.setTextColor(90,90,90);
+      pdf.text(`Green: ${leadGreenPct}%   |   Expected: ${expectedKeys.length}   |   MISS: ${miss}   |   Active from: ${lead.activeFrom || "-"}`, margin, y);
+      y += 10;
+
+      // Calendar cells (1..lastDay)
+      const startX = margin;
+      let x = startX;
+      let col = 0;
+
+      monthKeys.forEach((dk) => {
+        const dayNum = Number(dk.slice(8,10));
+
+        // status using your display logic
+        const st = fourdxGetDisplayStatus(dk, lead.name, lead.activeFrom);
+
+        // color mapping
+        let fill = null, stroke = [210,210,210], textColor = [80,80,80], label = null;
+
+        if (st === "GREEN") { fill = [34,197,94]; stroke = [34,197,94]; }
+        else if (st === "YELLOW") { fill = [234,179,8]; stroke = [234,179,8]; }
+        else if (st === "RED") { fill = [239,68,68]; stroke = [239,68,68]; }
+        else if (st === "MISS") { fill = [251,191,36]; stroke = [251,191,36]; }
+        else if (st === "OFF") { fill = [148,163,184]; stroke = [148,163,184]; label = "OFF"; }
+        else {
+          // FUTURE or INACTIVE => empty slot
+          fill = null;
+          stroke = [210,210,210];
+        }
+
+        // Draw cell
+        pdf.setDrawColor(...stroke);
+        if (fill) {
+          pdf.setFillColor(fill[0], fill[1], fill[2]);
+          // light fill
+          pdf.rect(x, y, cell, cell, "FD");
+        } else {
+          pdf.setFillColor(255,255,255);
+          pdf.rect(x, y, cell, cell, "D");
+        }
+
+        // Day number (small)
+        pdf.setTextColor(...textColor);
+        pdf.setFontSize(7);
+        pdf.text(String(dayNum), x + 3, y + 5);
+
+        // OFF label
+        if (label) {
+          pdf.setFontSize(6);
+          pdf.setTextColor(30,30,30);
+          pdf.text(label, x + 2, y + cell - 3);
+        }
+
+        // move
+        col++;
+        if (col >= cols) {
+          col = 0;
+          x = startX;
+          y += rowH;
+        } else {
+          x += (cell + cg);
+        }
+      });
+
+      // after grid: move y if last row not ended perfectly
+      if (col !== 0) y += rowH;
+      y += 10;
+    });
+  }
+
+  // Divider line before next section
+  pdf.setDrawColor(220, 220, 220);
+  pdf.line(margin, y, pageWidth - margin, y);
+  y += 14;
+  
   // ==========================
   // 6. SECTION 2 – LEARNING SUMMARY
   // ==========================
@@ -1443,7 +1806,571 @@ function scheduleRandomBounce() {
     scheduleRandomBounce();
   }, delay);
 }
+// ===== 4DX RENDER (DUMMY UI) =====
+function hohoIconForStatus(status){
+  if(status === "GREEN") return "assets/emothoho/hoho4dx_green.png";
+  if(status === "YELLOW") return "assets/emothoho/hoho4dx_yellow.png";
+  return "assets/emothoho/hoho4dx_red.png";
+}
+function fourdxIsOffday(dateKey){
+  ensure4DXState();
+  return !!appState.fourdx.offdays[dateKey];
+}
 
+// raw status: bisa null kalau belum diisi
+function fourdxGetRawStatus(dateKey, leadName){
+  ensure4DXState();
+  const dayObj = appState.fourdx.checkins[dateKey];
+  return dayObj ? (dayObj[leadName] || null) : null;
+}
+
+// display status: kalau belum diisi → dianggap RED (anti green palsu), tapi completion tetap ngitung "missing"
+function fourdxGetDisplayStatus(dateKey, leadName, leadActiveFrom){
+  // OFFDAY global
+  if (fourdxIsOffday(dateKey)) return "OFF";
+
+  const todayKey = getTodayKey();
+
+  // Future date: tetap ada slot tapi kosong
+  if (dateKey > todayKey) return "FUTURE";
+
+  // Sebelum lead berlaku: slot kosong beda style
+  const activeFrom = leadActiveFrom || "0000-01-01";
+  if (dateKey < activeFrom) return "INACTIVE";
+
+  // Past/today dan sudah aktif:
+  const raw = fourdxGetRawStatus(dateKey, leadName);
+
+  // Belum diisi → MISS (lebih jujur daripada RED)
+  if (!raw) return "MISS";
+
+  return raw; // GREEN/YELLOW/RED
+}
+
+function fourdxLastNDaysKeys(n){
+  const todayKey = getTodayKey();
+  const today = new Date(todayKey + "T00:00:00");
+  const keys = [];
+  for(let i = n - 1; i >= 0; i--){
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    keys.push(d.toISOString().slice(0,10));
+  }
+  return keys;
+}
+function fourdxExpectedKeysForLead(lead, dayKeys){
+  ensure4DXState();
+  const activeFrom = lead.activeFrom || "0000-01-01";
+  const todayKey = getTodayKey();
+
+  return dayKeys.filter(dk =>
+    dk >= activeFrom &&
+    dk <= todayKey &&          // exclude future
+    !fourdxIsOffday(dk)        // exclude global offdays
+  );
+}
+function fourdxComputeLeadCompletion(lead, dayKeys){
+  const expectedDays = fourdxExpectedKeysForLead(lead, dayKeys);
+
+  const filledDays = expectedDays.filter(dk => !!fourdxGetRawStatus(dk, lead.name));
+
+  const expected = expectedDays.length;
+  const filled = filledDays.length;
+  const miss = Math.max(0, expected - filled);
+  const pct = expected ? Math.round((filled/expected)*100) : 0;
+
+  return { expected, filled, miss, pct };
+}
+function ensure4DXState() {
+  if (!appState.fourdx) {
+    appState.fourdx = {
+      wig: "",
+      leadMeasures: [],   // [{ name, activeFrom }]
+      lagMeasures: [],
+      checkins: {},       // { "YYYY-MM-DD": { "Lead name": "RED|YELLOW|GREEN" } }
+      offdays: {}         // { "YYYY-MM-DD": true }
+    };
+  }
+
+  if (!Array.isArray(appState.fourdx.leadMeasures)) appState.fourdx.leadMeasures = [];
+  if (!Array.isArray(appState.fourdx.lagMeasures)) appState.fourdx.lagMeasures = [];
+  if (!appState.fourdx.checkins || typeof appState.fourdx.checkins !== "object") appState.fourdx.checkins = {};
+  if (!appState.fourdx.offdays || typeof appState.fourdx.offdays !== "object") appState.fourdx.offdays = {};
+
+  // MIGRATION: kalau leadMeasures masih array string → ubah jadi object + activeFrom (hari ini)
+  const todayKey = getTodayKey();
+  if (appState.fourdx.leadMeasures.length && typeof appState.fourdx.leadMeasures[0] === "string") {
+    appState.fourdx.leadMeasures = appState.fourdx.leadMeasures.slice(0,4).map((nm) => ({
+      name: (nm || "").trim() || "Masukkan Lead 1",
+      activeFrom: todayKey
+    }));
+    saveState();
+  }
+}
+function render4DX() {
+    ensure4DXState();
+
+  if (!fourdxMonthlyRows) return;
+
+  // default: cukup 1 lead dulu biar user rename (lebih clean)
+if (!appState.fourdx.leadMeasures || !appState.fourdx.leadMeasures.length) {
+  appState.fourdx.leadMeasures = [{ name: "Masukkan Lead 1", activeFrom: getTodayKey() }];
+  saveState();
+}
+
+// normalisasi max 4
+const finalLeads = (appState.fourdx.leadMeasures || []).slice(0, 4);
+
+  const periodVal = (fourdxPeriodSelect && fourdxPeriodSelect.value) || "30";
+  const period = (periodVal === "month") ? new Date().getDate() : parseInt(periodVal, 10);
+  const todayKey = getTodayKey();
+  const today = new Date(todayKey + "T00:00:00");
+
+  const dayKeys = [];
+  if (periodVal === "month") {
+    const daysInThisMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    for (let i = daysInThisMonth - 1; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth(), daysInThisMonth - i);
+      const iso = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+      dayKeys.push(iso);
+    }
+  } else {
+    const n = parseInt(periodVal, 10) || 30;
+    for (let i = n - 1; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      dayKeys.push(d.toISOString().slice(0, 10));
+    }
+  }
+
+  // bikin emoji row sepanjang period
+const rows = finalLeads.map((lead) => ({
+  lead,
+  cells: dayKeys.map((dk) => fourdxGetDisplayStatus(dk, lead.name, lead.activeFrom))
+}));
+
+// overall % green (expected-slot based)
+let g = 0, total = 0;
+
+finalLeads.forEach((lead) => {
+  const expectedKeys = fourdxExpectedKeysForLead(lead, dayKeys);
+  total += expectedKeys.length;
+
+  expectedKeys.forEach((dk) => {
+    const raw = fourdxGetRawStatus(dk, lead.name);
+    if (raw === "GREEN") g++;
+  });
+});
+
+const pct = total ? Math.round((g / total) * 100) : 0;
+
+  if (fourdxOverallGreen) fourdxOverallGreen.textContent = pct + "%";
+    // Battery bar (dummy) – %green + fraction
+  if (fourdxBatteryPct) fourdxBatteryPct.textContent = pct + "%";
+  if (fourdxBatteryFill) fourdxBatteryFill.style.width = pct + "%";
+  if (fourdxBatteryFraction) fourdxBatteryFraction.textContent = `${g}/${total}`;
+
+
+  // Render Monthly Lead Progress (emoji berjejer)
+  fourdxMonthlyRows.innerHTML = "";
+  rows.forEach((row) => {
+// ✅ expected slots khusus lead ini (ikut activeFrom + offday + sampai hari ini)
+const expectedKeys = fourdxExpectedKeysForLead(row.lead, dayKeys);
+
+// hitung GREEN/YELLOW/RED dari expectedKeys (raw status aja)
+// kalau null (belum diisi) => itu MISS, bukan RED
+let green = 0, yellow = 0, red = 0;
+
+expectedKeys.forEach((dk) => {
+  const raw = fourdxGetRawStatus(dk, row.lead.name);
+  if (raw === "GREEN") green++;
+  else if (raw === "YELLOW") yellow++;
+  else if (raw === "RED") red++;
+});
+
+const expected = expectedKeys.length;
+const greenPct = expected ? Math.round((green / expected) * 100) : 0;
+
+// completion (udah include miss)
+const comp = fourdxComputeLeadCompletion(row.lead, dayKeys);
+
+    const block = document.createElement("div");
+const gridHtml = row.cells.map((status) => {
+  // FUTURE: slot kosong tapi keliatan (dashed)
+  if (status === "FUTURE") {
+    return `<div class="fourdx-emoji-cell is-future" data-status="${status}" title="Future day"></div>`;
+  }
+
+  // INACTIVE: sebelum activeFrom (abu tipis)
+  if (status === "INACTIVE") {
+    return `<div class="fourdx-emoji-cell is-inactive" data-status="${status}" title="Belum berlaku"></div>`;
+  }
+
+  // OFF: offday (tulisan OFF)
+  if (status === "OFF") {
+    return `<div class="fourdx-emoji-cell is-off" data-status="${status}" title="Off day">OFF</div>`;
+  }
+
+  // MISS: belum diisi
+  if (status === "MISS") {
+    return `<div class="fourdx-emoji-cell is-miss" data-status="${status}" title="Belum diisi">MISS</div>`;
+  }
+
+  // GREEN/YELLOW/RED: icon
+  return `
+    <div class="fourdx-emoji-cell" data-status="${status}">
+      <img class="fourdx-icon" src="${hohoIconForStatus(status)}" alt="${status}">
+    </div>
+  `;
+}).join("");
+
+    block.className = "fourdx-lead-box";
+    block.innerHTML = `
+      <div class="fourdx-lead-head">
+        <div style="font-weight:800;">${row.lead.name}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;white-space:nowrap;">
+  <div style="font-size:12px;color:var(--text-light);">
+    <b>${greenPct}% green</b>
+  </div>
+  <div style="font-size:11px;color:var(--text-light);">
+  Completion: <b>${comp.pct}%</b> (${comp.filled}/${comp.expected}) · MISS: <b>${comp.miss}</b></div>
+</div>
+      </div>
+
+      <div class="fourdx-emoji-grid">
+        ${gridHtml}
+      </div>
+
+      <div style="font-size:12px;color:var(--text-light);margin-top:8px;">
+        Green ${green} · Yellow ${yellow} · Red ${red}
+      </div>
+
+      <div style="font-size:12px;margin-top:6px;">
+        🔥 Streak: <b>0</b> hari
+      </div>
+
+      <div style="font-size:12px;margin-top:4px;color:var(--text-light);">
+        🎯 ${greenPct < 50 ? "😡 Needs focus" : (greenPct < 80 ? "😐 Keep pushing" : "😄 Good job")}
+      </div>
+    `;
+    
+    fourdxMonthlyRows.appendChild(block);
+  });
+
+  // Render Lead Measures list (dummy input UI)
+  if (leadMeasuresList) {
+    leadMeasuresList.innerHTML = "";
+    finalLeads.forEach((lead, idx) => {
+  const row = document.createElement("div");
+  row.style.display = "grid";
+  row.style.gridTemplateColumns = "minmax(0,1fr) 160px 42px";
+  row.style.gap = "10px";
+  row.style.alignItems = "center";
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.value = lead.name || `Masukkan Lead ${idx + 1}`;
+
+const activeWrap = document.createElement("div");
+activeWrap.style.display = "flex";
+activeWrap.style.flexDirection = "column";
+activeWrap.style.gap = "4px";
+
+const active = document.createElement("input");
+active.type = "date";
+active.value = lead.activeFrom || getTodayKey();
+
+const hint = document.createElement("div");
+hint.style.fontSize = "11px";
+hint.style.color = "var(--text-light)";
+hint.textContent = "Mulai dihitung dari tanggal ini";
+
+activeWrap.appendChild(active);
+activeWrap.appendChild(hint);
+
+  input.addEventListener("change", () => {
+    ensure4DXState();
+
+    const oldName = (appState.fourdx.leadMeasures[idx]?.name || "").trim();
+    const newName = input.value.trim() || `Masukkan Lead ${idx + 1}`;
+
+    // rename lead
+    appState.fourdx.leadMeasures[idx].name = newName;
+
+    // MIGRATE CHECKINS KEY (biar data lama gak hilang)
+    if (oldName && oldName !== newName) {
+      Object.keys(appState.fourdx.checkins || {}).forEach((dk) => {
+        const dayObj = appState.fourdx.checkins[dk];
+        if (dayObj && dayObj[oldName]) {
+          dayObj[newName] = dayObj[oldName];
+          delete dayObj[oldName];
+        }
+      });
+    }
+
+    saveState();
+    render4DX();
+  });
+
+  active.addEventListener("change", () => {
+    ensure4DXState();
+    appState.fourdx.leadMeasures[idx].activeFrom = active.value || getTodayKey();
+    saveState();
+    render4DX();
+  });
+
+  const del = document.createElement("button");
+  del.type = "button";
+  del.className = "btn-ghost";
+  del.textContent = "✕";
+  del.style.width = "42px";
+  del.style.background = "#f97373";
+  del.style.color = "#111827";
+  del.addEventListener("click", () => {
+    ensure4DXState();
+    appState.fourdx.leadMeasures.splice(idx, 1);
+    saveState();
+    render4DX();
+  });
+
+  row.appendChild(input);
+  row.appendChild(activeWrap);;
+  row.appendChild(del);
+  leadMeasuresList.appendChild(row);
+});
+  }
+
+// add lead measure (max 4)
+if (addLeadMeasureBtn && !addLeadMeasureBtn.dataset.bound) {
+  addLeadMeasureBtn.dataset.bound = "1";
+  addLeadMeasureBtn.addEventListener("click", () => {
+    ensure4DXState();
+    if (appState.fourdx.leadMeasures.length >= 4) {
+      alert("Max 4 lead measures ya bro 😄");
+      return;
+    }
+    appState.fourdx.leadMeasures.push({
+      name: `Masukkan Lead ${appState.fourdx.leadMeasures.length + 1}`,
+      activeFrom: getTodayKey()
+    });
+    saveState();
+    render4DX();
+  });
+}
+   // Render Daily Lead Check-in (dummy buttons with hoho icons)
+// Render Daily Lead Check-in (Today)
+if (leadCheckinToday) {
+  ensure4DXState();
+
+  const todayKey = getTodayKey();
+  const isOff = fourdxIsOffday(todayKey);
+  const todayObj = appState.fourdx.checkins[todayKey] || {};
+
+  leadCheckinToday.innerHTML =
+    finalLeads.map((lead) => `
+      <div data-lead="${lead.name}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;">
+        <div style="font-size:13px;font-weight:700;">${lead.name}</div>
+
+        <div style="display:flex;gap:10px;align-items:center;${isOff ? "opacity:0.55;pointer-events:none;" : ""}">
+          <button type="button" class="fourdx-check-btn ${todayObj[lead.name] === "RED" ? "selected" : ""}" data-status="RED"
+            style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
+            <img class="fourdx-icon" src="${hohoIconForStatus("RED")}" alt="RED" draggable="false">
+          </button>
+
+          <button type="button" class="fourdx-check-btn ${todayObj[lead.name] === "YELLOW" ? "selected" : ""}" data-status="YELLOW"
+            style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
+            <img class="fourdx-icon" src="${hohoIconForStatus("YELLOW")}" alt="YELLOW" draggable="false">
+          </button>
+
+          <button type="button" class="fourdx-check-btn ${todayObj[lead.name] === "GREEN" ? "selected" : ""}" data-status="GREEN"
+            style="width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.65);display:flex;align-items:center;justify-content:center;">
+            <img class="fourdx-icon" src="${hohoIconForStatus("GREEN")}" alt="GREEN" draggable="false">
+          </button>
+        </div>
+      </div>
+    `).join("") +
+    (isOff ? `<div style="margin-top:8px;font-size:12px;color:var(--text-light);">Hari ini OFFDAY. Check-in dimatikan.</div>` : "");
+}
+
+  // Render Lag Measures (dummy)
+   if (lagMeasuresList) {
+    ensure4DXState();
+    lagMeasuresList.innerHTML = "";
+    const lags = appState.fourdx.lagMeasures.length ? appState.fourdx.lagMeasures : ["Profit IFMN 200jt per bulan sepanjang 2026"];
+    if (!appState.fourdx.lagMeasures.length) appState.fourdx.lagMeasures = lags;
+
+    appState.fourdx.lagMeasures.forEach((name, idx) => {
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.gap = "10px";
+      row.style.alignItems = "center";
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = name;
+      input.style.flex = "1";
+      input.addEventListener("change", () => {
+        appState.fourdx.lagMeasures[idx] = input.value.trim() || `Lag ${idx + 1}`;
+        saveState();
+      });
+
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "btn-ghost";
+      del.textContent = "✕";
+      del.style.width = "42px";
+      del.style.background = "#f97373";
+      del.style.color = "#111827";
+      del.addEventListener("click", () => {
+        appState.fourdx.lagMeasures.splice(idx, 1);
+        saveState();
+        render4DX();
+      });
+
+      row.appendChild(input);
+      row.appendChild(del);
+      lagMeasuresList.appendChild(row);
+    });
+  }
+
+  if (addLagMeasureBtn && !addLagMeasureBtn.dataset.bound) {
+  addLagMeasureBtn.dataset.bound = "1";
+  addLagMeasureBtn.addEventListener("click", () => {
+    ensure4DXState();
+    appState.fourdx.lagMeasures.push(`Lag Measure ${appState.fourdx.lagMeasures.length + 1}`);
+    saveState();
+    render4DX();
+  });
+}
+
+  // WIG dummy default
+  if (wigInput) {
+    ensure4DXState();
+    if (!appState.fourdx.wig) appState.fourdx.wig = "Meningkatkan pertumbuhan revenue 30% YoY di 2026";
+    wigInput.value = appState.fourdx.wig;
+
+    if (!wigInput.dataset.bound) {
+      wigInput.dataset.bound = "1";
+      wigInput.addEventListener("change", () => {
+        ensure4DXState();
+        appState.fourdx.wig = wigInput.value.trim();
+        saveState();
+      });
+    }
+  }
+}
+function fourdxOpenEditModal(){
+  const modal = document.getElementById("fourdxEditModal");
+  if(!modal) return;
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden","false");
+  fourdxRenderEditGrid();
+}
+
+function fourdxCloseEditModal(){
+  const modal = document.getElementById("fourdxEditModal");
+  if(!modal) return;
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden","true");
+}
+
+function fourdxCycleStatus(current){
+  // cycle: RED → YELLOW → GREEN → OFF
+  if(current === "RED") return "YELLOW";
+  if(current === "YELLOW") return "GREEN";
+  if(current === "GREEN") return "OFF";
+  return "RED";
+}
+
+function fourdxSetStatus(dateKey, leadName, status){
+  ensure4DXState();
+
+  // OFFDAY global per tanggal
+  if(status === "OFF"){
+    appState.fourdx.offdays[dateKey] = true;
+    saveState();
+    return;
+  }
+
+  // kalau status bukan OFF, pastikan tanggal bukan offday
+  if(appState.fourdx.offdays[dateKey]) delete appState.fourdx.offdays[dateKey];
+
+  if(!appState.fourdx.checkins[dateKey]) appState.fourdx.checkins[dateKey] = {};
+  appState.fourdx.checkins[dateKey][leadName] = status;
+  saveState();
+}
+
+function fourdxRenderEditGrid(){
+  ensure4DXState();
+  const grid = document.getElementById("fourdxEditGrid");
+  if(!grid) return;
+
+  const leads = (appState.fourdx.leadMeasures || []).slice(0,4);
+  const dayKeys = fourdxLastNDaysKeys(14);
+
+  // Header row: label + 14 dates
+  let html = `<div class="fourdx-edit-row">`;
+  html += `<div class="fourdx-edit-cell fourdx-edit-head fourdx-edit-leadname">Lead \\ Date</div>`;
+  dayKeys.forEach(dk=>{
+    const day = new Date(dk+"T00:00:00").getDate();
+    const off = fourdxIsOffday(dk);
+    html += `<div class="fourdx-edit-cell fourdx-edit-head ${off ? "fourdx-edit-offday" : ""}" data-datehead="${dk}">
+      ${day}<div style="font-size:10px;margin-top:2px;">${off ? "OFF" : ""}</div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Rows per lead
+  leads.forEach(lead=>{
+    html += `<div class="fourdx-edit-row">`;
+    html += `<div class="fourdx-edit-cell fourdx-edit-leadname">${lead.name || "Lead"}</div>`;
+
+    dayKeys.forEach(dk=>{
+      const disp = fourdxGetDisplayStatus(dk, lead.name);
+      const isOff = (disp === "OFF");
+      html += `<div class="fourdx-edit-cell ${isOff ? "fourdx-edit-offday" : ""}">
+        <div class="fourdx-edit-btn" data-date="${dk}" data-lead="${lead.name}" data-status="${disp}">
+          ${isOff ? `<span style="font-size:11px;font-weight:900;color:var(--text-light);">OFF</span>`
+                  : `<img src="${hohoIconForStatus(disp)}" alt="${disp}" draggable="false">`}
+        </div>
+      </div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  grid.innerHTML = html;
+
+  // Click handler: cell cycle
+  grid.onclick = (e) => {
+    const btn = e.target.closest(".fourdx-edit-btn");
+    if(btn){
+      const dateKey = btn.getAttribute("data-date");
+      const leadName = btn.getAttribute("data-lead");
+      const cur = btn.getAttribute("data-status") || "RED";
+      const next = fourdxCycleStatus(cur);
+
+      fourdxSetStatus(dateKey, leadName, next);
+
+      // refresh modal + main UI
+      fourdxRenderEditGrid();
+      render4DX();
+      return;
+    }
+
+    // Click date header: toggle OFFDAY (lebih gampang buat meeting)
+    const head = e.target.closest("[data-datehead]");
+    if(head){
+      const dk = head.getAttribute("data-datehead");
+      ensure4DXState();
+      if(appState.fourdx.offdays[dk]) delete appState.fourdx.offdays[dk];
+      else appState.fourdx.offdays[dk] = true;
+      saveState();
+      fourdxRenderEditGrid();
+      render4DX();
+    }
+  };
+}
 /* INIT */
 document.addEventListener("DOMContentLoaded", () => {
   // Load state awal
@@ -1471,6 +2398,60 @@ document.addEventListener("DOMContentLoaded", () => {
   // Ho-Ho idle bounce
   scheduleRandomBounce();
 
+  // 4DX UI (dummy)
+  render4DX();
+  if (fourdxPeriodSelect) {
+    fourdxPeriodSelect.addEventListener("change", render4DX);
+  }
+  // 4DX: click handler for Today check-in (bind once)
+if (leadCheckinToday && !leadCheckinToday.dataset.bound) {
+  leadCheckinToday.dataset.bound = "1";
+
+  leadCheckinToday.addEventListener("click", (e) => {
+    const btn = e.target.closest(".fourdx-check-btn");
+    if (!btn) return;
+
+    const row = btn.closest("[data-lead]");
+    if (!row) return;
+
+    // UI: highlight selected inside that row
+    row.querySelectorAll(".fourdx-check-btn").forEach((b) => b.classList.remove("selected"));
+    btn.classList.add("selected");
+
+    // Save
+    ensure4DXState();
+    const leadName = row.getAttribute("data-lead");
+    const status = btn.getAttribute("data-status") || "RED";
+    const todayKey = getTodayKey();
+
+    if (!appState.fourdx.checkins[todayKey]) appState.fourdx.checkins[todayKey] = {};
+    appState.fourdx.checkins[todayKey][leadName] = status;
+
+    saveState();
+    render4DX(); // refresh monthly + completion + battery
+  });
+}
+// 4DX Edit Mode bindings
+  const editBtn = document.getElementById("fourdxEditBtn");
+  const closeBtn = document.getElementById("fourdxEditCloseBtn");
+  const modal = document.getElementById("fourdxEditModal");
+
+  if (editBtn && !editBtn.dataset.bound) {
+    editBtn.dataset.bound = "1";
+    editBtn.addEventListener("click", fourdxOpenEditModal);
+  }
+  if (closeBtn && !closeBtn.dataset.bound) {
+    closeBtn.dataset.bound = "1";
+    closeBtn.addEventListener("click", fourdxCloseEditModal);
+  }
+  if (modal && !modal.dataset.bound) {
+    modal.dataset.bound = "1";
+    modal.addEventListener("click", (e) => {
+      if (e.target && e.target.getAttribute("data-close") === "1") {
+        fourdxCloseEditModal();
+      }
+    });
+  }
   // 🔗 Hubungkan tombol Sync Weekly → fungsi syncWeeklyToGoogleSheet()
   const syncBtn = document.getElementById("syncWeeklyBtn");
   if (syncBtn) {
@@ -1481,5 +2462,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
-
-  
+// 🔗 Tombol Sync 4DX Weekly
+  const sync4dxBtn = document.getElementById("sync4DXWeeklyBtn");
+  if (sync4dxBtn) {
+    sync4dxBtn.addEventListener("click", () => {
+      if (sync4dxBtn.disabled) return;
+      sync4DXWeeklyToGoogleSheet();
+    });
+  }
