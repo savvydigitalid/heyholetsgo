@@ -429,11 +429,11 @@ async function syncWeeklyToGoogleSheet() {
     }
 
     // Kirim tanpa baca response (biar gak ke-block CORS)
-await fetch(FOURDX_WEEKLY_WEBHOOK_URL, {
+await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
   method: "POST",
   mode: "no-cors",
   headers: { "Content-Type": "text/plain" },
-  body: JSON.stringify({ sheetName: "4DX_Weekly", rows: payload.rows })
+  body: JSON.stringify(payload)
 });
 
     alert("Permintaan sync sudah dikirim. Cek Google Sheet apakah barisnya sudah bertambah.");
