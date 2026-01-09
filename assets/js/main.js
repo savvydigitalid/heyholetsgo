@@ -543,7 +543,12 @@ const payload = build4DXWeeklyPayload();
       method: "POST",
       mode: "no-cors",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sheetName: "4DX_Weekly", rows: payload.rows })
+      body: JSON.stringify({
+  sheetName: "4DX_Weekly",
+  userName: (appState.user && appState.user.name) ? appState.user.name : "",
+  userPosition: (appState.user && appState.user.position) ? appState.user.position : "",
+  rows: payload.rows
+})
     });
 
     if (statusEl) statusEl.textContent = "✅ Sent (cek tab 4DX_Weekly)";
